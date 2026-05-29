@@ -8,6 +8,8 @@ Backtest investment strategies and publish results as Telegraph blog posts.
 
 ```
 /
+├── knowledgebase/       # Research library (AI-bubble, crash protection, frameworks, the $1M playbook)
+├── skills/              # opencode SKILL.md modules for the agentic hedge-fund team
 ├── report/img/          # All generated chart PNGs (never in root)
 ├── reports/             # Legacy report artifacts
 ├── *.py                 # Backtest scripts and publishers
@@ -18,6 +20,21 @@ Backtest investment strategies and publish results as Telegraph blog posts.
 ├── README.md            # Project overview
 └── AGENTS.md            # This file
 ```
+
+## Knowledgebase & Skills (added 2026-05-29)
+
+- **`knowledgebase/`** — 8 research notes answering "are we in an AI bubble, and how do I deploy
+  $1M to survive a crash while keeping upside?" Start at `knowledgebase/README.md`; the synthesis
+  is `knowledgebase/08-the-1M-playbook.md`. Evidence is `crash_protection_backtest.py`.
+- **`skills/`** — opencode-compatible `SKILL.md` modules for an automated agent team: `regime-detection`,
+  `trend-following`, `portfolio-construction`, `risk-management`, `rebalancing`, `dip-tranches-strategy`,
+  `tax-loss-harvesting`, and the top-level `agentic-fund-orchestration`. See `skills/README.md`.
+  Frontmatter must keep `compatibility: opencode`. The committed `dip-tranches-strategy/SKILL.md` was
+  once mangled to whitespace — the canonical copies are restored; `skills.zip` is the backup archive.
+- **`crash_protection_backtest.py`** — defensive/all-weather/trend vs S&P/QQQ across dot-com, GFC,
+  COVID, 2022 (2000-2026). Output cached in `crash_protection_summary.txt`,
+  chart `report/img/crash_protection_backtest.png`. Uses long-history Vanguard mutual-fund tickers
+  (VFINX/VUSTX/VISVX/VFITX) + gold futures (GC=F) so the test reaches back to 2000.
 
 ## Rules
 
@@ -69,6 +86,7 @@ Backtest investment strategies and publish results as Telegraph blog posts.
 | `value_factor_backtest.py` | Morningstar-proxy value+momentum | 2020-2026 | 26% CAGR, 0.99 Sharpe |
 | `era_2005_2020_backtest.py` | Multi-strategy 2005-2020 test | 2005-2020 | Quality Factor best |
 | `congressional_backtest.py` | Pelosi/McCaul tracker | 2020-2026 | Pelosi 20%, McCaul 28% |
+| `crash_protection_backtest.py` | All-weather/trend/permanent vs S&P/QQQ | 2000-2026 | Defensive Sharpe 0.65-0.69 vs S&P 0.38; DD −16% vs −55% |
 
 ## Known Issues / Caveats
 
