@@ -26,6 +26,7 @@ TauricResearch **TradingAgents** (analyst → debate → PM → risk → executi
 | Agent | Skill | Authority |
 |-------|-------|-----------|
 | **Regime Analyst** | `regime-detection` | sets gross exposure multiplier |
+| **Research Analyst** | `fundamental-analysis` | data sources, valuation context, defensive-sleeve choice, **backtest gate** |
 | **Signal Analysts** | `trend-following` (+ factor/macro analysts) | per-asset in/out & ranks |
 | **Portfolio Manager** | `portfolio-construction` | proposes target weights |
 | **Risk Manager** | `risk-management` | **veto + de-risk**; final say on size |
@@ -38,15 +39,17 @@ TauricResearch **TradingAgents** (analyst → debate → PM → risk → executi
 ```
 1. INGEST    pull EOD prices (yfinance) + macro (FRED).            [data-sources]
 2. REGIME    regime-detection -> exposure_multiplier.
-3. SIGNALS   trend-following + analysts -> per-asset signals.
-4. CONSTRUCT portfolio-construction -> target weights (× exposure_multiplier).
-5. RISK      risk-management -> vol target, drawdown de-risk, CPPI, caps -> risk_scale / veto.
-6. DIP       dip-tranches-strategy -> any reserve tranche firing today?
-7. REBALANCE rebalancing -> minimal trade deltas (calendar check, threshold act, no-trade bands).
-8. TAX       tax-loss-harvesting -> swap any underwater taxable lots.
-9. NOTIFY    email/Telegram the proposed trades + plain-English rationale + risk report.
-10. EXECUTE  human approves -> execution agent places orders (Alpaca/IBKR).
-11. LOG      append every signal/decision/order to an immutable audit log; update metrics.
+3. ANALYZE   fundamental-analysis -> valuation context + defensive-sleeve ETF choice;
+             any NEW candidate signal must clear the backtest gate before it can trade.
+4. SIGNALS   trend-following + analysts -> per-asset signals.
+5. CONSTRUCT portfolio-construction -> target weights (× exposure_multiplier).
+6. RISK      risk-management -> vol target, drawdown de-risk, CPPI, caps -> risk_scale / veto.
+7. DIP       dip-tranches-strategy -> any reserve tranche firing today?
+8. REBALANCE rebalancing -> minimal trade deltas (calendar check, threshold act, no-trade bands).
+9. TAX       tax-loss-harvesting -> swap any underwater taxable lots.
+10. NOTIFY   email/Telegram the proposed trades + plain-English rationale + risk report.
+11. EXECUTE  human approves -> execution agent places orders (Alpaca/IBKR).
+12. LOG      append every signal/decision/order to an immutable audit log; update metrics.
 ```
 
 ## Shared state (cuts tokens & drift)

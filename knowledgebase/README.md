@@ -21,6 +21,7 @@ from cited public sources (May 2026) and from our own backtests in this repo.
 | [06-data-sources.md](06-data-sources.md) | Data feeds, broker APIs, backtest frameworks (free → paid) |
 | [07-reading-list.md](07-reading-list.md) | The books/papers behind the strategies, distilled |
 | [08-the-1M-playbook.md](08-the-1M-playbook.md) | **The synthesis: a concrete $1M deployment plan** |
+| [09-stock-selection-evidence.md](09-stock-selection-evidence.md) | Does bottom-up stock-picking (Morningstar moat/fair-value, value, quality) beat the index? Backtest says mostly no — they're defensive sleeves, not alpha |
 
 ## How the pieces fit
 

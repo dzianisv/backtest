@@ -35,6 +35,7 @@ trend-following ──signals──┐                  ▼
 |-------|------|--------------|
 | [agentic-fund-orchestration](agentic-fund-orchestration/SKILL.md) | orchestrator | the daily decision loop, shared state, guardrails |
 | [regime-detection](regime-detection/SKILL.md) | regime analyst | risk-on/off → gross-exposure dial (+ runnable `regime_monitor.py`) |
+| [fundamental-analysis](fundamental-analysis/SKILL.md) | research analyst | what data/sources the analyst reads, screens, and the mandatory backtest gate (honest verdict: stock-picking ≠ alpha) |
 | [trend-following](trend-following/SKILL.md) | signal analyst | 200d-MA / dual-momentum / managed-futures crisis alpha |
 | [portfolio-construction](portfolio-construction/SKILL.md) | portfolio manager | bubble-aware all-weather target weights (3 risk tiers) |
 | [risk-management](risk-management/SKILL.md) | risk manager | vol target, drawdown de-risk, CPPI, caps — deterministic veto |
