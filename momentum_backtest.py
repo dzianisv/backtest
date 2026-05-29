@@ -124,7 +124,7 @@ def run_dual_momentum(top_n=3, use_abs_momentum=True, universe=None):
         # Calculate current portfolio value using today's prices
         if holdings:
             current_value = sum(
-                holdings[asset] * shares * monthly_prices.loc[date, asset]
+                shares * monthly_prices.loc[date, asset]
                 for asset, shares in holdings.items()
                 if asset in monthly_prices.columns
             )

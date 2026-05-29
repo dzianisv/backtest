@@ -448,3 +448,209 @@ All-weather = 30% VOO + 40% TLT + 15% GLD + 15% IEF
 - 60/40 is a disaster: 0/20 wins, -4.20pp. TLT lost ~50% peak-to-trough as the Fed hiked 525bp. The classic institutional portfolio failed completely in this rate environment.
 - All-weather (Dalio 30/40/15/15) is worst: 0/20, -4.83pp. Both bond allocations were dead weight during the rate-hiking cycle.
 - Practical takeaway: a simple 80/20 VOO+GLD DCA beats pure VOO in every single entry point tested with a higher Sharpe. The cost is ~0.3pp lower CAGR vs the degen allocation.
+
+---
+
+## Experiment 6: Berkshire 13F Copy (Buffett Follower)
+
+Copy Berkshire Hathaway's top holdings using quarterly 13F disclosures with a 45-day execution lag. Buy-and-hold, $1M starting capital.
+
+![Berkshire 13F copy vs VOO lump sum](https://i.imgur.com/INLX8D2.png)
+
+```
+Strategy       CAGR  Sharpe  Max DD
+Berkshire 13F  15.8%  0.57  -37.4%
+VOO Lump Sum   15.6%  0.62  -34.0%
+```
+
+- Barely beats VOO (+0.2pp CAGR) with worse Sharpe and deeper drawdown. Not worth the complexity.
+- Buffett sat on cash during COVID while the market ripped — Apple's weight rescued it.
+- Congressional insider flow (Pelosi +20%) decisively beats 13F copy.
+
+---
+
+## Experiment 7: Post-Earnings Announcement Drift (PEAD)
+
+Buy S&P 500 stocks that gap up >5% on earnings day. Hold 60 days. Proxy for the academic PEAD effect.
+
+![PEAD gap-up earnings momentum vs VOO](https://i.imgur.com/jwrjwQR.png)
+
+```
+Strategy  CAGR  Sharpe  Max DD
+PEAD      16.2%  0.57  -47.5%
+VOO       15.7%  0.62  -34.0%
+```
+
+- +0.5pp CAGR vs VOO but max drawdown -47.5% vs -34%. Risk-adjusted, it loses.
+- Real PEAD alpha requires executing within hours of the 8-K. Daily-close proxy dilutes the signal.
+- Avg 7.1 simultaneous positions — single-stock concentration drives the outsized drawdown.
+
+---
+
+## Experiment 8: Quality Factor + Low Volatility
+
+Monthly rebalancing into stocks ranked by: 40% 6-month momentum + 30% 12-month momentum + 30% low-vol rank. Top 10/15/20 holdings.
+
+![Quality factor top-15 — best Sharpe of all non-congressional strategies](https://i.imgur.com/nj5vVBg.png)
+
+```
+Variant  CAGR   Sharpe  Max DD
+Top-10  16.1%   0.78  -20.2%
+Top-15  19.0%   0.89  -16.8%  <- best
+Top-20  18.2%   0.90  -16.3%
+VOO     15.7%   0.62  -34.0%
+```
+
+- **Best risk-adjusted result of all non-congressional experiments.** Top-15: 19.0% CAGR, Sharpe 0.89, max DD only -16.8% — half VOO's -34%.
+- Nearly matches Pelosi's CAGR (19.0% vs 20.0%) with far better drawdown protection (-16.8% vs -42.7%).
+- Fully systematic — no insider info, no fundamentals, just price signals.
+
+---
+
+## Experiment 9: Sector Rotation (ETF Momentum)
+
+Monthly rebalancing across 11 sector ETFs ranked by momentum. Four variants.
+
+![Sector rotation rank-weighted variant achieves 21.2% CAGR](https://i.imgur.com/nWXdv1P.png)
+
+```
+Variant            CAGR  Sharpe  Max DD   Final
+V1: Top-1 3M      18.9%   0.60  -36.0%  $3.03M
+V2: Top-3 EW      20.5%   0.80  -19.8%  $3.29M
+V3: Top-3 +ABS    17.2%   0.64  -20.0%  $2.76M
+V4: Rank-weighted 21.2%   0.84  -17.7%  $3.43M  <- best
+VOO               15.7%   0.62  -34.0%  $2.54M
+```
+
+- **Rank-weighted (V4) beats Pelosi on CAGR** with 21.2% and Sharpe 0.84, max DD only -17.7%. Beats VOO on every metric.
+- Absolute momentum filter (V3) hurts — rotates to cash too often, missing 2020 and 2023 recoveries.
+- Insight: XLK (tech) dominated most of 2020-2024. Systematically overweighting the winning sector wins.
+
+---
+
+## Experiment 10: Price Momentum Stock Picking
+
+Two price-momentum strategies on S&P 500 large caps, monthly rebalancing.
+
+> **Survivorship bias warning:** universe built from 2026 S&P 500 members. Stocks that failed/were removed are excluded. Results are directional only.
+
+![Momentum strategies A/B vs VOO — results are survivorship-biased](https://i.imgur.com/oDqqEqN.png)
+
+```
+Strategy              CAGR  Sharpe  Max DD
+A: Momentum Screen   33.3%   0.87  -54.0%
+B: Vol-Adj Momentum  45.3%   1.14  -49.2%
+VOO                  15.7%   0.62  -34.0%
+```
+
+- Numbers are inflated — bankrupt/removed stocks excluded. Point-in-time constituent list would reduce returns substantially.
+- Max drawdowns -49% to -54% reveal concentrated single-stock risk not in the Sharpe calculation.
+
+---
+
+## Experiment 11: Tech Concentration / Mag7
+
+Concentrate in Magnificent 7 or AI/semiconductor names. Four variants vs VOO and QQQ.
+
+> Same survivorship caveat — returns constructed knowing which 7 companies dominated 2020-2026.
+
+![Mag7 equal-weight and AI/semis concentration vs VOO/QQQ](https://i.imgur.com/7hhJedc.png)
+
+```
+Strategy             CAGR  Sharpe  Max DD   Final
+VOO                 15.7%   0.62  -34.0%  $2.54M
+QQQ                 21.7%   0.75  -35.1%  $3.51M
+A: Mag7 EW          38.6%   1.05  -48.4%  $8.08M
+B: AI/Semis Mom     46.3%   1.11  -50.8%  $11.4M
+C: TQQQ+SMA         39.3%   0.88  -50.8%  $8.35M
+D: 80/20 VOO+TQQQ   22.9%   0.71  -42.5%  $3.75M
+```
+
+- In real-time you would not have known which 7 companies would dominate. Concentration in AI/semis explains nearly all S&P 500 outperformance since 2023.
+- TQQQ (3x QQQ) with 200-day SMA filter still suffers -50% max DD. Daily vol-decay from 3x ETF rebalancing is not fully captured.
+
+---
+
+## Experiment 12: Wheel / Theta Strategy (Covered Calls + CSP)
+
+Simulated monthly 30-delta options on SPY/VOO using Black-Scholes approximation. No real historical options data — directionally illustrative only.
+
+![Wheel strategy: CSP trails badly, covered call overlay beats VOO](https://i.imgur.com/U151oaA.png)
+
+```
+Strategy       CAGR  Sharpe  Max DD
+CSP only        3.6%  -0.00  -18.2%  — terrible
+Covered Call   19.9%   0.83  -25.3%  — beats VOO
+Full Wheel     10.4%   0.43  -22.1%  — mediocre
+VOO            15.6%   0.69  -27.4%  — benchmark
+```
+
+- Covered call overlay: 19.9% CAGR, Sharpe 0.83, max DD -25.3%. Beats VOO on all three in simulation.
+- The catch: covered calls cap upside. In the 2023-24 AI rally, writers missed large up moves.
+- CSP only: 3.6% CAGR in a 15%+ market. The "wheel prints money" narrative is not supported.
+- **Caveat:** synthetic B-S pricing, no slippage or assignment modeled. Real backtesting requires CBOE options data.
+
+---
+
+## Experiment 13: Dual Momentum (ETF Universe)
+
+Gary Antonacci's Dual Momentum applied to a 12-ETF universe (SPY, QQQ, IWM, EFA, EEM, TLT, GLD, SLV, VNQ, HYG, LQD). Monthly rebalancing. 12-1 month lookback.
+
+![Dual momentum ETF strategy — Top-1 achieves 21.2% CAGR](https://i.imgur.com/19zxeqG.png)
+
+```
+Variant              CAGR  Sharpe  Max DD   Final
+Top-1 (no filter)   21.2%   0.73  -30.9%  $3.37M  <- best CAGR
+Top-1 + Abs Filter  17.9%   0.63  -41.8%  $2.84M
+Top-3 (no filter)   16.6%   0.72  -24.8%  $2.64M
+Top-3 + Abs Filter  15.2%   0.68  -24.5%  $2.44M
+Top-5 (no filter)   15.3%   0.73  -25.6%  $2.47M
+Top-5 + Abs Filter  13.9%   0.69  -20.7%  $2.28M
+VOO Lump Sum        15.7%   0.62  -34.0%  $2.54M
+```
+
+- Top-1 no-filter: 21.2% CAGR, Sharpe 0.73, max DD -30.9%. Beats VOO and Pelosi on raw CAGR.
+- The absolute momentum filter hurts in this period — fast 2020 and 2023 recoveries penalize rotating to T-bills.
+- Top-3 with abs filter: only -24.5% max DD with market-beating CAGR — good balance.
+- **Insight:** fully systematic, no insider info. The 2020–2026 tech bull market heavily rewarded simple momentum.
+
+---
+
+## Master Ranking: All Strategies
+
+```
+Rank  Strategy                  CAGR   Sharpe  Max DD
+--------------------------------------------------------
+ 1    McCaul (congress)         28.3%   0.91   -43.9%
+ 2    Combined Congress         22.3%   0.97   -38.2%
+ 3    Dual Momentum Top-1       21.2%   0.73   -30.9%
+ 4    Sector Rotation V4        21.2%   0.84   -17.7%
+ 5    QQQ Lump Sum              21.7%   0.75   -35.1%
+ 6    Sector Rotation V2        20.5%   0.80   -19.8%
+ 7    Pelosi (congress)         20.0%   0.68   -42.7%
+ 8    Covered Call sim          19.9%   0.83   -25.3%
+ 9    Quality Factor Top-15     19.0%   0.89   -16.8%
+10    PEAD proxy                16.2%   0.57   -47.5%
+11    Berkshire 13F copy        15.8%   0.57   -37.4%
+12    VOO Lump Sum              15.6%   0.69   -27.4%
+13    Dip-Tranche Strategy      15.2%   0.70   -22.5%
+14    VOO DCA                   13.2%   0.71   -18.7%
+15    Degen DCA 70/20/10        14.1%   0.98   -10.5%
+16    Gold Hedge 80/20          13.8%   1.13    -9.4%
+17    Green (congress)          11.7%   0.47   -26.7%
+18    Full Wheel sim            10.4%   0.43   -22.1%
+19    60/40 VOO+TLT              8.6%   0.71    -7.3%
+20    All-Weather (Dalio)        8.0%   0.68    -6.6%
+--------------------------------------------------------
+* Mag7/social_momentum excluded: survivorship bias
+* Congress requires ongoing STOCK Act monitoring
+* Options strategies use synthetic B-S pricing
+```
+
+**Five actionable conclusions:**
+
+1. Systematic sector rotation (V4) and quality-factor achieve both higher CAGR and lower drawdown than index investing — no insider info required.
+2. Dual momentum Top-1 matches sector rotation on CAGR but with higher drawdown.
+3. Congressional copy works (McCaul 28%, Pelosi 20%) but requires monitoring disclosure filings — and the alpha appears to have peaked mid-2023.
+4. 20% gold allocation improves every quarterly entry point tested — the simplest reliable enhancement.
+5. The dip-tranche strategy's value is risk management (max DD -22.5%), not alpha.
