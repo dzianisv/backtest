@@ -192,23 +192,26 @@ futures.
 
 ---
 
-## The honest gap that remains
+## The gap — now closed
 
-Everything above justifies each *piece*. It does **not** prove the *assembled* v3 portfolio (these weights,
-this dip-reserve ladder) survives a crash, because:
+Everything above justifies each *piece*. The earlier open question was whether the *assembled* portfolio
+(these weights, this dip ladder) survives a crash, since half these ETFs post-date the dot-com/GFC crashes
+and the dip mechanic was never simulated.
 
-1. **The specific weights were never backtested as a unit** — the crisis evidence in
-   [`v3-bubble-aware-all-weather.md`](v3-bubble-aware-all-weather.md) is for textbook portfolios
-   (Permanent/Golden Butterfly/All-Weather/GEM/200d-trend), not this exact 10-sleeve mix.
-2. **Half these ETFs didn't exist in the dot-com bust or GFC** — AVUV/DBMF (2019), USMV/BTAL (2011),
-   RSP (2003). So v3 *cannot* be backtested through 2000–02 with these tickers; it needs long-history
-   **proxies** mapped to each sleeve.
-3. **The dip-reserve mechanic was never simulated** inside the crash backtest.
+**That backtest now exists:** [`../backtests/v3_proxy_backtest.py`](../backtests/v3_proxy_backtest.py) runs
+the actual v3 Balanced weights — each sleeve return-spliced onto a long-history proxy — through 2000-2026
+with the dip ladder simulated, plus a real-ETF-only 2019-2026 cross-check. Results
+([`results/v3_proxy_summary.txt`](../backtests/results/v3_proxy_summary.txt), summarized in
+[`v3-bubble-aware-all-weather.md`](v3-bubble-aware-all-weather.md)):
 
-**Next step to close it:** build a backtest of the v3 weights using long-history proxies (RSP→equal-weight
-reconstruct or S&P; AVUV→VISVX small-value; USMV→low-vol proxy; DBMF→a managed-futures/trend index or
-200d-trend basket; GLD→gold; TLT/SCHP→Treasury funds; SGOV→T-bill accrual) and run *that* portfolio + the
-dip ladder through 2000–2026 crisis windows. Then v3 stands on its own numbers, not borrowed ones.
+- **Crash protection holds:** v3 max DD −27% vs S&P −55%; +73% through the 2000-09 lost decade vs S&P −9%.
+- **Bull lag is real:** lifetime 6.8% vs 8.3% CAGR; real funds 2019-26 8.6% vs S&P 16.8% / QQQ 23.3%.
+- **Dip ladder adds return *and* drawdown** — a return enhancer, not a hedge.
+
+**Residual caveat (not a gap, a limitation):** pre-2019 sleeves use proxies, several of which *understate*
+v3's real protection (min-vol→S&P, anti-beta→cash) and the trend proxy is a 3-asset simplification of real
+managed futures. The 2019-2026 real-ETF table is the no-proxy check. v3 now stands on its own numbers — read
+with the proxy caveats in [`results/v3_proxy_summary.txt`](../backtests/results/v3_proxy_summary.txt).
 
 ## Provenance
 ETF facts verified 2026-05-30 from issuer pages/filings (cited inline; flags preserved). Concept citations

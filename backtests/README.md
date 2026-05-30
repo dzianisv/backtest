@@ -23,7 +23,8 @@ if a ticker still comes back empty, just re-run.
 
 | Script | What it shows | Result file |
 |--------|---------------|-------------|
-| **`crash_protection_backtest.py`** | All-weather / permanent / golden-butterfly / trend vs S&P & QQQ across dot-com, GFC, COVID, 2022 (2000-2026). The centerpiece. | `results/crash_protection_summary.txt` |
+| **`v3_proxy_backtest.py`** | **The actual v3 Balanced allocation** (each sleeve → long-history proxy, spliced onto the real ETF) + dip-reserve ladder, through dot-com/GFC/COVID/2022, plus a real-ETF-only 2019-2026 cross-check. Proves v3 on its own numbers (DD −27% vs S&P −55%; +73% lost decade; but lags in bulls). | `results/v3_proxy_summary.txt` |
+| **`crash_protection_backtest.py`** | Generic all-weather / permanent / golden-butterfly / trend vs S&P & QQQ across dot-com, GFC, COVID, 2022 (2000-2026). The structural-edge evidence v3 is derived from. | `results/crash_protection_summary.txt` |
 | **`fundamental_screens_backtest.py`** | Investable factor/selection ETFs (MOAT, COWZ, RPV, VLUE, SPHQ, QUAL, MTUM, SCHD, NOBL, USMV) vs SPY — survivorship/look-ahead safe. Shows selection ≠ alpha. | `results/fundamental_screens_summary.txt` |
 
 ## Exploratory backtests (the v1/v2 journey)

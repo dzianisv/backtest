@@ -96,6 +96,7 @@ Some results are also published as Telegraph posts.
 | `backtests/era_2005_2020_backtest.py` | Multi-strategy 2005-2020 test | 2005-2020 | Quality Factor best |
 | `backtests/congressional_backtest.py` | Pelosi/McCaul tracker | 2020-2026 | Pelosi 20%, McCaul 28% |
 | `backtests/crash_protection_backtest.py` | All-weather/trend/permanent vs S&P/QQQ | 2000-2026 | Defensive Sharpe 0.65-0.69 vs S&P 0.38; DD −16% vs −55% |
+| `backtests/v3_proxy_backtest.py` | **Actual v3 Balanced** (proxy-spliced) + dip ladder vs S&P/QQQ | 2000-2026 | v3 DD −27% vs S&P −55%; +73% lost decade vs −9%; lags in bulls (6.8% vs 8.3% CAGR) |
 
 ## Known Issues / Caveats
 

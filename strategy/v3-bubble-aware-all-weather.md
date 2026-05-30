@@ -16,25 +16,56 @@ edge isn't *when* you buy or *what* you pick — it's **structure**:
 
 You participate if the bull continues, and you survive — with ammo — if it breaks. No prediction required.
 
-## The evidence it's built on
+## The evidence it's built on — the **actual v3 allocation**, backtested
 
-`backtests/crash_protection_backtest.py`, $1M, 2000-2026:
+Earlier versions of this doc borrowed the crisis numbers of generic textbook portfolios
+(Permanent / Golden Butterfly / All-Weather) and implied they were v3's. They were not. v3 has now been
+backtested **as specified** — the exact Balanced weights, each sleeve mapped to a long-history proxy and
+return-spliced onto the real ETF, with the dip-reserve ladder simulated. Script:
+[`backtests/v3_proxy_backtest.py`](../backtests/v3_proxy_backtest.py); full output (incl. every proxy
+caveat): [`results/v3_proxy_summary.txt`](../backtests/results/v3_proxy_summary.txt).
+
+**Full period, $1M, 2000-2026:**
 
 | Strategy | CAGR | Sharpe | Max DD | 2000-09 "lost decade" |
 |---|:--:|:--:|:--:|:--:|
+| **v3 Balanced (static)** | 6.8% | **0.53** | **−27%** | **+73%** |
+| v3 + dip ladder | 7.8% | 0.55 | −32% | +84% |
+| v3 (no trend sleeve) | 6.8% | 0.49 | −31% | +68% |
 | S&P 500 Buy&Hold | 8.3% | 0.38 | **−55%** | **−9%** |
 | QQQ Buy&Hold | 8.7% | 0.35 | **−83%** | **−50%** |
-| 60/40 | 7.4% | 0.49 | −30% | +38% |
-| Permanent Portfolio | 7.2% | **0.69** | **−16%** | +94% |
-| Golden Butterfly | 8.0% | 0.67 | −22% | +104% |
-| All-Weather (proxy) | 7.3% | 0.65 | −24% | +94% |
-| Dual Momentum (GEM) | **9.9%** | 0.49 | −34% | +156% |
-| Trend-Following (200d) | 9.1% | 0.57 | −23% | +115% |
 
-Diversified / trend mixes beat the index on **risk-adjusted** terms and **roughly doubled through the
-lost decade** while the index went nowhere — and in the dot-com bust (2000-02) the permanent/all-weather
-portfolios were **flat-to-positive** while the S&P fell −47% and QQQ −83%. The cost: they lag in a
-roaring bull (the premium for capping the tail). Full context:
+**Per crisis (total return / max drawdown):**
+
+| Event | v3 static | S&P 500 | QQQ |
+|---|:--:|:--:|:--:|
+| Dot-com 2000-02 | −12% / −13% | −47% / −47% | −83% / −83% |
+| GFC 2007-09 | −26% / −27% | −55% / −55% | −52% / −53% |
+| COVID 2020 | −17% / −17% | −34% / −34% | −28% / −29% |
+| 2022 stocks+bonds | −8% / −9% | −25% / −25% | −34% / −34% |
+
+**What v3's own numbers say — honestly:**
+
+1. **The crash protection is real.** v3 roughly **halves the max drawdown** (−27% vs −55%) and was
+   **+73% through the 2000-09 lost decade while the S&P was −9%**. In every crisis window it fell far
+   less than the index. This is the whole point, and it holds up on v3's actual weights.
+2. **The cost is steep in bulls.** v3 lags the index lifetime (**6.8% vs 8.3% CAGR**) — and in the
+   **real-ETF era 2019-2026 (no proxies, real funds only):** v3 **8.6%** CAGR vs S&P **16.8%** / QQQ
+   **23.3%**, with v3's drawdown −17% vs −34%/−35%. v3's Sharpe edge over the index (0.53 vs 0.38
+   lifetime) is **earned almost entirely in the 2000-09 crisis decade** — in the recent bull v3's Sharpe
+   (0.71) was *below* the S&P's (0.75). If no crash comes, you will underperform, possibly for years.
+3. **The dip ladder is not free downside protection.** Deploying the reserve *into* declines raises
+   equity exposure, so it **adds long-run return (7.8% vs 6.8%) but also adds drawdown (−32% vs −27%)**.
+   It's a return enhancer with a risk cost, not a hedge. Size it to the drawdown you can stomach.
+4. **The trend sleeve helps risk-adjusted, modestly.** Dropping it leaves CAGR flat (6.8%) but lowers
+   Sharpe (0.49 vs 0.53) and deepens drawdown — consistent with managed futures earning its keep in
+   crises, not bulls.
+
+⚠️ **Proxy honesty:** pre-2019 most sleeves use long-history proxies (RSP/USMV→S&P, AVUV→VISVX,
+DBMF→a 3-asset trend proxy, BTAL→cash). Several **understate** v3's real protection (min-vol, anti-beta)
+and the trend proxy is a simplification. The 2019-2026 real-ETF table is the no-proxy cross-check. Full
+list of substitutions and what each over/understates is in the caveats block of
+[`results/v3_proxy_summary.txt`](../backtests/results/v3_proxy_summary.txt). Broader context:
 [`../research/03-backtest-evidence.md`](../research/03-backtest-evidence.md),
 [`../research/08-the-1M-playbook.md`](../research/08-the-1M-playbook.md).
 
@@ -122,9 +153,10 @@ approval for go-live, large trades, and leverage changes; the kill switch + hard
 
 ## The honest trade-off
 
-In a continued AI bull, this **will** lag a 100% QQQ holder — possibly by a lot (research note 03:
-+282% vs +3187% in the 2009-2026 bull). That underperformance is the **premium you pay** to not lose
-50-80% and a decade if the bubble bursts. If your honest answer is "20-year horizon, I'll never sell,
+In a continued AI bull, this **will** lag a 100% QQQ holder — possibly by a lot. v3's own backtest shows
+it: 2009-2026 recovery **+345% (static) vs S&P +1398% / QQQ +3187%**, and real funds 2019-2026 **8.6% vs
+16.8% / 23.3% CAGR**. That underperformance is the **premium you pay** to not lose 50-80% and a decade if
+the bubble bursts. If your honest answer is "20-year horizon, I'll never sell,
 I can stomach −80%," a larger cap-weight slice is defensible. For a $1M windfall when you're *already
 worried about a bubble*, capping the left tail is worth the premium. Choose the column that matches the
 drawdown you can actually live through.
