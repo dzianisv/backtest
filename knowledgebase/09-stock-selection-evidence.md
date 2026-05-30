@@ -111,6 +111,13 @@ profitability, low capital intensity, pricing-power margins) on point-in-time da
 the backtest gate (`skills/fundamental-analysis`) before any capital. The default remains the cheap
 ETF.
 
+**Even if you already have a Morningstar account:** use it only as a *manual context lens* (a
+quality/valuation gut-check on individual names), never as automated infrastructure. Its ratings are
+**public → already in the price** (semi-strong EMH; Bogle's *Common Sense Investing*, Malkiel's
+*Random Walk*), which is precisely why the productized version (MOAT ETF) lagged SPY. And your
+account only shows *today's* rating — no point-in-time history — so a Morningstar-driven screen can
+never clear the backtest gate. It's a sanity-check, not a strategy.
+
 ## Caveats
 - Strategy ETFs include real expense ratios but not the investor's trading costs/taxes.
 - Each ETF is judged over its own window vs SPY in that window; rows aren't cross-comparable (RPV/SPHQ

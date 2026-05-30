@@ -94,6 +94,20 @@ Cap it small (≤10-15% of equity), require it to clear the backtest gate on poi
 single-name and tax/turnover costs, and benchmark it honestly against the ETF it replaces. Know the
 base rate: most such sleeves lag the index. Size it as a satellite, never the core.
 
+## Optional Morningstar overlay (manual, context-only)
+If you already have legitimate Morningstar access (personal/Investor account), you may use moat +
+fair-value ratings as **one manual context lens** — a quality/valuation sanity-check before a
+discretionary buy — NOT as an automated signal or the core.
+- **Why only context:** Morningstar's ratings are *public information*, so they are already in the
+  price (semi-strong EMH; Bogle, Malkiel). The productized version of exactly this process (the MOAT
+  ETF) **lagged SPY** (13.5% vs 14.7%) — consuming their conclusions adds no alpha.
+- **Do NOT scrape/spoof their API** for the pipeline: it breaks their ToS, is brittle (stale/wrong
+  data is the worst failure mode for a fund), and your account only exposes *today's* rating — there
+  is **no point-in-time history**, so a Morningstar-driven screen can never clear the backtest gate.
+- A DCF "fair value" is an uncertain *range*, not a precise number (Damodaran) — weight it accordingly.
+- **Net:** optional manual gut-check on individual names; the default remains the cheap ETF, and the
+  backtest gate still governs any capital.
+
 ## Hand-offs
 Feeds the **defensive sleeve choice** + valuation context to **portfolio-construction** and
 **regime-detection**; routes any candidate signal to the backtest harness before **risk-management**
