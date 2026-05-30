@@ -10,11 +10,16 @@ Backtest investment strategies to answer one mission — deploy $1M with crash p
 AI bubble, run by an agentic team. **The mission is defined in @GOAL.md; start there.**
 Some results are also published as Telegraph posts.
 
+**Second, separate track — crypto.** `crypto/` manages a live ~$177k multi-chain crypto book
+(conservative, blue-chip-backed, bubble-defensive). It has **its own goal in @crypto/GOAL.md** — the
+optimal-allocation problem, constraints, and roadmap. Do not conflate it with the $1M tradfi @GOAL.md.
+
 ## Directory Structure
 
 ```
 /
-├── GOAL.md              # The mission (read first)
+├── GOAL.md              # The mission (read first): deploy $1M tradfi with crash protection
+├── crypto/              # Separate track: managing a live ~$177k crypto book — see @crypto/GOAL.md
 ├── strategy/            # The strategy evolution: README + v1/v2/v3.md (v3 is current)
 ├── research/            # Research library (AI-bubble, crash protection, frameworks, the $1M playbook)
 ├── backtests/           # All backtest + publisher scripts (run from repo root)
