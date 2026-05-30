@@ -5,7 +5,8 @@ Inherits the AI-bubble mandate from [`../GOAL.md`](../GOAL.md).
 
 | File | What it is |
 |------|------------|
-| [GOAL.md](GOAL.md) | **The goal (read first):** the optimal-allocation problem stated formally — objective, constraints, success criteria, required investor inputs, honest status (not yet reached), roadmap |
+| [GOAL.md](GOAL.md) | **The goal (read first):** the optimal-allocation problem stated formally — objective, constraints, success criteria, required investor inputs, roadmap |
+| [STRATEGY.md](STRATEGY.md) | **The strategy:** policy defaults, target allocation + venue menu, the 5-job control loop, cash-deployment waterfall, transition plan, crash validation |
 | [portfolio.py](portfolio.py) | Live tracker — pulls APY + collateral from DefiLlama + Morpho, reports value/yield/idle/concentration + rebalance model |
 | [usdt.md](usdt.md) | Earlier USDT deposit notes |
 | report/ | Generated output: `portfolio.md` + `img/alloc.png`, `img/uplift.png` |

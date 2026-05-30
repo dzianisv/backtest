@@ -6,12 +6,33 @@
 
 ## The mission
 
-Find and continuously maintain the **optimal allocation** of a live **~$177k multi-chain crypto book**
-for a conservative, bubble-defensive investor — then prove it is optimal, and keep it there as rates move.
+Build and run a **risk-aware yield strategy** — a standing policy, not a one-time trade — that manages the
+live **~$177k multi-chain crypto book *and all available cash*** (idle balances, new deposits, harvested
+yield, proceeds from exits) to earn the **best sustainable net yield the mandate allows, without ever
+compromising capital preservation.** Conservative, bubble-defensive.
 
-"Optimal" is not "I moved the idle cash somewhere better." It is a **specific, defended target weight for
-every dollar**, derived from the full eligible opportunity set under explicit constraints, such that you
-**cannot raise expected risk-adjusted return without breaking a constraint or lowering collateral quality.**
+The strategy's **output at any moment is an optimal target allocation**: a specific, defended weight for every
+dollar, derived from the full eligible opportunity set under explicit constraints, such that you **cannot raise
+expected risk-adjusted return without breaking a constraint or lowering collateral quality.** But the goal is
+not a single snapshot — it is the **strategy that keeps producing and holding that allocation as rates, cash,
+and market regime change**: deploy idle cash fast, rotate out when a venue's yield decays or its collateral
+degrades, rebalance on drift, and de-risk in a crash. No dollar sits idle; no dollar takes unpriced risk.
+
+## The strategy (the actual deliverable)
+
+A written, automatable policy — a control loop, not a spreadsheet — with five standing jobs:
+
+| Job | Trigger | Default action |
+|-----|---------|----------------|
+| **Deploy** | Any cash (new deposit, harvested yield, exit proceeds, idle balance) sits > **D_cash days** | Move to the current best **C1-passing** venue with capacity, respecting the caps below |
+| **Monitor** | Continuous (via `portfolio.py`) | Track live blended yield, idle $, concentration, collateral grade per position |
+| **Rotate** | A held venue's net yield falls below the clean frontier, or its collateral degrades / fails C1 | Exit to a better eligible venue; record why |
+| **Rebalance** | A sleeve or position drifts outside its band (C2–C8) | Trim/add back to target |
+| **Defend** | Regime flips risk-off (bubble-defense signal from parent [`../GOAL.md`](../GOAL.md)) | Raise stable/gold weight, cut satellite, per the policy bands |
+
+"Better yield, risk-aware" = **maximize sustainable net yield subject to the hard constraints below** — never
+the other way around. The optimization problem below is how each cycle of this loop is *solved*; the loop is
+the strategy.
 
 ## The optimization problem (well-defined)
 
@@ -41,6 +62,7 @@ where the directional sleeve is sized for *survival in a crash*, not for yield.
 | C6 | **Liquidity** — ≥ L% of the book redeemable within D days (respect Maple/notice windows) | *needs investor input* |
 | C7 | **Satellite cap** — high-risk/perp-LP/points positions ≤ S% total, sized so a total loss is survivable | 5% |
 | C8 | **Sleeve bands** — stable / ETH / SOL / BTC / gold / satellite within target ranges | *needs investor input* |
+| C9 | **No idle cash** — no stablecoin/cash balance sits below the clean frontier longer than `D_cash` days; default destination = current best C1 venue with capacity | D_cash = 3 days |
 
 **Definition of optimal (the stop condition).** The allocation is optimal when it sits **on the efficient
 frontier for this mandate**: no feasible reallocation raises expected net yield (stable sleeve) or improves the
@@ -61,6 +83,7 @@ These are policy choices only the investor can make — they set C6, C8, and the
 
 ## Success criteria (how we know the goal is reached)
 
+- [ ] **Strategy written & automatable** — a standing policy ([`STRATEGY.md`](STRATEGY.md)) implementing the five-job control loop above, with explicit numeric bands and cash rules, not a one-off trade list.
 - [ ] **Opportunity set enumerated** — the full menu of C1-passing venues across all held chains *and* the obvious unheld ones (Aave, Spark/sUSDS, clean Morpho vaults per chain, Maple, RWA T-bills, ETH LSTs, SOL LSTs, BTC-collateralized lending), each with live APY, TVL/capacity, and liquidity terms.
 - [ ] **Investor inputs captured** (the checklist above) so C6/C8 are numbers, not blanks.
 - [ ] **Target weights computed** by the two-layer optimization, with each weight traceable to a constraint or a yield rank.
@@ -75,13 +98,13 @@ Done so far (necessary, not sufficient):
 - ✅ **Built the tracker** ([`portfolio.py`](portfolio.py)) — live value, blended yield, idle capital, concentration.
 - ✅ **Interim "stop-the-bleeding" target** — reactivate idle cash to the clean frontier (the model below).
 
-Still missing to actually *reach* an optimum:
-- ❌ The **full eligible opportunity set** (I only graded venues already held + the 5%+ synthetics I rejected).
-- ❌ The **investor inputs** above (risk tolerance, liquidity, sleeve split) — so the strategic layer is unsolved.
-- ❌ The **constrained optimization** producing target weights, and the **crash validation**.
+Now done (2026-05-30):
+- ✅ **Opportunity set enumerated** — clean stable lending, RWA T-bills, and ETH/SOL/BTC staking swept across chains (3 research agents). The graded menu is in [`STRATEGY.md`](STRATEGY.md).
+- ✅ **Strategy written** — [`STRATEGY.md`](STRATEGY.md): policy defaults (acting as investor), target allocation + venue menu, the control loop, cash waterfall, transition plan, and crash validation (modeled ~−8 to −12% in a −60% crash, within the −20% policy).
 
-**This interim model is a lower bound, not the optimum.** It only says "stop earning 0% on cash"; it does not
-prove the *best* mix across the full menu under your risk policy.
+Still open to fully *close* the goal:
+- ⏳ **Investor sign-off** on the §0 policy defaults (max-drawdown, KYC, sleeve split) — set as defaults, not yet confirmed.
+- ⏳ **Encode target weights in `portfolio.py`** (drift tracking) and **execute** the transition (investor signs).
 
 ### Audited state (2026-05-30)
 
