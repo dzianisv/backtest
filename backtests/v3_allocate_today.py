@@ -524,7 +524,7 @@ def print_ticket(data: dict) -> None:
     print(f"  {'SGOV':<6}{sg_role:<40}${sg['dollar']:>11,.0f}{sg_px:>10}{sg_sh:>9}")
     print("  " + "-" * 76)
     print(f"  TODAY intended: ${tk['today_total_intended']:,.2f}   filled (whole shares): ${tk['today_total_actual']:,.2f}")
-    print(f"  (risk book = {tk['risk_book_pct']}% of capital; Foundation funds it to 50%, DCA the rest)")
+    print(f"  (risk book = {tk['risk_book_pct']}% of capital; Foundation deploys 50% of capital into it today, DCA adds 28% over {tk['dca_monthly']['months']} mo)")
     print(f"\n  >>> MONTHLY — DCA for {tk['dca_monthly']['months']} months (${tk['dca_monthly']['per_month']:,.0f}/mo, sell SGOV → buy risk sleeves):")
     for r in tk["dca_monthly"]["rows"]:
         sh = f"~{r['shares']:,} sh" if r["shares"] is not None else "n/a"
