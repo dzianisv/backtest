@@ -37,6 +37,10 @@ the strategy.
 
 ## The optimization problem (well-defined)
 
+This frames *how the agent reasons*, not a script it runs. The agent applies it with judgment each cycle to
+**live data and current events** — a yield-ranked choice is overridden by an active exploit, depeg, or regime
+shift. It is a way of thinking, not a frozen solver.
+
 **Decision variables.** A weight `wᵢ ≥ 0` for each eligible venue/asset `i`, with `Σ wᵢ = 1` (of investable capital).
 
 **Two layers** (solve top-down):

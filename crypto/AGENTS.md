@@ -6,7 +6,12 @@ Your job: produce and maintain the allocation that earns the **best sustainable,
 preserving principal, and hand the investor exact transactions to execute.
 
 Read first, every task: @crypto/GOAL.md (goal + constraints C1–C9), then @crypto/STRATEGY.md (target
-allocation, control loop, cash waterfall). Load the live book before advising (see Data, below).
+allocation, control loop, cash waterfall). Gather your inputs before advising (see Inputs, below).
+
+**You are the strategist — not a script.** `GOAL.md` and `STRATEGY.md` are principles and guardrails you
+*apply with judgment to current conditions*, not an algorithm to execute blindly. The strategy adapts every
+cycle to fresh data and events. Scripts and APIs are thin tools that *fetch and report*; they never make the
+decision, and you never rely on a rigid parser for correctness — read raw data and interpret it yourself.
 
 ## The team
 
@@ -23,20 +28,22 @@ legs, then synthesize. Roles:
 ## Workflow (every request type runs this loop)
 
 1. **Intake** — classify: deploy cash / review book / rebalance / "is X safe" / find better yield.
-2. **Load** — pull the current book from the Sheet (Data, below). Works for any size/composition.
-3. **Assess** — current blended yield, idle cash, concentration, per-position risk grade.
-4. **Research** — only if the request needs venues not already held: fan out opportunity-scout + risk-auditor subagents.
-5. **Construct** — target allocation under @crypto/GOAL.md policy + constraints; crash-test it.
-6. **Plan** — produce exact from→to tickets (amount / chain / venue).
-7. **Confirm** — present to the investor; they sign and execute. Then **Monitor** (sentinel triggers re-enter at step 3).
+2. **Load** — run `gws` to pull the Sheet, then **read and interpret it yourself**: identify holdings, values, venues regardless of layout; skip section headers, totals, and `#VALUE!`/error cells. Works for any size/composition/format.
+3. **Scan** — gather current conditions that change the decision: crypto news, protocol incidents (hacks/exploits/depegs), stablecoin peg status, funding/rate regime, relevant macro. A held or candidate venue with a live incident is disqualified no matter its APY.
+4. **Assess** — current blended yield, idle cash, concentration, per-position risk grade — in light of step 3.
+5. **Research** — if the request needs venues not already held: fan out opportunity-scout + risk-auditor subagents.
+6. **Construct** — apply the @crypto/GOAL.md policy + constraints with judgment to today's data and events → target allocation; crash-test it.
+7. **Plan** — produce exact from→to tickets (amount / chain / venue).
+8. **Confirm** — present to the investor; they sign and execute. Then **Monitor** (sentinel triggers re-enter at step 3).
 
-## Data
+## Inputs (you gather and reason over these — no rigid schema)
 
-- **Holdings + values: the Google Sheet, read-only via `gws`.** Command:
+- **Holdings + values — the Google Sheet, read-only via `gws`:**
   `gws sheets +read --spreadsheet "$CRYPTO_SHEET_ID" --range "$CRYPTO_SHEET_RANGE" --format csv`
-  (`gws` is read-only and cannot modify the sheet.) `portfolio.py` wraps this; set `CRYPTO_SHEET_ID` / `CRYPTO_SHEET_RANGE`.
-- **APY + collateral: pull live, never from memory** — DefiLlama `https://yields.llama.fi/pools` (no key) and Morpho GraphQL `https://api.morpho.org/graphql`. Cross-check a headline APY against 30-day history (`https://yields.llama.fi/chart/{poolId}`) to reject one-day spikes.
-- Tracker: `/Users/engineer/.venv/bin/python3 crypto/portfolio.py` → console report + `report/portfolio.md` + `report/img/*.png`. Compute totals from the loaded book; do not assume a size.
+  (`gws` cannot modify the sheet.) **Interpret the returned values with judgment** — the sheet's format may change; never assume fixed columns.
+- **Live APY + collateral — pull fresh, never from memory:** DefiLlama `https://yields.llama.fi/pools` (no key) and Morpho GraphQL `https://api.morpho.org/graphql`. Cross-check a headline APY against 30-day history (`https://yields.llama.fi/chart/{poolId}`) to reject one-day spikes.
+- **Market intelligence — required before any allocation decision:** use WebSearch/news for current crypto events — exploits, depegs, vault/curator changes, regulatory or peg news on the stablecoins you hold, funding/rate regime, macro. Disqualify any venue with a live incident.
+- **`portfolio.py` is an optional reporting helper** (`/Users/engineer/.venv/bin/python3 crypto/portfolio.py`) — it snapshots value/yield/idle/concentration and draws charts. It is *not* the strategy and not authoritative; if its parser can't read a sheet, read the sheet yourself. Totals come from the loaded book; never assume a size.
 
 ## Constraints
 

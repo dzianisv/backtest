@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Crypto portfolio tracker — single source of truth for value, live yield, and rebalance actions.
+Crypto portfolio REPORTING HELPER — snapshots value, live yield, idle cash, concentration.
 
-Replaces the broken spreadsheet (#VALUE!, syrupGlobals errors). Holdings are a snapshot you
-maintain in POSITIONS below (or wire a wallet reader later); APY and collateral are pulled LIVE
-from DefiLlama and the Morpho GraphQL API at runtime, so the blended yield is always real.
+NOT the strategy and not authoritative. The portfolio manager is the AGENT (see AGENTS.md): it
+reads the book, the live yields, AND the news/market context, and decides with judgment. This
+script only fetches and tabulates — a convenience for the numbers. If its parser can't read a
+given sheet layout, the agent reads the sheet directly via `gws` and reasons over it instead.
+
+Holdings load from the Google Sheet (CRYPTO_SHEET_ID) or the offline POSITIONS snapshot; APY and
+collateral are pulled live from DefiLlama and the Morpho GraphQL API at runtime.
 
 Run:   /Users/engineer/.venv/bin/python3 crypto/portfolio.py
 Output: console report + crypto/report/portfolio.md + crypto/report/img/*.png
