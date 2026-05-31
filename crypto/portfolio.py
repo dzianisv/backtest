@@ -12,8 +12,12 @@ Output: console report + crypto/report/portfolio.md + crypto/report/img/*.png
 Educational tooling, not financial advice. Verify against your own wallet before acting.
 """
 from __future__ import annotations
+import csv
+import io
 import json
 import os
+import re
+import subprocess
 import sys
 import urllib.request
 from dataclasses import dataclass, field
@@ -335,16 +339,125 @@ def charts(positions, a, m):
     print(f"  charts -> {IMG}/alloc.png, uplift.png")
 
 
+# ---------------------------------------------------------------------------
+# 1b) SOURCE OF TRUTH — load holdings from the investor's Google Sheet via `gws`.
+#     The POSITIONS list above is the offline fallback AND the live-APY mapping:
+#     when a sheet row's name matches a known position, we reuse its dl/morpho/kind
+#     hints so live APY + sleeve still resolve. Set CRYPTO_SHEET_ID to go live.
+#       CRYPTO_SHEET_ID    spreadsheet id
+#       CRYPTO_SHEET_RANGE e.g. "Portfolio!A1:I200"  (default: first sheet)
+# ---------------------------------------------------------------------------
+STABLE_ASSETS = {"USDC", "USDT", "USDE", "EUSD", "USDS", "DAI", "PYUSD", "USD", "FRAX"}
+
+
+def _norm(s):
+    return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+
+def _clean_money(s):
+    s = (s or "").strip().replace("$", "").replace(",", "")
+    if not s or s.startswith("#") or s.lower().startswith("error"):
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _parse_apy(s):
+    s = (s or "").strip().replace("%", "")
+    if not s or s.startswith("#") or s.lower().startswith("error"):
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _infer_kind(asset, name):
+    a, n = asset.upper(), name.lower()
+    if a in ("PAXG", "XAUT", "GOLD"):
+        return "gold"
+    if a in ("ETH", "STETH", "CBETH", "WSTETH", "WETH", "RETH"):
+        return "eth"
+    if a in ("SOL", "FRAGSOL", "JITOSOL", "JUPSOL", "MSOL"):
+        return "sol"
+    if a in STABLE_ASSETS:
+        return "satellite" if any(k in n for k in ("storm", "lp", "perp", "hlp", "avantis")) else "stable"
+    return "directional"
+
+
+def load_from_sheet():
+    """Read the book live from Google Sheets via `gws` (read-only). Returns list[Pos]."""
+    sid = os.environ["CRYPTO_SHEET_ID"]
+    rng = os.environ.get("CRYPTO_SHEET_RANGE", "")
+    cmd = ["gws", "sheets", "+read", "--spreadsheet", sid, "--format", "csv"]
+    if rng:
+        cmd += ["--range", rng]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
+    if out.returncode != 0:
+        raise RuntimeError(f"gws read failed: {out.stderr.strip()[:200]}")
+    rows = list(csv.reader(io.StringIO(out.stdout)))
+    if not rows:
+        raise RuntimeError("gws returned no rows")
+    # locate header (row containing both 'item' and 'value')
+    hdr_i, idx = 0, {}
+    for i, r in enumerate(rows[:10]):
+        low = [c.strip().lower() for c in r]
+        if "item" in low and "value" in low:
+            hdr_i = i
+            idx = {name: low.index(name) for name in
+                   ("item", "protocol", "assets", "apy", "value", "comment") if name in low}
+            break
+    if not idx:  # assume the known column order
+        idx = {"item": 0, "protocol": 1, "assets": 2, "apy": 3, "value": 4, "comment": 8}
+    mapping = {_norm(p.name): p for p in POSITIONS}
+    positions = []
+    for r in rows[hdr_i + 1:]:
+        def cell(k):
+            j = idx.get(k, -1)
+            return r[j].strip() if 0 <= j < len(r) else ""
+        name = cell("item")
+        value = _clean_money(cell("value"))
+        if not name or value is None or value <= 0 or name.lower() == "total":
+            continue  # section header, blank, total, or zero-value row
+        hint = mapping.get(_norm(name))
+        asset = cell("assets") or (hint.asset if hint else "?")
+        chain = cell("protocol") or (hint.chain if hint else "?")
+        p = Pos(name, chain, asset, hint.kind if hint else _infer_kind(asset, name), value,
+                dl=hint.dl if hint else "", morpho=hint.morpho if hint else "",
+                msym=hint.msym if hint else "", apy=_parse_apy(cell("apy")),
+                note=(hint.note if hint else cell("comment")))
+        positions.append(p)
+    return positions
+
+
+def load_positions():
+    if os.environ.get("CRYPTO_SHEET_ID"):
+        try:
+            ps = load_from_sheet()
+            print(f"  loaded {len(ps)} positions from Google Sheet "
+                  f"(${sum(p.value for p in ps):,.0f})", file=sys.stderr)
+            return ps
+        except Exception as e:
+            print(f"  ! sheet load failed ({e}); using offline snapshot", file=sys.stderr)
+    else:
+        print("  CRYPTO_SHEET_ID unset; using offline snapshot (set it to read the live book)",
+              file=sys.stderr)
+    return POSITIONS
+
+
 def main():
+    positions = load_positions()
     print("Fetching live APY/collateral (DefiLlama + Morpho)...", file=sys.stderr)
     dl = fetch_defillama()
     m_addr, m_sym = fetch_morpho()
-    resolve(POSITIONS, dl, m_addr, m_sym)
-    a = analyze(POSITIONS)
-    m = model(POSITIONS, a)
-    console(POSITIONS, a, m)
-    md = write_markdown(POSITIONS, a, m)
-    charts(POSITIONS, a, m)
+    resolve(positions, dl, m_addr, m_sym)
+    a = analyze(positions)
+    m = model(positions, a)
+    console(positions, a, m)
+    md = write_markdown(positions, a, m)
+    charts(positions, a, m)
     print(f"  report -> {md}", file=sys.stderr)
 
 

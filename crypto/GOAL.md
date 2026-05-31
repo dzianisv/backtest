@@ -7,7 +7,7 @@
 ## The mission
 
 Build and run a **risk-aware yield strategy** — a standing policy, not a one-time trade — that manages the
-live **~$177k multi-chain crypto book *and all available cash*** (idle balances, new deposits, harvested
+live **multi-chain crypto book — whatever its size and composition — *and all available cash*** (idle balances, new deposits, harvested
 yield, proceeds from exits) to earn the **best sustainable net yield the mandate allows, without ever
 compromising capital preservation.** Conservative, capital-preservation-first — managed against crypto's
 own failure modes (smart-contract, depeg, bridge, custody, liquidity, yield-traps), not any macro cycle.

@@ -1,8 +1,10 @@
 # crypto/
 
-Managing a live ~$177k multi-chain crypto book — a conservative, capital-preservation-first crypto
-treasury: real yield on principal, idiosyncratic crypto risks (smart-contract, depeg, bridge, custody,
-liquidity) capped, directional beta kept small. (Separate from the tradfi book in [`../GOAL.md`](../GOAL.md).)
+Managing a live multi-chain crypto book — **any size, read from the investor's Google Sheet** — as a
+conservative, capital-preservation-first crypto treasury: real yield on principal, idiosyncratic crypto risks
+(smart-contract, depeg, bridge, custody, liquidity) capped, directional beta kept small. Dollar figures in
+these docs are a dated snapshot (2026-05-30); the live book comes from the Sheet via `gws`. (Separate from
+the tradfi book in [`../GOAL.md`](../GOAL.md).)
 
 | File | What it is |
 |------|------------|
