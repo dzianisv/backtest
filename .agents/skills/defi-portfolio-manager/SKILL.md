@@ -17,7 +17,7 @@ compatibility: >
   Reading a live book needs the `gws` Google Workspace CLI authenticated for the investor's account.
 metadata:
   author: engineer
-  version: "2.0"
+  version: "2.2"
 ---
 
 # Crypto Hedge Fund — Portfolio Team
@@ -68,9 +68,11 @@ if the Researcher loves a vault the Auditor flagged, it's out), and present. For
 | Vetted satellite | ≤15% | Audited, real-yield, higher-APY venues that are NOT shitty (sized so a total loss is survivable) |
 | Gold / defensive | 0–10% | PAXG, optional ballast |
 
+**Construct into the bands — don't default to over-timid.** Size the directional sleeve to ~20–40% and the stable core to 45–65% *first*; only then justify any deviation with a stated reason (e.g. the investor's other book already carries the directional sleeve, or a live incident regime argues for caution this week). An all-stable ~3.5% book is NOT a moderate book — if you land outside the bands, say why explicitly and offer the in-band version. **Blended-yield gate:** after allocating, check the whole-book blended yield is ~5–7% for moderate; if it's under, shift 3–8% from the stable core into the vetted directional/satellite sleeve before finalizing.
+
 Drawdown budget: a −60% crypto move should leave the whole book within **~−30%** (vs −20% for conservative).
 
-**Caps (moderate):** ≤20% per position · ≤30% per protocol · ≤25% per issuer/sponsor family · ≤15% per chain outside Ethereum/Base · a held instant-liquidity reserve · satellite ≤15% · no idle stable below the clean frontier > ~3 days. **Coupled exposures count as ONE** (PSM pairs like USDS↔USDC, same family/curator/oracle). **Validate before emitting:** DETECT → AUTO-CORRECT → recheck every cap class so the headline table is compliant by construction; never ship a breaching table.
+**Caps (moderate):** ≤20% per position · ≤30% per protocol · ≤25% per issuer/sponsor family · ≤15% per chain outside Ethereum/Base · a held instant-liquidity reserve · satellite ≤15% · no idle stable below the clean frontier > ~3 days. **Leave headroom:** target the off-main-chain and satellite sleeves ≤2 points *below* their caps (e.g. off-main ≤13%, satellite ≤13%) so normal price drift between weekly rebalances doesn't breach a cap. **Coupled exposures count as ONE** (PSM pairs like USDS↔USDC, same family/curator/oracle). **Validate DURING construction, not after:** size positions to satisfy every cap (position / protocol / issuer / chain) in the FIRST pass, then recheck. Show only the compliant result — never emit a breach-then-correct sequence or any intermediate non-compliant table.
 
 ## No shitty assets (the hard line — moderate does NOT relax this)
 
@@ -92,7 +94,7 @@ wrapped assets with custody or bridge risk, and **anything whose yield source yo
 ## Constraints (invariants)
 
 - **NEVER custody keys, sign, or broadcast.** Produce tickets; the investor executes. No custody/signing tools.
-- **NEVER state an APY/collateral from memory** — pull live, tag each figure with source + "verify on-chain / re-pull before signing." Label anything not freshly pulled "unverified — confirm before sizing."
+- **NEVER state an APY/collateral from memory** — pull live, tag each figure with source + "verify on-chain / re-pull before signing." Label anything not freshly pulled "unverified — confirm before sizing." Tag every numeric *incident* claim (depeg price, date, default $, reserve-fund %) inline as `[source | re-pull]` so dated specifics never read as memorized fact.
 - **Verify a vault's on-chain address before recommending a move** — deprecated clones silently earn ~0%.
 - **Reason from crypto-native risk, not tradfi/macro cycles.** This book is separate from any tradfi `GOAL.md`.
 
@@ -106,11 +108,11 @@ wrapped assets with custody or bridge risk, and **anything whose yield source yo
 
 1. **Verdict** — 1–2 lines.
 2. **Team findings** — one line each from Analyst / Researcher / Risk Auditor (incl. vetoes).
-3. **Reasoning** — decomposition: rejected premiums named, AND the base/reward/collateral basis of each chosen venue.
+3. **Reasoning** — decomposition: rejected premiums named, AND a one-line named-premium tag on each chosen position (e.g. "gtUSDCp ~4.7% = overcollateralized cbBTC-lending credit premium").
 4. **Incident scan** — one line per proposed/held/rejected venue: clean or flagged, dated.
 5. **Target allocation** — table (venue · chain · collateral · live APY [source+re-pull] · liquidity · weight) + caps checklist (coupled merged, auto-corrected).
 6. **Crash test** — −60% crypto vs the moderate drawdown budget; residual risks named.
-7. **Tickets** — concrete from→to (amount · chain · from · to · verified address) + "verify on-chain & re-pull before signing."
+7. **Tickets** — concrete from→to (amount · chain · from · to · verified address) + "verify on-chain & re-pull before signing." Include **reversal tickets** (cancel a pending move; cut/exit an in-flight risky position) where needed, not only forward deploys.
 8. Close: "I did not move or sign anything — you execute."
 
 ## Validate before trusting a strategy

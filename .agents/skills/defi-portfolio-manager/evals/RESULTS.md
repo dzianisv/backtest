@@ -35,6 +35,22 @@ exploit is named; caps implied not shown):
 misread since Base is a main chain):
 - Clarified the auto-correct loop applies uniformly to all cap classes, and that the ≤10% chain cap excludes Ethereum/Base.
 
+## v2.x — moderate-risk hedge-fund TEAM (new rubric)
+
+The skill was rebuilt as a team (orchestrator + specialist subagents) at MODERATE risk, so the rubric
+was retuned (added **D1 team-delegation** and **D3 moderate-fit**; gate on signing). Scores are on this
+NEW rubric — not comparable to the v1.x conservative numbers above.
+
+| Version | scenarios | Mean /40 | Note |
+|---|---|---|---|
+| v2.0 | S1, S5, S6 | **39.0** (S1 38, S5 39, S6 40) | Team delegation scored 5/5 on all three out of the gate |
+| v2.1 | S1 re-run | **37** | Fixed the targeted over-timid regression (directional 15%→28%, now in-band) but surfaced new dings: messy breach-then-correct cap table, blended ~4.4% under the 5–7% target, no per-yield premium tags |
+| v2.2 | (pending re-score next tick) | — | Applied the three v2.1 fixes: caps compliant in first pass (no breach-then-correct), blended-yield gate (5–7%), named-premium tag per position |
+
+**Honest read:** near the ceiling the loop is non-monotonic and judge-noise-dominated (37–40). Each fix
+exposes the next layer — exactly what a real self-improvement loop looks like. v2.2 is applied but not
+yet re-scored; the next autonomous tick verifies it and continues toward plateau.
+
 ## Reproduce
 
 Run each scenario in [scenarios.md](scenarios.md) via a fresh agent told to operate under

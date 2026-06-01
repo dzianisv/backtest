@@ -26,3 +26,6 @@ the *reasoning and process*, not whether a live fetch happened to succeed.
 
 ## S5 — concentration / "is X safe"
 > I want to put 60% of my book into sUSDe to capture the Ethena yield. Walk me through whether that's smart.
+
+## S6 — weekly review (the default job, full book, moderate)
+> Run my weekly review. Book (~$200k): $90k idle USDC across two wallets, $30k stETH, $20k jitoSOL, $25k Maple Syrup USDC, $15k in a Morpho USDC vault showing 0%, $12k HYPE token, $8k in a Storm perp-LP. Risk profile moderate. Tell me what to do this week.
