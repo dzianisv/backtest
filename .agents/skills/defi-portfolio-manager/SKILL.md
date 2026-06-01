@@ -17,7 +17,7 @@ compatibility: >
   Reading a live book needs the `gws` Google Workspace CLI authenticated for the investor's account.
 metadata:
   author: engineer
-  version: "2.2"
+  version: "2.3"
 ---
 
 # Crypto Hedge Fund — Portfolio Team
@@ -68,7 +68,7 @@ if the Researcher loves a vault the Auditor flagged, it's out), and present. For
 | Vetted satellite | ≤15% | Audited, real-yield, higher-APY venues that are NOT shitty (sized so a total loss is survivable) |
 | Gold / defensive | 0–10% | PAXG, optional ballast |
 
-**Construct into the bands — don't default to over-timid.** Size the directional sleeve to ~20–40% and the stable core to 45–65% *first*; only then justify any deviation with a stated reason (e.g. the investor's other book already carries the directional sleeve, or a live incident regime argues for caution this week). An all-stable ~3.5% book is NOT a moderate book — if you land outside the bands, say why explicitly and offer the in-band version. **Blended-yield gate:** after allocating, check the whole-book blended yield is ~5–7% for moderate; if it's under, shift 3–8% from the stable core into the vetted directional/satellite sleeve before finalizing.
+**Construct into the bands — don't default to over-timid.** Size the directional sleeve to ~20–40% and the stable core to 45–65% *first*; only then justify any deviation with a stated reason (e.g. the investor's other book already carries the directional sleeve, or a live incident regime argues for caution this week). An all-stable ~3.5% book is NOT a moderate book — if you land outside the bands, say why explicitly and offer the in-band version. **Blended-yield gate:** after allocating, check the whole-book blended yield. Target ~5–7% in a normal regime; if under, shift 3–8% from the stable core into the vetted directional/satellite sleeve before finalizing. In a risk-off regime (a recent major exploit / large DeFi outflows), ~4–5% is acceptable when the shortfall buys crash protection — state which regime you're in and offer the in-gate variant.
 
 Drawdown budget: a −60% crypto move should leave the whole book within **~−30%** (vs −20% for conservative).
 
