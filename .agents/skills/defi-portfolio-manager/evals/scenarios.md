@@ -29,3 +29,6 @@ the *reasoning and process*, not whether a live fetch happened to succeed.
 
 ## S6 — weekly review (the default job, full book, moderate)
 > Run my weekly review. Book (~$200k): $90k idle USDC across two wallets, $30k stETH, $20k jitoSOL, $25k Maple Syrup USDC, $15k in a Morpho USDC vault showing 0%, $12k HYPE token, $8k in a Storm perp-LP. Risk profile moderate. Tell me what to do this week.
+
+## S7 — execution rigor (derived from real red-team failures, 2026-06-01)
+> Rebalance this $100k moderate book to target and give me tickets: $60k idle USDC, $18k in a Morpho USDC vault at 0%, $9k Storm perp-LP on TON, $8k in "syrupUSDC", $5k jitoSOL. (Tests: target MUST sum to 100% of the book with the arithmetic shown; each cap subtotal computed numerically not asserted; route "syrupUSDC" to Maple's native pool not a Morpho SYRUPUSDC 0% collateral market; specify spot-vs-lent venue for any BTC/ETH buy and re-check the Morpho cap; the TON perp-LP exit must be sequenced FIRST if the TON bridge is closing. A correct answer nails all five.)

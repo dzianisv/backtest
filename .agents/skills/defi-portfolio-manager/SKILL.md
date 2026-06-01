@@ -17,7 +17,7 @@ compatibility: >
   Reading a live book needs the `gws` Google Workspace CLI authenticated for the investor's account.
 metadata:
   author: engineer
-  version: "2.3"
+  version: "2.4"
 ---
 
 # Crypto Hedge Fund — Portfolio Team
@@ -72,7 +72,7 @@ if the Researcher loves a vault the Auditor flagged, it's out), and present. For
 
 Drawdown budget: a −60% crypto move should leave the whole book within **~−30%** (vs −20% for conservative).
 
-**Caps (moderate):** ≤20% per position · ≤30% per protocol · ≤25% per issuer/sponsor family · ≤15% per chain outside Ethereum/Base · a held instant-liquidity reserve · satellite ≤15% · no idle stable below the clean frontier > ~3 days. **Leave headroom:** target the off-main-chain and satellite sleeves ≤2 points *below* their caps (e.g. off-main ≤13%, satellite ≤13%) so normal price drift between weekly rebalances doesn't breach a cap. **Coupled exposures count as ONE** (PSM pairs like USDS↔USDC, same family/curator/oracle). **Validate DURING construction, not after:** size positions to satisfy every cap (position / protocol / issuer / chain) in the FIRST pass, then recheck. Show only the compliant result — never emit a breach-then-correct sequence or any intermediate non-compliant table.
+**Caps (moderate):** ≤20% per position · ≤30% per protocol · ≤25% per issuer/sponsor family · ≤15% per chain outside Ethereum/Base · a held instant-liquidity reserve · satellite ≤15% · no idle stable below the clean frontier > ~3 days. **Leave headroom:** target the off-main-chain and satellite sleeves ≤2 points *below* their caps (e.g. off-main ≤13%, satellite ≤13%) so normal price drift between weekly rebalances doesn't breach a cap. **Coupled exposures count as ONE** (PSM pairs like USDS↔USDC, same family/curator/oracle). **Validate DURING construction, not after:** size positions to satisfy every cap (position / protocol / issuer / chain) in the FIRST pass, then recheck. Show only the compliant result — never emit a breach-then-correct sequence or any intermediate non-compliant table. **Show the arithmetic:** compute each position/protocol/issuer/chain *subtotal explicitly* and check the number against its cap — asserting "compliant" without the sum is a failure (a real run claimed Solana ≤13% while it was actually 13.9%). **The target MUST sum to ~100% of the book — show the total;** a target that sums to less than the book has silently stranded capital (a real run summed to $149k of a $177k book).
 
 ## No shitty assets (the hard line — moderate does NOT relax this)
 
@@ -102,7 +102,8 @@ wrapped assets with custody or bridge risk, and **anything whose yield source yo
 
 - **Holdings — Google Sheet via `gws`:** `gws sheets +read --spreadsheet "$CRYPTO_SHEET_ID" --range "$CRYPTO_SHEET_RANGE" --format csv`. Interpret any layout yourself.
 - **Live APY + collateral:** DefiLlama `curl -s https://yields.llama.fi/pools` (+ `/chart/{poolId}` for 30-day history); Morpho `https://api.morpho.org/graphql` for vault collateral (chainId 1=Ethereum, 8453=Base).
-- **Incidents/news:** WebSearch (Risk Auditor's job).
+- **Incidents/news:** WebSearch (Risk Auditor's job) — include **time-sensitive deadlines** (bridge shutdowns, migration windows) that should re-order exits.
+- **Pin the exact pool id / vault address for each leg, and state its execution venue (spot vs lent).** Beware **name-collision** venues — e.g. a Morpho "SYRUPUSDC" *collateral* market at 0% vs Maple's native syrupUSDC *yield* pool; route to the yield-bearing pool, not a same-named market. A "buy/hold" leg counts toward whatever protocol it actually lands in (spot BTC bought through a Morpho market counts toward the Morpho cap) — say "held spot / self-custody" when you mean it.
 
 ## Deliverable format (orchestrator's synthesis)
 
@@ -112,7 +113,7 @@ wrapped assets with custody or bridge risk, and **anything whose yield source yo
 4. **Incident scan** — one line per proposed/held/rejected venue: clean or flagged, dated.
 5. **Target allocation** — table (venue · chain · collateral · live APY [source+re-pull] · liquidity · weight) + caps checklist (coupled merged, auto-corrected).
 6. **Crash test** — −60% crypto vs the moderate drawdown budget; residual risks named.
-7. **Tickets** — concrete from→to (amount · chain · from · to · verified address) + "verify on-chain & re-pull before signing." Include **reversal tickets** (cancel a pending move; cut/exit an in-flight risky position) where needed, not only forward deploys.
+7. **Tickets** — concrete from→to (amount · chain · from · to · verified address) + "verify on-chain & re-pull before signing." Include **reversal tickets** (cancel a pending move; cut/exit an in-flight risky position) where needed, not only forward deploys. **Sequence by URGENCY first** (closing bridges/deadlines, live incidents — e.g. a bridge shutting this month → exit it first), then free idle-reactivation, then risk-tier exits, then directional build.
 8. Close: "I did not move or sign anything — you execute."
 
 ## Validate before trusting a strategy

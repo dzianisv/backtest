@@ -54,6 +54,23 @@ last as a judgment-aware clarification rather than chasing noise. The eval harne
 when new failure modes appear (or on a weekly cadence) — that is the "continuous" mechanism, not infinite
 token burn at the ceiling.
 
+## v2.4 — self-improvement on REAL signal (the loop continuing correctly)
+
+Re-running the eval on frozen synthetic cases at the ~39/40 ceiling is noise, not improvement. Real
+self-improvement needs new signal. On 2026-06-01 the skill was run on the investor's **real $177k book**
+and an adversarial red-team caught **5 real failure modes** the actors exhibited — exactly the signal the
+loop exists to harvest. v2.4 fixes the *general* lessons and adds them as frozen case **S7**:
+
+| Real failure (on the real book) | General skill fix (v2.4) |
+|---|---|
+| Claimed Solana ≤13% while it was 13.9% | Show the cap **arithmetic** — compute each subtotal numerically, don't assert |
+| Target summed to $149k of a $177k book | Target **MUST sum to ~100%**; show the total |
+| Would route $17k to a Morpho "SYRUPUSDC" 0% collateral market | Pin exact pool id; beware **name-collision** venues; route to the yield pool |
+| cbBTC could land in Morpho and breach the protocol cap | State **spot-vs-lent** venue; count "buy/hold" legs toward their real protocol |
+| TON exits sequenced last while the bridge closes this month | **Sequence tickets by urgency** (closing windows/incidents) first |
+
+This is the hyperagent loop working as intended: the realest case produced the most valuable fixes.
+
 ## Reproduce
 
 Run each scenario in [scenarios.md](scenarios.md) via a fresh agent told to operate under
