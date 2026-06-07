@@ -44,12 +44,24 @@ optimal-allocation problem, constraints, and roadmap. Do not conflate it with th
   `backtests/crash_protection_backtest.py`.
 - **`skills/`** — opencode-compatible `SKILL.md` modules for an automated agent team: `regime-detection`,
   `trend-following`, `portfolio-construction`, `risk-management`, `rebalancing`, `dip-tranches-strategy`,
-  `tax-loss-harvesting`, `fundamental-analysis`, `hedge-fund-13f-analysis`, `analytics-lyn-alden`, and
-  the top-level `agentic-fund-orchestration`. Use **`analytics-lyn-alden`** to analyze any macro/asset
-  question through Lyn Alden's framework (fiscal dominance, broad-money inflation, eurodollar system,
-  energy/EROI, BTC-as-hurdle, scarce-asset allocation) — it's a synthesis SKILL.md + per-theme KB in
-  `references/` distilled from ~100 lynalden.com articles + her newsletters; treat it as a lens (with
-  her hedges), and re-check tactical/"current" claims against her newest newsletter. Use
+  `tax-loss-harvesting`, `fundamental-analysis`, `hedge-fund-13f-analysis`, the **macro-economist panel**
+  (`macro-panel` + the seven `analytics-*` thinker-lenses), and the top-level `agentic-fund-orchestration`.
+
+  **The macro-economist panel** is a team of thinker-lenses, each a synthesis `SKILL.md` + per-theme KB
+  in `references/` distilled from that person's primary sources (full provenance in each skill's
+  `references/article-index.md`, aggregated in `macro-panel/SOURCES.md`). The seats:
+  `analytics-lyn-alden` (fiscal dominance / broad-money / eurodollar / BTC-as-hurdle / energy),
+  `analytics-ray-dalio` (debt cycles / changing world order / all-weather risk-parity),
+  `analytics-stanley-druckenmiller` (liquidity / timing / position-sizing),
+  `analytics-lacy-hunt` (the **deflation dissent** seat — debt→low-velocity→disinflation, long bonds),
+  `analytics-michael-pettis` (trade / capital-flows / China, S−I=CA),
+  `analytics-russell-napier` (financial repression / structural-inflation regime), and
+  `analytics-warren-buffett` (bubble-discipline / quality-value / cash-as-option). Use a single
+  `analytics-*` skill to apply one thinker's lens; use **`macro-panel`** to convene several at once and
+  surface their **agreement vs disagreement** (the disagreement is the signal — never average it away).
+  Each is a LENS, not gospel (carry the per-skill Caveats; every thinker has been wrong/early), and all
+  tactical/"current" claims must be re-checked against that thinker's `05-current-views.md` / newest
+  letter. Use
   **`hedge-fund-13f-analysis`** whenever a position needs an
   institutional-conviction cross-check — what notable funds (Buffett, Burry, Ackman, Tepper, Druckenmiller,
   Klarman, Li Lu, Tiger, etc.) own and why, computed from SEC 13F filings, and overlapped against a book;
