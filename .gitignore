@@ -14,3 +14,10 @@ connectors/audit_log.jsonl
 stocks/portfolio-review.csv
 stocks/monitor-report-*.md
 .agents/skills/portfolio-monitor/scripts/__pycache__/
+
+# local-only copyrighted source books; keep the catalog README tracked
+books/*
+!books/README.md
+
+# local generated skill source lock metadata
+skills-lock.json
