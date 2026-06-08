@@ -46,8 +46,17 @@ optimal-allocation problem, constraints, and roadmap. Do not conflate it with th
   `trend-following`, `portfolio-construction`, `risk-management`, `rebalancing`, `dip-tranches-strategy`,
   `tax-loss-harvesting`, `fundamental-analysis`, `hedge-fund-13f-analysis`, the **macro-economist panel**
   (`macro-panel` + the seven `analytics-*` thinker-lenses), the two **trading-discipline lenses**
-  (`analyst-systematic-trading` + `analyst-technical-analysis`), and the top-level
-  `agentic-fund-orchestration`.
+  (`analyst-systematic-trading` + `analyst-technical-analysis`), the **decision method**
+  `multi-lens-quorum`, and the top-level `agentic-fund-orchestration`.
+
+  **`multi-lens-quorum`** is the general orchestration method for hard JUDGMENT calls: convene 4-7
+  independent lenses (each subagent reads ONE skill, judges the SAME question on IDENTICAL facts,
+  returns verdict + conviction + what-would-change-my-mind + its own blind spot), then synthesize the
+  consensus **without averaging away dissent**. It carries a cost gate (only for reversible-expensive
+  "should I buy/sell/allocate" calls where frameworks genuinely disagree — answer trivial/factual
+  questions directly) and mandates a dissent seat. It is the GENERAL method over any lenses; `macro-panel`
+  is the special case that convenes the macro-thinker seats. Proven on the live BTC-tranche cadence call
+  (consensus $1k/wk × 6 calendar; Howell + Carver dissent preserved).
 
   **The trading-discipline lenses** are book-grounded experts (sources in `books/`):
   `analyst-systematic-trading` distils Robert Carver's *Systematic Trading* (2015) — the
