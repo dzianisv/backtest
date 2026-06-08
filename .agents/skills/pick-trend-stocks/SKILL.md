@@ -400,3 +400,26 @@ The task is complete when:
 6. Top finalists are routed to multi-lens-quorum with confidence flags
 7. You did NOT speculate about any company without having read a source about it
 </success_criteria>
+
+<eval_tracking>
+## Evaluation tracking (mandatory after every execution)
+
+After every execution of this skill, append a row to `TrendPickingEval.csv` (in this skill's
+directory) with the iteration results. This creates an audit trail of how the skill improves.
+
+File: `.agents/skills/pick-trend-stocks/TrendPickingEval.csv`
+
+Columns:
+- iteration: sequential number (1, 2, 3...)
+- commit_id: the git commit SHA of the skill version that was executed
+- date: YYYY-MM-DD
+- c1_read_sources through c7_no_speculation: PASS / PARTIAL / FAIL for each criterion
+- total_pass, total_partial, total_fail: counts
+- feedback: one-line specific gap description + what to fix next
+
+Score each criterion against the success_criteria above. Be honest — PARTIAL means "attempted but
+with gaps", FAIL means "did not do this at all or fabricated content".
+
+The skill is considered WORKING when: total_pass >= 6 AND total_fail == 0 for 2 consecutive iterations.
+Until then, keep iterating (fix gaps → re-run → re-score).
+</eval_tracking>
