@@ -4,6 +4,8 @@ __pycache__/
 .telegraph_path
 .tasks/
 
+.DS_Store
+
 # cached intraday OHLCV (re-fetch via crypto_data.py)
 backtests/daytrade/data/
 

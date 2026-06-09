@@ -66,6 +66,10 @@ Backtest + operate investment strategies for the @GOAL.md mission. Some results 
 **Second, separate track — crypto.** `crypto/` manages a live ~$177k multi-chain book with **its own
 goal in @crypto/GOAL.md**. Do not conflate with the $1M tradfi @GOAL.md.
 
+**Second, separate track — crypto.** `crypto/` manages a live ~$177k multi-chain crypto book
+(conservative, blue-chip-backed, bubble-defensive). It has **its own goal in @crypto/GOAL.md** — the
+optimal-allocation problem, constraints, and roadmap. Do not conflate it with the $1M tradfi @GOAL.md.
+
 ## Directory Structure
 ```
 /
@@ -84,6 +88,74 @@ goal in @crypto/GOAL.md**. Do not conflate with the $1M tradfi @GOAL.md.
 └── archive/             # session log, skills.zip backup
 ```
 
+## The four pillars
+
+- **@GOAL.md** — the mission, the bubble evidence, and the done/not-done checklist. Start here.
+- **`strategy/`** — how our thinking evolved: `v1` (entry timing into the index), `v2` (can selection
+  beat the index? — mostly no), `v3` (Bubble-Aware All-Weather — **current recommendation**).
+  Start at @strategy/README.md.
+- **`research/`** — 9 cited research notes behind the strategy. Start at @research/README.md; the
+  synthesis is `research/08-the-1M-playbook.md`; the centerpiece evidence is
+  `backtests/crash_protection_backtest.py`.
+- **`skills/`** — opencode-compatible `SKILL.md` modules for an automated agent team: `regime-detection`,
+  `trend-following`, `portfolio-construction`, `risk-management`, `rebalancing`, `dip-tranches-strategy`,
+  `tax-loss-harvesting`, `fundamental-analysis`, `hedge-fund-13f-analysis`, the **macro-economist panel**
+  (`macro-panel` + the seven `analytics-*` thinker-lenses), the two **trading-discipline lenses**
+  (`analyst-systematic-trading` + `analyst-technical-analysis`), the **decision method**
+  `multi-lens-quorum`, and the top-level `agentic-fund-orchestration`.
+
+  **`multi-lens-quorum`** is the general orchestration method for hard JUDGMENT calls: convene 4-7
+  independent lenses (each subagent reads ONE skill, judges the SAME question on IDENTICAL facts,
+  returns verdict + conviction + what-would-change-my-mind + its own blind spot), then synthesize the
+  consensus **without averaging away dissent**. It carries a cost gate (only for reversible-expensive
+  "should I buy/sell/allocate" calls where frameworks genuinely disagree — answer trivial/factual
+  questions directly) and mandates a dissent seat. It is the GENERAL method over any lenses; `macro-panel`
+  is the special case that convenes the macro-thinker seats. Proven on the live BTC-tranche cadence call
+  (consensus $1k/wk × 6 calendar; Howell + Carver dissent preserved).
+
+  **The trading-discipline lenses** are book-grounded experts (sources in `books/`):
+  `analyst-systematic-trading` distils Robert Carver's *Systematic Trading* (2015) — the
+  how-to-*design/size/validate/automate* a rules-based strategy lens (modular framework, EWMAC+carry,
+  volatility targeting / Half-Kelly, handcrafting, the over-fitting/over-trading/over-betting pitfalls,
+  the cost "speed limit"); it operationalizes the GOAL.md mandate that any strategy be backtested with
+  realistic costs **before** trading. `analyst-technical-analysis` distils Jacob Bernstein's *The
+  Ultimate Day Trader* (2009) — the chart/indicator/Set-Up→Trigger→Follow-Through lens with exact
+  parameters — carried explicitly as **hypothesis-generation, not validated edge** (TA has a weak
+  empirical base; the house finding is hold/mid-risk beats day-trading after costs). The two pair: TA
+  proposes, `analyst-systematic-trading` validates. A third book-grounded lens,
+  `analyst-crypto` (Michael Howell *Capital Wars* + on-chain/sentiment/DCA), is the crypto-market analysis
+  brain for the `crypto/` book (liquidity governor → on-chain level → sentiment → tilted-DCA execution +
+  BTC-as-hurdle). And `analytics-morgan-housel` (Morgan Housel *The Psychology of Money*) is the
+  behavioral-finance / investor-psychology lens — the discipline guardrail over the trader who is "the
+  weakest link" — pairing with `analytics-warren-buffett` / `analytics-benjamin-graham` on temperament.
+
+  **The macro-economist panel** is a team of thinker-lenses, each a synthesis `SKILL.md` + per-theme KB
+  in `references/` distilled from that person's primary sources (full provenance in each skill's
+  `references/article-index.md`, aggregated in `macro-panel/SOURCES.md`). The seats:
+  `analytics-lyn-alden` (fiscal dominance / broad-money / eurodollar / BTC-as-hurdle / energy),
+  `analytics-ray-dalio` (debt cycles / changing world order / all-weather risk-parity),
+  `analytics-stanley-druckenmiller` (liquidity / timing / position-sizing),
+  `analytics-lacy-hunt` (the **deflation dissent** seat — debt→low-velocity→disinflation, long bonds),
+  `analytics-michael-pettis` (trade / capital-flows / China, S−I=CA),
+  `analytics-russell-napier` (financial repression / structural-inflation regime),
+  `analytics-warren-buffett` (bubble-discipline / quality-value / cash-as-option), and
+  `analytics-benjamin-graham` (the **rules-based value origin** — investment-vs-speculation, margin of
+  safety, Mr. Market, defensive vs enterprising, net-nets / the Graham number; the statistical-value
+  counterpart that Buffett evolved from). Use a single
+  `analytics-*` skill to apply one thinker's lens; use **`macro-panel`** to convene several at once and
+  surface their **agreement vs disagreement** (the disagreement is the signal — never average it away).
+  Each is a LENS, not gospel (carry the per-skill Caveats; every thinker has been wrong/early), and all
+  tactical/"current" claims must be re-checked against that thinker's `05-current-views.md` / newest
+  letter. Use
+  **`hedge-fund-13f-analysis`** whenever a position needs an
+  institutional-conviction cross-check — what notable funds (Buffett, Burry, Ackman, Tepper, Druckenmiller,
+  Klarman, Li Lu, Tiger, etc.) own and why, computed from SEC 13F filings, and overlapped against a book;
+  it pins the filing quarter, computes Q/Q deltas, infers the *why*, and persists the read to
+  `stocks/13f-overlap.md` + a memory pointer. It is a lagging cross-check, not a trade trigger — it
+  complements `fundamental-analysis` (the valuation gate), never replaces it. See
+  @skills/README.md. Frontmatter must keep `compatibility: opencode`. The committed
+  `dip-tranches-strategy/SKILL.md` was once mangled to whitespace — the canonical copies are restored;
+  `archive/skills.zip` is the backup archive.
 ## Rules
 
 ### File Placement
