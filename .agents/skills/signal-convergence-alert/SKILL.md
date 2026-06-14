@@ -32,10 +32,15 @@ It reads the day's accumulated pools (whichever exist):
 | `13f` | 13F dedup ledger (last 14d) | 13f-watch |
 | `congress` | congress dedup ledger (last 14d) | congressman-stock-watch |
 
-Run:
+**A. Local backend (Python present):**
 ```bash
 python3 .agents/skills/signal-convergence-alert/convergence.py --min-sources 2 --json
 ```
+
+**B. openclaw pod (NO Python):** read the pool files yourself — they are small JSONL. For each file,
+read each line's `ticker` (or `symbol`), tag it with that pool's source name, build a
+`ticker → {sources}` map (ledgers: keep only rows whose `date`/`recorded`/`ts` is within 14d), then
+emit any ticker whose source-set size ≥ min-sources. No script needed — it's a count.
 
 Each output row: `ticker`, `sources` (which pools), `n_sources`, `notes`.
 

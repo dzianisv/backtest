@@ -8,6 +8,33 @@ A research + backtest lab answering one question:
 > ⚠️ **Educational analysis only — not financial advice.** Past backtest performance does not guarantee
 > future results. Validate with a fee-only fiduciary before deploying real capital.
 
+## What this project is
+
+Two missions, one north-star ([`GOAL.md`](GOAL.md)):
+
+1. **The agentic hedge-fund** (core). An automated, recommend-only team that runs the loop
+   **discover → backtest → human-approve → execute → report** over a **$1M tradfi book** + a separate
+   **~$177k crypto book**, AI-bubble-defended, behind a hard backtest-before-trade gate. The agent
+   proposes; the human approves every order.
+
+2. **AI Agent Investment Advisor** (new sub-project). A **proactive, notification-first** advisor that
+   watches markets *daily* and DMs the owner the moment a quality, time-sensitive setup appears —
+   catching the next Google −30% / SanDisk / BTC-dip the owner keeps missing for lack of research time.
+   It is **not a new runtime**: it's a portable skill+config layer deployed onto existing agentic
+   systems (**openclaw, hermes-ai, claude-code**) using their **native primitives** — openclaw
+   `heartbeat` + `HEARTBEAT.md`, claude-code `/loop` + `/goal` + dynamic workflows + Routines, the
+   hermes scheduler. Same skills on all three; only the scheduling/notification wiring differs.
+   **Recommend-only** — it never places a trade.
+
+   | Read | For |
+   |---|---|
+   | [`docs/GOAL.md`](docs/GOAL.md) | the advisor north-star (the missed-opportunity mandate) |
+   | [`docs/prd.md`](docs/prd.md) | **what** — gaps → features, cadence, personas |
+   | [`docs/tdd.md`](docs/tdd.md) | **how** — architecture + full wiring diagrams + data contracts |
+   | [`.agents/setup/`](.agents/setup/) | per-backend proactive deployment (openclaw / claude-code / hermes) |
+
+   Status: skills built, tested, and documented; not yet validated live on a backend.
+
 ## Start here
 
 | If you want… | Read |

@@ -21,11 +21,27 @@ Most opportunities are missed because no one was watching. Google dropped -30% f
 
 **RECOMMEND ONLY.** No trades, no orders. Output = candidates for quorum review. Educational analysis, not advice.
 
-## Run the screener
+## Two execution paths (pick by backend)
 
+**A. Local backend (claude-code / hermes — Python + yfinance):** full S&P 100 scan.
 ```bash
 python3 .agents/skills/dip-screener/dip_screener.py --threshold 20
 ```
+
+**B. openclaw pod (NO Python — node+curl only):** the `.py` won't run. 100 sequential `web_fetch`
+calls are infeasible (rate limits), so scan the **curated quality watchlist** below via `web_fetch`,
+one ticker at a time, same math as regime-detection's chart parse:
+```
+For each T in WATCHLIST:
+  web_fetch https://query2.finance.yahoo.com/v8/finance/chart/<T>?range=1y&interval=1d
+  closes = result[0].indicators.quote[0].close ; current=last ; ath_52w=max(closes)
+  sma200 = mean(last 200) ; pct_from_ath = (current-ath_52w)/ath_52w*100
+  tier: HIGH ≤-30 | MED ≤-25 | WATCH ≤-20
+```
+WATCHLIST (the "next Google" universe — large quality names worth catching on a dip; ~25):
+`GOOGL MSFT AAPL AMZN META NVDA AVGO ADBE CRM NOW ORCL ACN NFLX TMO DHR ABT ISRG ZTS LLY UNH V MA COST HD LOW`.
+429 → retry once, then mark `[UNAVAILABLE]`, continue. Never fabricate. (Pod path trades coverage for
+feasibility; the full 100-name scan runs on local backends.)
 
 Output fields: `ticker`, `pct_from_ath`, `ath_52w`, `current`, `sma200`, `pct_vs_200d`, `conviction`.
 

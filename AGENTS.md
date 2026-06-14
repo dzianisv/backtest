@@ -30,6 +30,26 @@ Two skill roots:
 | `tradfi-portfolio-manager` | the weekly portfolio note (REVIEW→ASSESS→RESEARCH→DECIDE→ORDER), v3. |
 | `skill-supervisor` | the propose/dispose improvement loop — blind modifier proposes, supervisor scores on held-out evals, accept only if train↑ AND holdout↑ AND 0 invariant trips. **Use to improve any skill.** Never let one agent both edit and grade. |
 
+#### Advisor proactive skills (the **AI Agent Investment Advisor** sub-project — see @docs/GOAL.md)
+The notification-first slice: watch daily, DM the owner same-day on a time-sensitive setup. Recommend-only.
+| Skill | Role |
+|-------|------|
+| `dip-screener` | daily S&P100 dip scan, flags names `≥20/25/30%` below 52w ATH; HIGH (`≤−30%`) DMs only when regime=RISK_ON (regime-gated), MED→`/tmp/dip_candidates.jsonl` pool. Ships `dip_screener.py`. Catches the Google −30%. |
+| `crypto-dip-scanner` | daily BTC/ETH/SOL/BNB/AVAX/LINK % from ATH + Fear&Greed + funding; PRIMARY trigger = dip `≤−30%` AND F&G`<25` (funding = bonus, never required — `fapi.binance.com` is geo-blocked 451 from US/pod). Ships `crypto_dip_scanner.py`. Catches the BTC $61k. |
+| `signal-convergence-alert` | cross-references the daily signal pools/ledgers (dip + journalism + 13F + congress); DMs when `≥2` independent sources hit the same ticker (`≥3` → routes `multi-lens-quorum`). Ships `convergence.py`. Catches the SanDisk multi-signal pattern. |
+
+> **Advisor docs:** north-star @docs/GOAL.md, the **what** @docs/prd.md, the **how** + full wiring
+> diagrams @docs/tdd.md. Per-backend proactive deployment (openclaw heartbeat / claude-code `/loop` +
+> Routines / hermes scheduler) lives in **`.agents/setup/`** — `SETUP-openclaw.md`, `SETUP-claudecode.md`,
+> `SETUP-hermes.md` + the `HEARTBEAT.template.md` / `AGENTS.template.md` / `weekly-brief.workflow.js`.
+> Same skills on all three backends; only the scheduling/notification wiring differs.
+>
+> **POD ACCURACY NOTE — the openclaw bot pod has NO PYTHON (node + curl only).** The advisor `.py`
+> skills (`dip_screener.py`, `crypto_dip_scanner.py`, `convergence.py`, `regime_monitor.py`) **cannot
+> run inside the openclaw pod** — they run on the local backends (claude-code / hermes), or need a
+> no-python `web_fetch` path on openclaw. Do **not** repeat the false "yfinance is pre-installed in the
+> pod" claim. (Agent-side cron is also unavailable in-pod, incident #1787 → heartbeat is the path.)
+
 ### `skills/` — desk sub-skills (the analysts the manager delegates to)
 | Skill | Role |
 |-------|------|

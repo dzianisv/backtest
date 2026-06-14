@@ -21,11 +21,28 @@ BTC dropped -43% from its ATH to $61k in Spring 2025. Fear & Greed was sub-20 (e
 
 **RECOMMEND ONLY.** No trades. Educational analysis, not advice.
 
-## Run the scanner
+## Two execution paths (pick by backend)
 
+**A. Local backend (claude-code / hermes — Python + yfinance present):** fast path.
 ```bash
 python3 .agents/skills/crypto-dip-scanner/crypto_dip_scanner.py --threshold 20
 ```
+
+**B. openclaw pod (NO Python — node+curl only): use `web_fetch`, one call at a time.** Do NOT call the
+`.py`; it will fail (`python3: not found`). Fetch sequentially (parallel → 429):
+```
+1. F&G:   web_fetch https://api.alternative.me/fng/?limit=1   → data[0].value (int), value_classification
+2. BTC:   web_fetch https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD?range=1y&interval=1d
+            → closes = result[0].indicators.quote[0].close ; current=last ; ath_52w=max(closes)
+            ; sma200=mean(last 200) ; pct_from_ath=(current-ath_52w)/ath_52w*100
+3. ETH:   …/chart/ETH-USD?range=1y&interval=1d     (repeat parse)
+4. SOL:   …/chart/SOL-USD?range=1y&interval=1d
+5. BNB:   …/chart/BNB-USD?range=1y&interval=1d
+6. AVAX:  …/chart/AVAX-USD?range=1y&interval=1d
+7. LINK:  …/chart/LINK-USD?range=1y&interval=1d
+```
+Funding (`fapi.binance.com`) is geo-blocked from the pod — skip it, it's bonus only.
+If a chart fetch 429s: retry once, then mark that coin `[UNAVAILABLE]` and continue. Never fabricate.
 
 Output fields per coin: `pct_from_ath`, `current_usd`, `ath_52w_usd`, `sma200_usd`, `pct_vs_200d`, `conviction`.
 
