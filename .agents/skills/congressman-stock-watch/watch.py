@@ -27,8 +27,7 @@ LEDGER = os.environ.get("CONGRESS_LEDGER", os.path.join("congress", "recommended
 HOUSE_API = "https://housestockwatcher.com/api/transactions"
 SENATE_API = "https://senatestockwatcher.com/api/transactions"
 
-PURCHASE_KEYWORDS = {"purchase", "buy", "bought", "exchange (partial)", "exchange"}
-# 'exchange (partial)' can be purchase-like; exclude if no clear buy side
+PURCHASE_KEYWORDS = {"purchase", "buy", "bought", "exchange (partial)"}
 SKIP_KEYWORDS = {"sale", "sale (partial)", "sale (full)", "sale_full", "sale_partial"}
 
 AMOUNT_ORDER = [
@@ -67,10 +66,10 @@ def _save(rows: list):
 
 
 def _is_purchase(tx_type: str) -> bool:
-    t = tx_type.lower().strip()
-    if any(s in t for s in SKIP_KEYWORDS):
+    t = tx_type.lower().strip().replace("_", " ").replace("-", " ")
+    if any(t == s or t.startswith(s) for s in SKIP_KEYWORDS):
         return False
-    return any(p in t for p in PURCHASE_KEYWORDS) or t == "purchase"
+    return t in PURCHASE_KEYWORDS or "purchase" in t
 
 
 def _amount_rank(amount_str: str) -> int:
@@ -141,7 +140,8 @@ def fetch_recent(days: int) -> list:
 def cmd_recent(a):
     rows = fetch_recent(a.days)
     if not rows:
-        print("(no recent purchase disclosures found — APIs may be down or no filings)")
+        print(f"(no purchase disclosures found in last {a.days} days — "
+              "both APIs returned empty or are unreachable; verify housestockwatcher.com + senatestockwatcher.com)")
         return
 
     # Cluster by ticker
@@ -184,12 +184,17 @@ def cmd_seen(a):
 
 
 def cmd_record(a):
+    try:
+        datetime.strptime(a.date, "%Y-%m-%d")
+    except ValueError:
+        print(f"error: --date must be YYYY-MM-DD, got '{a.date}'", file=sys.stderr)
+        sys.exit(2)
     rows = _load()
     t = a.ticker.upper()
     if any(r["ticker"].upper() == t for r in rows):
         print(f"skip: {t} already recommended — dedup rule, not recording again", file=sys.stderr)
         sys.exit(3)
-    rows.append({
+    entry = {
         "ticker": t,
         "member": a.member,
         "chamber": a.chamber,
@@ -199,8 +204,10 @@ def cmd_record(a):
         "reason": a.reason or "",
         "committee": a.committee or "",
         "recommended_on": date.today().isoformat(),
-    })
-    _save(rows)
+    }
+    os.makedirs(os.path.dirname(LEDGER) or ".", exist_ok=True)
+    with open(LEDGER, "a") as f:
+        f.write(json.dumps(entry) + "\n")
     print(f"recorded {t}  {a.member}  {a.chamber}  {a.date}  ({a.action})")
 
 

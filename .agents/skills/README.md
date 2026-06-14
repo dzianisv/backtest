@@ -45,13 +45,14 @@ hermes skills install https://raw.githubusercontent.com/dzianisv/backtest/main/.
 hermes skills install https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills/hedge-fund-manager/SKILL.md
 ```
 
-### Setup prompts for AI agents
+### Setup prompt (all agents)
 
-For **openclaw** (e.g. `@OpenClawBoxBot` / `@MichaelBurryTraderBot`): paste `openclaw-investor-setup-prompt.md`
+After installing, paste **[INVESTOR-SETUP-PROMPT.md](INVESTOR-SETUP-PROMPT.md)** to your agent — works on openclaw, hermes-agent, Claude Code, opencode, or any agent with the skills loaded.
 
-For **hermes-agent**: paste `hermes-investor-setup-prompt.md`
-
-These prompts tell the agent to install the skills, run initial scans, and register weekly/daily cron jobs.
+The prompt tells the agent to:
+1. Verify all skills loaded
+2. Run 13F + congressional + trending stock research immediately
+3. Register 4 recurring cron jobs (daily regime, weekly 13F, weekly congress, weekly trend research)
 
 ---
 
