@@ -1,4 +1,4 @@
-# TDD — Proactive AI Financial Advisor
+# TDD — AI Agent Investment Advisor
 
 Aligns to `docs/prd.md`. RECOMMEND-ONLY. Never trades. Honest-or-`[UNAVAILABLE]`. Same-day DM for next Google/SanDisk/BTC-dip before window closes.
 

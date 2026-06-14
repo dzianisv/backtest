@@ -1,4 +1,7 @@
-# PRD — Proactive AI Financial Advisor
+# PRD — AI Agent Investment Advisor
+
+Built on existing agentic systems (openclaw, hermes-ai, claude-code) via their native primitives — heartbeat, cron jobs, AGENTS.md, memory tools, browser tools, dynamic workflows. Same skills on all three; only the scheduling/notification wiring differs.
+
 
 Outcome: owner gets same-day DM for next Google/SanDisk/BTC-dip — quorum verdict attached — before window closes. RECOMMEND-ONLY. Never trades.
 
