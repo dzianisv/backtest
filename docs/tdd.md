@@ -29,7 +29,7 @@ applies the gate, then either DMs the owner or writes a pool file. Pools feed co
 weekly brief. State file stops double-fire.
 
 ```
- SCHEDULER PRIMITIVE  ── openclaw heartbeat(15m)→HEARTBEAT.md │ claude-code /loop+CronCreate (durable: Routine) │ hermes sched
+ SCHEDULER PRIMITIVE  ── openclaw AGENT CRON (heartbeat = light backup) │ claude-code /loop+CronCreate (durable: Routine) │ hermes sched
         │  reads .heartbeat-state.json (task→last_run_date); runs only the DUE slot
         ▼
  ┌──07:45────────┐ ┌──07:50──────────┐ ┌──08:00──────────┐ ┌──08:15──────────┐ ┌──08:30──────────────┐
@@ -122,12 +122,18 @@ Same skills, same 6 slots. Each backend uses its NATIVE primitive — no shared 
 openclaw HEARTBEAT.md checks **UTC**; claude-code `/loop`/`CronCreate`/Routines fire in **local TZ**;
 hermes per its scheduler. Pick the slot times per backend so they land at the same wall-clock moment.
 
-### openclaw — heartbeat (`SETUP-openclaw.md`)
-- `agents.defaults.heartbeat`: `{ every:"15m", target:"last", lightContext:true, skipWhenBusy:true, model:"litellm/gpt-5-mini" }`.
-- Every 15m tick: agent reads per-agent `HEARTBEAT.md` = time-gated playbook. Checks clock, runs only the DUE slot, DMs only on alert, else silent.
-- State file `~/.openclaw/workspace/investor/.heartbeat-state.json` maps `task→last_run_date`; prevents double-fire same day.
-- `lightContext:true` loads only HEARTBEAT.md (cheap clock-check); brief can escalate model.
-- Agent-side cron flagged (incident #1787) → heartbeat is the path. Workspace files persist → survive pod restart.
+### openclaw — AGENT CRON (primary) + heartbeat (light backup) (`SETUP-openclaw.md`)
+- **Reality (verified live 2026-06-14): the investor agent HAS native cron and it is the primary scheduler.**
+  It already runs ~13 jobs (e.g. `0 8 * * 1-5 UTC` regime+Fed, `15 8 * * 1-5` journalism, `0/5/30 9 * * 1`
+  weekly 13F/congress/brief). We added the 3 missing dip jobs:
+  `45 7 * * 1-5` stock dip · `50 7 * * *` crypto dip · `30 8 * * 1-5` convergence — each SILENT-unless-alert.
+- Cron prompt pattern: "Run `python3 ~/.openclaw/workspace/investor/skills/<skill>/<script>.py --json`,
+  apply the gate, DM only if it fires, else `NO_REPLY`." Fixed UTC, reliable, survives restart.
+- **heartbeat** (`agents.defaults.heartbeat { every:15m, lightContext, target:last }`) stays as a LIGHT
+  "did anything urgent change" backup — NOT the full scans (a per-agent `HEARTBEAT.md` that re-ran the
+  scans was removed to avoid double-firing what cron owns).
+- Skills + scripts live in the agent sandbox at `/home/node/.openclaw/workspace/investor/skills/<skill>/`
+  (python3.12 + yfinance + Yahoo reachable there — distinct from the `kubectl exec` container).
 
 ### claude-code — `/loop` + `/goal` + workflows (`SETUP-claudecode.md`)
 - NOT OS crontab → `claude -p`: that's stateless and writes to stdout, no native notify path back to the owner.

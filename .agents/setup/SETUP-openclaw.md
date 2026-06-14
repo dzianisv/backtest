@@ -1,71 +1,65 @@
 # Proactive Advisor on OpenClaw
 
-Native primitive: **heartbeat**. Every `heartbeat.every` (15m), agent reads its workspace `HEARTBEAT.md`
-and acts. No external cron, no secrets. This is the proactive engine.
+Native primitive: **agent cron** (primary) + **heartbeat** (light backup). Verified live 2026-06-14:
+the investor agent has native cron and already runs the daily/weekly loop. No external scheduler, no secrets.
 
-## 1. Install skills (into the investor agent)
+## 1. Install skills (into the agent's runtime skills dir)
 
-```sh
-cd ~/.openclaw/workspace/investor
-HOME="${OPENCLAW_HOME_DIR:-$HOME}" npx --yes skills add dzianisv/backtest \
-  --agent openclaw --yes --copy --dangerously-accept-openclaw-risks
-```
-`--copy` is REQUIRED (pulls `dip_screener.py`, `crypto_dip_scanner.py`, `regime_monitor.py`, `watch.py`).
-
-If repo nesting (`.agents/skills/`) breaks discovery, copy dirs into the deployment skills path directly
-(`kubectl cp .agents/skills/<name> <pod>:/app/shared/skills/investor/<name>`).
-
-## 2. Verify load (the ONLY proof that counts)
+The agent runs bash in a sandbox at `HOME=/home/node`; its skills live at
+`/home/node/.openclaw/workspace/investor/skills/`. (This is NOT the `kubectl exec` container — that one
+has no python. The agent sandbox HAS python3.12 + yfinance + Yahoo access.) Have the agent pull each skill
+from the repo:
 
 ```sh
-cd /app && node openclaw.mjs skills list --agent investor --json
+B=https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills
+S=~/.openclaw/workspace/investor/skills
+for k in dip-screener crypto-dip-scanner signal-convergence-alert; do
+  mkdir -p $S/$k
+  curl -sL -o $S/$k/SKILL.md $B/$k/SKILL.md
+done
+curl -sL -o $S/dip-screener/dip_screener.py            $B/dip-screener/dip_screener.py
+curl -sL -o $S/crypto-dip-scanner/crypto_dip_scanner.py $B/crypto-dip-scanner/crypto_dip_scanner.py
+curl -sL -o $S/signal-convergence-alert/convergence.py  $B/signal-convergence-alert/convergence.py
 ```
-Each of `dip-screener`, `crypto-dip-scanner`, `regime-detection`, `fomc-monitor`,
-`trend-stock-research`, `13f-watch`, `congressman-stock-watch`, `multi-lens-quorum`,
-`risk-management`, `signal-convergence-alert` must show `eligible:true` AND `modelVisible:true`.
-A SKILL.md on disk is NOT a loaded skill.
+(`npx skills add dzianisv/backtest --agent openclaw --copy` also works if discovery handles the nested
+`.agents/skills/` layout; the curl path is deterministic.)
 
-## 3. Drop the mandate + playbook into the workspace
+## 2. Verify the skill actually runs (the only proof that counts)
 
-```sh
-cp .agents/setup/AGENTS.template.md    ~/.openclaw/workspace/investor/AGENTS.md
-cp .agents/setup/HEARTBEAT.template.md ~/.openclaw/workspace/investor/HEARTBEAT.md
+Trigger the live agent, don't infer from `kubectl exec`:
 ```
-`AGENTS.md` = standing mandate (boot). `HEARTBEAT.md` = the 15-min time-gated playbook (every tick).
-
-## 4. Confirm heartbeat config
-
-In `openclaw-rc.d/openclaw.json` → `agents.defaults.heartbeat` (already present):
-```json
-{ "every": "15m", "target": "last", "lightContext": true, "skipWhenBusy": true,
-  "model": "litellm/gpt-5-mini" }
+python3 ~/.openclaw/workspace/investor/skills/crypto-dip-scanner/crypto_dip_scanner.py --json
 ```
-- `every:15m` → fires often enough to hit every 15-min schedule slot.
-- `lightContext:true` → loads only HEARTBEAT.md (cheap). Keep it.
-- `target:"last"` → DMs the owner's last channel. For a fixed DM target set `to:"<telegram-id>"`.
-- `model: gpt-5-mini` → cheap for the every-tick clock-check; the brief itself can escalate.
+Expect real JSON with `high_52w_usd` + `pct_from_high` fields + a Fear&Greed value. If it fabricates a
+number or errors → fix before scheduling.
 
-Per-agent override (if investor needs its own cadence) — add `heartbeat` under the investor entry in
-`agents.list`. Default inherited config is fine.
+## 3. Schedule via AGENT CRON (primary)
 
-## 5. Why heartbeat, not agent cron
+The agent already runs ~13 cron jobs (regime `0 8 * * 1-5`, journalism `15 8 * * 1-5`, weekly 13F/congress
+`0/5 9 * * 1`, weekly brief `30 9 * * 1`). Add the 3 proactive dip jobs — **SILENT unless the gate fires**:
 
-OpenClaw agent-side cron tools were flagged (incident #1787). Heartbeat + a time-gated `HEARTBEAT.md`
-is the reliable in-pod proactive path: deterministic clock-check each tick, state file prevents
-double-fire. No external scheduler, survives pod restart (files are in the persistent workspace).
+| Name | Schedule (UTC) | Prompt |
+|------|----------------|--------|
+| Daily stock dip scan | `45 7 * * 1-5` | Run `dip_screener.py --json` + regime-detection. DM ONLY if a HIGH dip (`pct_from_high<=-30`) AND regime=RISK_ON. Else `NO_REPLY`. |
+| Daily crypto dip scan | `50 7 * * *` | Run `crypto_dip_scanner.py --json`. DM ONLY if any coin `pct_from_high<=-30` AND `fear_greed.value<25`. Else `NO_REPLY`. |
+| Daily signal convergence | `30 8 * * 1-5` | Run `convergence.py --json --min-sources 2`. DM ONLY if any ticker `n_sources>=2`. Else `NO_REPLY`. |
 
-## 6. Smoke test
+Ask the agent to register them with its cron tool (it returns a UUID per job). Verify: ask it to list cron jobs.
 
-```sh
-# Force a tick by messaging the agent:
-python3 ~/.claude/skills/telegram-cli-tool/telegram-cli.py ask @MichaelBurryTraderBot \
-  "Run your 07:45 HEARTBEAT task now: dip-screener + regime. DM me any HIGH dip in RISK_ON." --wait 120
-```
-Expect: a dip list (or "no HIGH dips") + regime verdict, using live yfinance data. If it fabricates a
-number or skips the regime gate → fix the skill, re-verify load.
+## 4. heartbeat = light backup only
+
+`agents.defaults.heartbeat { every:15m, lightContext, target:last }` stays for a lightweight "did regime/Fed
+change" nudge. Do NOT put the full scans in a `HEARTBEAT.md` — cron owns the schedule; a scan-running
+HEARTBEAT.md double-fires what cron already does (we removed ours).
+
+## 5. Feedback loop — forecast-ledger (reuse, don't rebuild)
+
+The weekly-brief cron prompt should `forecast-ledger add` each DM'd buy idea (ticker, action, ref price,
+resolution date), and a weekly/quarterly job should `forecast-ledger score`/`report` for 30/60/90d hit-rate
+by source. See `.agents/skills/forecast-ledger`.
 
 ## Done when
-- [ ] 10 skills `eligible:true && modelVisible:true` for agent `investor`.
-- [ ] `AGENTS.md` + `HEARTBEAT.md` in `~/.openclaw/workspace/investor/`.
-- [ ] Heartbeat fires, runs the due slot, DMs only on a real alert, silent otherwise.
-- [ ] State file `.heartbeat-state.json` written (no double-fire same day).
+- [ ] 3 skills present + runnable in the agent sandbox (real `--json` output, no fabrication).
+- [ ] 3 dip cron jobs registered (UUIDs) alongside the existing loop; each SILENT-unless-alert.
+- [ ] No scan-running HEARTBEAT.md (cron owns the schedule).
+- [ ] Weekly brief logs calls to forecast-ledger.
