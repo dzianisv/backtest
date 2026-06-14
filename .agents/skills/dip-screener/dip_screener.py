@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
 dip_screener.py — Daily quality-stock dip scanner.
-Screens S&P 100 for stocks >= threshold% below 52-week ATH.
+Screens S&P 100 for stocks >= threshold% below their 52-week INTRADAY high.
 Educational only — not investment advice.
 
 Usage:
     python3 dip_screener.py
     python3 dip_screener.py --threshold 25
     python3 dip_screener.py --json
+
+Honesty notes:
+  - "52w high" = max of the trailing-1-year INTRADAY HIGH (yfinance 'High', auto_adjust=False),
+    NOT a closing-price max and NOT an all-time high. pct_from_high uses the real high.
+  - sma200 is null when <200 trading days of history exist (never a mislabeled shorter mean).
 """
 from __future__ import annotations
 import argparse, json, sys, time
@@ -37,42 +42,55 @@ def scan(threshold_pct: float = 20.0) -> list[dict]:
     for i in range(0, len(SP100), batch_size):
         batch = SP100[i:i + batch_size]
         try:
-            raw = yf.download(batch, period="1y", auto_adjust=True, progress=False)
-            data = raw["Close"].ffill() if "Close" in raw else raw.ffill()
-        except Exception:
+            # auto_adjust=False so we get the true unadjusted intraday High/Close.
+            raw = yf.download(batch, period="1y", auto_adjust=False, progress=False, group_by="column")
+        except Exception as e:
+            print(f"[dip-screener] batch fetch failed {batch}: {e}", file=sys.stderr)
             time.sleep(2)
+            continue
+        try:
+            close = raw["Close"]
+            high = raw["High"]
+        except Exception:
+            print(f"[dip-screener] batch missing OHLC columns {batch}", file=sys.stderr)
             continue
         for ticker in batch:
             try:
-                col = ticker if ticker in data.columns else None
-                if col is None:
+                if ticker not in close.columns:
+                    print(f"[dip-screener] no data for {ticker} (skipped)", file=sys.stderr)
                     continue
-                s = data[col].dropna()
-                if len(s) < 20:
+                cs = close[ticker].dropna()
+                hs = high[ticker].dropna()
+                if len(cs) < 20 or len(hs) < 20:
                     continue
-                current = float(s.iloc[-1])
-                ath_52w = float(s.max())
-                sma200 = float(s.rolling(min(200, len(s))).mean().iloc[-1])
-                pct_from_ath = (current - ath_52w) / ath_52w * 100
-                pct_vs_200d = (current - sma200) / sma200 * 100
-                if pct_from_ath <= -threshold_pct:
+                current = float(cs.iloc[-1])
+                high_52w = float(hs.max())  # true trailing-1y intraday high
+                pct_from_high = (current - high_52w) / high_52w * 100
+                if len(cs) >= 200:
+                    sma200 = float(cs.rolling(200).mean().iloc[-1])
+                    pct_vs_200d = round((current - sma200) / sma200 * 100, 1)
+                else:
+                    sma200 = None
+                    pct_vs_200d = None
+                if pct_from_high <= -threshold_pct:
                     results.append({
                         "ticker": ticker,
                         "current": round(current, 2),
-                        "ath_52w": round(ath_52w, 2),
-                        "pct_from_ath": round(pct_from_ath, 1),
-                        "sma200": round(sma200, 2),
-                        "pct_vs_200d": round(pct_vs_200d, 1),
+                        "high_52w": round(high_52w, 2),
+                        "pct_from_high": round(pct_from_high, 1),
+                        "sma200": round(sma200, 2) if sma200 is not None else None,
+                        "pct_vs_200d": pct_vs_200d,
                         "conviction": (
-                            "HIGH" if pct_from_ath <= -30
-                            else "MEDIUM" if pct_from_ath <= -25
+                            "HIGH" if pct_from_high <= -30
+                            else "MEDIUM" if pct_from_high <= -25
                             else "WATCH"
                         ),
                     })
-            except Exception:
+            except Exception as e:
+                print(f"[dip-screener] {ticker} parse error: {e}", file=sys.stderr)
                 continue
         time.sleep(1)
-    results.sort(key=lambda x: x["pct_from_ath"])
+    results.sort(key=lambda x: x["pct_from_high"])
     return results
 
 
@@ -89,16 +107,20 @@ def main():
         return
 
     if not hits:
-        print(f"No S&P 100 stocks >= {a.threshold:.0f}% below 52w ATH today.")
+        print(f"No S&P 100 stocks >= {a.threshold:.0f}% below 52-week high today.")
         return
 
-    print(f"\n=== DIP SCREENER — S&P 100 stocks >= {a.threshold:.0f}% below 52-week ATH ===\n")
+    print(f"\n=== DIP SCREENER — S&P 100 stocks >= {a.threshold:.0f}% below 52-week intraday high ===\n")
     for r in hits:
         label = {"HIGH": "[HIGH]", "MEDIUM": "[MED]", "WATCH": "[WATCH]"}[r["conviction"]]
-        trend = "above" if r["pct_vs_200d"] >= 0 else "below"
+        if r["sma200"] is not None:
+            trend = "above" if r["pct_vs_200d"] >= 0 else "below"
+            ma = f"200dMA ${r['sma200']:.2f} ({r['pct_vs_200d']:+.1f}% {trend})"
+        else:
+            ma = "200dMA n/a (<200d history)"
         print(
-            f"  {label} {r['ticker']:6s}  {r['pct_from_ath']:+.1f}% from ATH (${r['ath_52w']:.2f})  "
-            f"now ${r['current']:.2f}  200dMA ${r['sma200']:.2f} ({r['pct_vs_200d']:+.1f}% {trend})"
+            f"  {label} {r['ticker']:6s}  {r['pct_from_high']:+.1f}% from 52w high (${r['high_52w']:.2f})  "
+            f"now ${r['current']:.2f}  {ma}"
         )
     print(f"\n  {len(hits)} candidate(s). Educational only — not advice.\n")
 

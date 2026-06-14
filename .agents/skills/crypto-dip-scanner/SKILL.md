@@ -1,6 +1,6 @@
 ---
 name: crypto-dip-scanner
-description: Daily crypto dip scanner — checks BTC/ETH/SOL/BNB/AVAX for % below 52-week ATH, cross-referenced with Fear & Greed index and BTC funding rates. Fires immediate alert when extreme fear (F&G < 25) coincides with a major dip (>= -30% from ATH). Use when asked "is crypto cheap", "BTC dip opportunity", "should I buy the crypto dip", "crypto fear and greed", "when to buy crypto", or on the daily proactive schedule.
+description: Daily crypto dip scanner — checks BTC/ETH/SOL/BNB/AVAX for % below 52-week high, cross-referenced with Fear & Greed index and BTC funding rates. Fires immediate alert when extreme fear (F&G < 25) coincides with a major dip (>= -30% from 52w high). Use when asked "is crypto cheap", "BTC dip opportunity", "should I buy the crypto dip", "crypto fear and greed", "when to buy crypto", or on the daily proactive schedule.
 license: MIT
 compatibility: opencode
 metadata:
@@ -33,8 +33,8 @@ python3 .agents/skills/crypto-dip-scanner/crypto_dip_scanner.py --threshold 20
 ```
 1. F&G:   web_fetch https://api.alternative.me/fng/?limit=1   → data[0].value (int), value_classification
 2. BTC:   web_fetch https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD?range=1y&interval=1d
-            → closes = result[0].indicators.quote[0].close ; current=last ; ath_52w=max(closes)
-            ; sma200=mean(last 200) ; pct_from_ath=(current-ath_52w)/ath_52w*100
+            → q=result[0].indicators.quote[0] ; current=last(q.close) ; high_52w=max(q.high)
+            ; sma200=mean(last 200 closes, else null) ; pct_from_high=(current-high_52w)/high_52w*100
 3. ETH:   …/chart/ETH-USD?range=1y&interval=1d     (repeat parse)
 4. SOL:   …/chart/SOL-USD?range=1y&interval=1d
 5. BNB:   …/chart/BNB-USD?range=1y&interval=1d
@@ -44,21 +44,21 @@ python3 .agents/skills/crypto-dip-scanner/crypto_dip_scanner.py --threshold 20
 Funding (`fapi.binance.com`) is geo-blocked from the pod — skip it, it's bonus only.
 If a chart fetch 429s: retry once, then mark that coin `[UNAVAILABLE]` and continue. Never fabricate.
 
-Output fields per coin: `pct_from_ath`, `current_usd`, `ath_52w_usd`, `sma200_usd`, `pct_vs_200d`, `conviction`.
+Output fields per coin: `pct_from_high`, `current_usd`, `high_52w_usd`, `sma200_usd`, `pct_vs_200d`, `conviction`. (`high_52w` = trailing-1y intraday high, not all-time; `sma200_usd` null if <200d history.)
 
 Also outputs:
 - **Fear & Greed index** (0–100): < 25 = Extreme Fear = historically good entry
 - **BTC funding rate**: negative = shorts dominant = squeeze setup
 
 Conviction tiers:
-- `HIGH`: >= -40% from ATH
+- `HIGH`: >= -40% from 52w high
 - `MEDIUM`: -30% to -40%
 - `WATCH`: -20% to -30%
 
 ## Alert logic
 
 **PRIMARY trigger = IMMEDIATE DM (don't wait for weekly brief).** Fire when BOTH hold:
-1. Any coin is >= -30% from 52w ATH, AND
+1. Any coin is >= -30% from 52w high, AND
 2. Fear & Greed < 25 (extreme fear)
 
 These two are the reliable, always-available signals. **Funding rate is a BONUS confirmation, not a requirement** — `fapi.binance.com` is geo-blocked from many networks (incl. the openclaw pod), so the script prints no funding line when it can't fetch. NEVER suppress a valid dip+fear alert just because funding is missing. If funding IS available and < 0% (shorts dominant), add it to the alert as extra weight.

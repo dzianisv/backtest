@@ -253,6 +253,18 @@ create/edit skill → execute on real input → evaluate output → feedback (sp
                      (repeat until output is good)
 ```
 
+### Before building a NEW skill — STOP (anti-bloat guardrail)
+The product is the **agent + its proactive loop** (cron / heartbeat / dynamic workflow), NOT the skill
+count. Adding a skill is the low-value move; wiring an existing skill onto a reliable schedule is the
+high-value one. There are already 43 skills in `.agents/skills/` + dozens more in the live agent.
+1. **Audit first** — grep existing skills before writing one. If something already does it → REUSE/extend,
+   never duplicate. (2026-06 lessons: `recommendation-journal` deleted — `forecast-ledger` already scored
+   calls; `watchlist-monitor`/`narrative-velocity-tracker` cut for overlapping `portfolio-monitor` /
+   `trend-stock-research`.)
+2. **A new skill must name, in one line, the gap NO existing skill fills** — or it doesn't get built.
+3. **Test for real, then be skeptical** — running once ≠ correct. Check the logic makes sense, the field
+   names are honest (don't call a 52-week-high "ATH"), and failures degrade to `[UNAVAILABLE]`, never fabricate.
+
 ### Capture recurring routines as skills (proactive — no instruction needed)
 When a **repeatable method** emerges in a session — the same multi-step analysis, screen, research
 fan-out, or eval done a second time, or any procedure worth re-running — **propose and author a skill

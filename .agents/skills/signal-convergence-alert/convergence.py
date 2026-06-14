@@ -46,16 +46,20 @@ def _load(path: str, max_age_days: int | None) -> list[dict]:
                 except json.JSONDecodeError:
                     continue
                 if cutoff is not None:
+                    # FAIL CLOSED: this feeds an "immediate DM" signal, so a row whose date is
+                    # missing or unparseable must NOT leak into "today's convergence". Drop it.
                     d = r.get("date") or r.get("recorded") or r.get("ts")
-                    if d:
+                    keep = False
+                    if d is not None:
                         try:
                             dt = datetime.fromisoformat(str(d).replace("Z", "+00:00"))
                             if dt.tzinfo is None:
                                 dt = dt.replace(tzinfo=timezone.utc)
-                            if dt < cutoff:
-                                continue
-                        except ValueError:
-                            pass
+                            keep = dt >= cutoff
+                        except (ValueError, TypeError):
+                            keep = False
+                    if not keep:
+                        continue
                 rows.append(r)
     except OSError:
         pass

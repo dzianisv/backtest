@@ -65,6 +65,13 @@ Macro proxies handled: `BTC`/`BITCOIN` → BTC-USD, `BRENT` → BZ=F, `OIL` → 
 Requires `yfinance` (available in `/Users/engineer/.venv`). Fetches 1 year of daily closes in one
 batch call; dead or merged tickers show `no-data` and are skipped gracefully.
 
+**Candidate watchlist (same mechanism, not a separate skill).** To get standing same-day triggers on
+names you DON'T own yet ("alert if GOOGL hits $150"), point `--csv` at a watchlist file using the same
+columns — put the level in `Price_Flag` with a literal `$` (e.g. `"$150 = buy starter"`). The script
+fires/NEARs those triggers and reports % from 52-week high identically. This covers the candidate-trigger
+use case without a dedicated watchlist skill; `dip-screener` already catches generic quality dips, so
+reserve the watchlist for specific hand-set levels.
+
 ## Output: `stocks/monitor-report-<date>.md`
 
 ```

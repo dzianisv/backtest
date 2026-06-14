@@ -34,8 +34,8 @@ one ticker at a time, same math as regime-detection's chart parse:
 ```
 For each T in WATCHLIST:
   web_fetch https://query2.finance.yahoo.com/v8/finance/chart/<T>?range=1y&interval=1d
-  closes = result[0].indicators.quote[0].close ; current=last ; ath_52w=max(closes)
-  sma200 = mean(last 200) ; pct_from_ath = (current-ath_52w)/ath_52w*100
+  q=result[0].indicators.quote[0] ; current=last(q.close) ; high_52w=max(q.high)
+  sma200 = mean(last 200 closes, else null) ; pct_from_high = (current-high_52w)/high_52w*100
   tier: HIGH ≤-30 | MED ≤-25 | WATCH ≤-20
 ```
 WATCHLIST (the "next Google" universe — large quality names worth catching on a dip; ~25):
@@ -43,10 +43,10 @@ WATCHLIST (the "next Google" universe — large quality names worth catching on 
 429 → retry once, then mark `[UNAVAILABLE]`, continue. Never fabricate. (Pod path trades coverage for
 feasibility; the full 100-name scan runs on local backends.)
 
-Output fields: `ticker`, `pct_from_ath`, `ath_52w`, `current`, `sma200`, `pct_vs_200d`, `conviction`.
+Output fields: `ticker`, `pct_from_high`, `high_52w`, `current`, `sma200`, `pct_vs_200d`, `conviction`. (`high_52w` = trailing-1y intraday high, not all-time; `sma200` null if <200d history.)
 
 Conviction tiers:
-- `HIGH`: >= -30% from ATH (immediate alert if RISK_ON)
+- `HIGH`: >= -30% from 52w high (immediate alert if RISK_ON)
 - `MEDIUM`: -25% to -30% (add to weekly pool)
 - `WATCH`: -20% to -25% (note, don't alert)
 
@@ -60,7 +60,7 @@ If `regime = RISK_OFF`: no new buys. Still run screener to build watchlist for w
 
 **Step 2: For each HIGH hit in RISK_ON regime → immediate DM:**
 ```
-🚨 DIP ALERT — [TICKER] [pct]% below 52w ATH
+🚨 DIP ALERT — [TICKER] [pct]% below 52w high
   ATH: $[ath]  Now: $[price]  200dMA: $[sma] ([pct_vs_200d]% [above/below])
   Regime: RISK_ON (score [score])
   → Route to /multi-lens-quorum for verdict? Reply YES to run full analysis.

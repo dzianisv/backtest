@@ -612,6 +612,10 @@ converging = search_theme_convergence(min_sources=3, min_weeks=2)
 
 4. Apply the skeptic filter (Step 4) to any `actionable` thesis
 5. Route survivors to multi-lens-quorum with the full evidence trail
+6. **Feed the convergence pool:** append each `building`/`actionable` ticker to `/tmp/narrative.jsonl`
+   as `{"ticker":..,"reason":"narrative <building|actionable>: N sources/M weeks","date":"<today>"}`
+   so `signal-convergence-alert` can cross it with dip/13F/congress signals (the SanDisk pattern).
+   (This stateful daily-ingest→weekly-acceleration IS the "narrative velocity" detector — no separate skill.)
 
 ### Mode: SEARCH (on-demand — "look up what we know")
 

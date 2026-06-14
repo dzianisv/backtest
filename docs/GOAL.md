@@ -80,9 +80,22 @@ data feeds, intraday day-trading (that is root GOAL.md workstreams B/C, behind t
 
 <done_when>
 - [x] dip-screener, crypto-dip-scanner, signal-convergence-alert — built + evaluated on live data.
-- [x] 3-backend proactive setup (heartbeat / crontab+workflow / hermes scheduler) documented.
+- [x] 3-backend proactive setup (heartbeat / loop+goal+workflow / hermes scheduler) documented.
 - [x] docs/prd.md, docs/tdd.md, docs/GOAL.md written.
-- [ ] Skills validated LOADED on a live backend (eligible + modelVisible), heartbeat firing, a real
-      DM landing. (Built + locally tested ≠ deployed + validated.)
-- [ ] narrative-velocity-tracker, watchlist-monitor, recommendation-journal (the 3 PLANNED skills).
+- [x] Skills deployed + validated on the LIVE openclaw backend (2026-06-14): all 3 installed in the
+      agent skills dir; crypto-dip-scanner ran in agent bash (python3.12+yfinance) on real data and the
+      agent DM'd a live dip alert (F&G 18, BTC −47.9%); HEARTBEAT.md installed and a simulated 07:50 tick
+      executed the playbook end-to-end (read → run skill → gate fired → DM). NOTE: the literal 15-min
+      timer auto-fire was not waited out in-session; the playbook logic it invokes is proven.
+- [x] Resolved the "3 PLANNED skills" by REUSE, not new build (anti-bloat — there are already 43+ skills):
+      `recommendation-journal` = duplicate of `forecast-ledger` (cut); narrative-velocity already exists as
+      `trend-stock-research` daily-INGEST→weekly-SYNTHESIZE acceleration (cut, wired to convergence pool);
+      watchlist triggers fold into `portfolio-monitor` (cut, noted). The product is the agent loop + reuse,
+      not more skills.
+- [x] The 3 kept scripts hardened after adversarial review: true 52w intraday high (was mislabeled "ATH"
+      close-max), SMA200 nulled <200d, convergence freshness fails CLOSED, dropped-batch logging.
+- [ ] Re-deploy the FIXED dip/crypto scanners to the live agent (it still has the pre-review versions).
+- [ ] Deploy/validate on claude-code + hermes backends (openclaw proven; other two documented only).
+- [ ] Wire the loop on AGENT-NATIVE CRON (fixed-UTC daily/weekly), not heartbeat alone; weekly brief as a
+      dynamic workflow; log every DM'd call to `forecast-ledger` for 30/60/90d scoring.
 </done_when>
