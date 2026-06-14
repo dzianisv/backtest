@@ -46,18 +46,22 @@ Summary (2-3 sentences): what the Fed said, what changed, and what it means for 
 
 1. **Fetch calendar** — get the next scheduled FOMC meeting date(s). Flag if we are within 10 days of a meeting (heightened sensitivity).
 
-2. **Fetch latest statement** — exact steps:
+2. **Fetch latest statement** — exact 3-hop procedure:
    ```
-   a. WebFetch: https://www.federalreserve.gov/newsevents/pressreleases.htm
-   b. Scan the HTML for href links matching the pattern: /newsevents/pressreleases/monetary20*.htm
-      (e.g. /newsevents/pressreleases/monetary20260507a.htm)
-   c. The FIRST such link is the most recent FOMC statement.
-   d. WebFetch: https://www.federalreserve.gov<that href>
-   e. Extract: rate decision, key language paragraphs, vote tally.
-   ```
-   Do NOT stop at step (a) — the index page is NOT the statement. You MUST follow the link in step (d).
+   HOP 1: WebFetch https://www.federalreserve.gov/newsevents/pressreleases.htm
+           Find href: /newsevents/pressreleases/2026-press-fomc.htm  (or current year)
 
-3. **Fetch prior statement** — the SECOND monetary*.htm link from the same index page. Same fetch procedure.
+   HOP 2: WebFetch https://www.federalreserve.gov/newsevents/pressreleases/2026-press-fomc.htm
+           Find the FIRST href matching pattern: /newsevents/pressreleases/monetary2026*.htm
+           (e.g. /newsevents/pressreleases/monetary20260429a.htm = April 29, 2026 meeting)
+
+   HOP 3: WebFetch https://www.federalreserve.gov/newsevents/pressreleases/monetary20260429a.htm
+           THIS is the actual FOMC statement. Read it fully.
+           Extract: rate decision, key policy paragraphs, vote tally, any guidance language.
+   ```
+   Do NOT stop at hop 1 or hop 2. You MUST fetch hop 3 to read the actual policy language.
+
+3. **Fetch prior statement** — the SECOND monetary*.htm link from hop 2's page. Same 3-hop procedure but take link #2.
 
 4. **Parse tone delta** — compare key policy language:
    - Count hawkish phrases: "remains committed to returning inflation", "still elevated", "further increases may be appropriate", "restrictive", "ongoing increases"

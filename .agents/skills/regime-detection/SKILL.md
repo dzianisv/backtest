@@ -79,31 +79,31 @@ Return structured JSON the Portfolio Manager and Risk Manager can consume:
 
 Run these fetches in order. Parse the JSON inline — do NOT spawn a Python subprocess.
 
-**IMPORTANT: Fetch ONE source at a time (sequential, not parallel). Yahoo Finance v8 API 429s under parallel load — use stooq.com as primary.**
+**IMPORTANT: Fetch ONE source at a time (sequential, not parallel) to avoid 429 rate limits.**
 
 ### 1. SPY price + 200-day MA
 
-**Primary — stooq.com (reliable, no rate limit):**
+**Primary — Yahoo Finance query2 (confirmed working):**
 ```
-WebFetch: https://stooq.com/q/d/l/?s=spy.us&d1=20251201&d2=20260614&i=d
-Response: CSV with Date,Open,High,Low,Close,Volume columns (newest row = today)
-200-day MA = average of last 200 Close values
-Current price = most recent Close
+WebFetch: https://query2.finance.yahoo.com/v8/finance/chart/SPY?range=1y&interval=1d
+Parse JSON: result[0].indicators.quote[0].close  → array of ~252 daily closes
+200-day MA = average of last 200 values
+Current price = last value in array
 Signal: +1 if current > 200dMA * 1.01, -1 if current < 200dMA * 0.99, else 0
 ```
 
-**Fallback — Yahoo Finance key-statistics page (scrape the "200-Day Moving Average" field):**
+**Fallback — Yahoo Finance key-statistics page (scrape the field):**
 ```
 WebFetch: https://finance.yahoo.com/quote/SPY/key-statistics/
-Look for "200-Day Moving Average" in the Stock Price History table.
+Look for "200-Day Moving Average" in the Stock Price History section.
 ```
 
 ### 2. VIX spot
 
-**Primary — stooq.com:**
+**Primary:**
 ```
-WebFetch: https://stooq.com/q/d/l/?s=%5Evix&d1=20260601&d2=20260614&i=d
-Parse: last row Close = VIX spot level
+WebFetch: https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?range=5d&interval=1d
+Parse JSON: result[0].indicators.quote[0].close → last value = VIX spot
 Signal: VIX > 25 → stress; VIX > 35 → acute stress
 ```
 
@@ -115,7 +115,7 @@ Scrape the current VIX level from the page.
 
 **VIX term structure (VIX vs VIX3M):**
 ```
-WebFetch: https://stooq.com/q/d/l/?s=%5Evix3m&d1=20260601&d2=20260614&i=d
+WebFetch: https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX3M?range=5d&interval=1d
 Signal: +1 if VIX/VIX3M < 1 (contango/calm), -1 if > 1 (backwardation/stress)
 ```
 
