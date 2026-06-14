@@ -62,7 +62,7 @@ Already shipped: regime-detection (RISK_ON/OFF from SPY 200dMA+VIX+HY spread), f
 | Backend | Proactive mechanism |
 |---|---|
 | openclaw | heartbeat + HEARTBEAT.md |
-| claude-code | claude -p + crontab + workflows |
+| claude-code | `/loop` + `/goal` + dynamic workflows (durable: Routines / Desktop scheduled tasks); notify via mobile push + messaging connector |
 | hermes-ai | hermes scheduler |
 
 ## Constraints

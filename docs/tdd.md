@@ -22,6 +22,88 @@ Four layers. Data flows up, decision down, alert out.
 - (c) Scheduler: NOT in-script. The backend's own primitive fires the agent (§3).
 - (d) Notify: any non-`SILENT` output → owner channel. DM = something real fired.
 
+### 1a. Complete wiring — DAILY (every skill, where it plugs in)
+
+Scheduler primitive fires the agent on each UTC slot. Agent reads the SKILL.md, runs the `.py`,
+applies the gate, then either DMs the owner or writes a pool file. Pools feed convergence + the
+weekly brief. State file stops double-fire.
+
+```
+ SCHEDULER PRIMITIVE  ── openclaw heartbeat(15m)→HEARTBEAT.md │ claude-code /loop+CronCreate (durable: Routine) │ hermes sched
+        │  reads .heartbeat-state.json (task→last_run_date); runs only the DUE slot
+        ▼
+ ┌──07:45────────┐ ┌──07:50──────────┐ ┌──08:00──────────┐ ┌──08:15──────────┐ ┌──08:30──────────────┐
+ │ dip-screener  │ │ crypto-dip-     │ │ regime-detection│ │ trend-stock-    │ │ signal-convergence- │
+ │ dip_screener  │ │ scanner         │ │  + fomc-monitor │ │ research(broad) │ │ alert  convergence  │
+ │ .py           │ │ crypto_dip_     │ │ regime_monitor  │ │ web/browser     │ │ .py                 │
+ │               │ │ scanner.py      │ │ .py + web_fetch │ │ tools           │ │                     │
+ │ yfinance      │ │ yfinance +      │ │ yfinance SPY/   │ │ FT/WSJ/SA       │ │ reads pools+ledgers │
+ │ SP100[100]    │ │ alternative.me  │ │ ^VIX/^VIX3M +   │ │ paywall-aware   │ │                     │
+ │               │ │ + binance(451)  │ │ FRED OAS        │ │                 │ │                     │
+ │ GATE:         │ │ GATE:           │ │ GATE:           │ │ GATE: none      │ │ GATE:               │
+ │ ≤-30% ATH     │ │ ≤-30% ATH       │ │ regime flip vs  │ │ (collect only)  │ │ ticker in ≥2        │
+ │ AND RISK_ON   │ │ AND F&G<25      │ │ yesterday OR    │ │                 │ │ independent pools   │
+ │               │ │ (funding=bonus) │ │ new FOMC stmt   │ │                 │ │ (≥3 → quorum)       │
+ └───┬───────┬───┘ └───┬─────────────┘ └───┬─────────────┘ └───┬─────────────┘ └───┬─────────────────┘
+     │       │         │                   │                   │                   │
+   DM◄┘    MED→        DM◄─ (extreme       DM◄─ (if changed)  append ticker      DM◄─ (≥2 src)
+   (HIGH)  /tmp/dip_   fear+dip)           else SILENT        /tmp/narrative      else SILENT
+           candidates                                          .jsonl
+           .jsonl │                                              │
+                  └───────────────► POOLS ◄───────────────────────┘
+                          /tmp/dip_candidates.jsonl, /tmp/narrative.jsonl,
+                          13f ledger, congress ledger  ──► read by convergence (08:30) + weekly brief
+```
+
+Reused signal skills feeding the pools/brief: `13f-watch` + `congressman-stock-watch` (write their
+dedup ledgers, deduped, weekly), `portfolio-monitor` (holdings triggers → PRIORITY ACTIONS in brief),
+`prediction-market-odds` (Fed/Polymarket odds, consumed by fomc + weekly macro context).
+
+### 1b. Complete wiring — WEEKLY brief (the dynamic workflow)
+
+`09:30 Mon` fires `weekly-brief.workflow.js` (claude-code dynamic workflow; openclaw/hermes run the
+same pipeline serially in-agent). Parallelism is the design: independent lenses never block.
+
+```
+ 09:30 Mon  ──►  weekly-brief.workflow.js   (3 phases, fan-out/fan-in)
+ ───────────────────────────────────────────────────────────────────────────────────────
+ PHASE 1  COLLECT          parallel() × 6 agents — one skill each
+   regime-detection ┐ fomc-monitor ┐ 13f-watch ┐ congressman-stock-watch ┐ trend(narrative) ┐ dips ┐
+        each → CAND_SCHEMA {candidates[], summary}                                                  │
+        cross-ref:  bySources[ticker] → Set(source)   ──►  rank by n_sources  ──►  TOP 5            │
+                    (ticker in ≥2 sources = elevated conviction)                                    ▼
+ PHASE 2  QUORUM           parallel: 5 candidates × 4 lenses  (multi-lens-quorum)                   │
+   ┌ analytics-warren-buffett ┐                                                                     │
+   ┤ analytics-stanley-druckenmiller ├ each → VERDICT {verdict, conviction1-5, reason,              │
+   ┤ analytics-lyn-alden            │              invalidation, dissent}                           │
+   └ fundamental-analysis ──────────┘   (macro-panel = macro backdrop; dissent preserved)           ▼
+ PHASE 3  SYNTHESIZE       per candidate → risk-management VETO  (name>10% book OR RISK_OFF → VETO)  │
+        final agent writes INVESTMENT BRIEF:                                                        │
+        header(REGIME/FED) · PRIORITY ACTIONS · NEW BUY IDEAS(risk=PASS only) · HOLDS · CANT VERIFY ▼
+                                                              ──────────────────────────────► DM owner
+```
+
+### 1c. Skill → wiring map (honest: wired vs roster-only)
+
+| Skill | Wired at | Role |
+|---|---|---|
+| `dip-screener` | daily 07:45 | stock dip alert + MED→pool |
+| `crypto-dip-scanner` | daily 07:50 | crypto dip alert |
+| `regime-detection` | daily 08:00 + weekly P1 | RISK_ON/OFF gate (gates every buy) |
+| `fomc-monitor` | daily 08:00 + weekly P1 | Fed tone delta |
+| `trend-stock-research` | daily 08:15 + weekly P1 | narrative pool (catches SanDisk buildup) |
+| `signal-convergence-alert` | daily 08:30 | ≥2-source DM (the SanDisk pattern) |
+| `13f-watch` | weekly P1 | new institutional buys → ledger → convergence |
+| `congressman-stock-watch` | weekly P1 | STOCK Act buys → ledger → convergence |
+| `multi-lens-quorum` | weekly P2 | buy/sell/hold verdict engine |
+| `macro-panel` + `analytics-*` | weekly P2 | the quorum lenses + macro backdrop |
+| `fundamental-analysis` | weekly P2 | valuation lens |
+| `risk-management` | weekly P3 (+ daily gate) | VETO authority |
+| `portfolio-monitor` | weekly P3 | holdings triggers → PRIORITY ACTIONS |
+| `prediction-market-odds` | weekly P1 (via fomc) | crowd odds for Fed/macro |
+| `superforecasting` + `forecast-ledger` | **roster — not yet wired** | dated probability + grading; planned for per-candidate timing |
+| narrative-velocity / watchlist-monitor / recommendation-journal | **PLANNED — not built** | see PRD gaps 3,5,6 |
+
 ## 2. Skills
 
 | skill | script | data source (exact) | failure mode | alert trigger |
@@ -36,7 +118,9 @@ Regime map: `score≥0.5`→1.0x RISK_ON | `≥0.0`→0.7x NEUTRAL | `≥−0.5`
 
 ## 3. Proactive Scheduling — 3 backends
 
-Same skills, same 6 slots (all UTC). Each backend uses its NATIVE primitive — no shared scheduler.
+Same skills, same 6 slots. Each backend uses its NATIVE primitive — no shared scheduler. **TZ caveat:**
+openclaw HEARTBEAT.md checks **UTC**; claude-code `/loop`/`CronCreate`/Routines fire in **local TZ**;
+hermes per its scheduler. Pick the slot times per backend so they land at the same wall-clock moment.
 
 ### openclaw — heartbeat (`SETUP-openclaw.md`)
 - `agents.defaults.heartbeat`: `{ every:"15m", target:"last", lightContext:true, skipWhenBusy:true, model:"litellm/gpt-5-mini" }`.
@@ -45,11 +129,14 @@ Same skills, same 6 slots (all UTC). Each backend uses its NATIVE primitive — 
 - `lightContext:true` loads only HEARTBEAT.md (cheap clock-check); brief can escalate model.
 - Agent-side cron flagged (incident #1787) → heartbeat is the path. Workspace files persist → survive pod restart.
 
-### claude-code — crontab → `claude -p` (`SETUP-claudecode.md`)
-- No daemon. System crontab (`CRON_TZ=UTC`) wakes headless: `claude --bare -p "$PROMPT" --allowedTools "Bash,Read,Write,WebFetch,WebSearch" --append-system-prompt "<RECOMMEND-ONLY…SILENT>" --output-format text`.
-- `--bare` = deterministic (skips hook/MCP discovery). Wrapper drops `SILENT`; non-SILENT → notifier.
-- Weekly brief = dynamic workflow: `ultracode` keyword authors+runs `weekly-brief.workflow.js`, fanning quorum lenses in PARALLEL.
-- Auth: `ANTHROPIC_API_KEY` in cron env. Subscription headless draws Agent SDK credit (effective 2026-06-15).
+### claude-code — `/loop` + `/goal` + workflows (`SETUP-claudecode.md`)
+- NOT OS crontab → `claude -p`: that's stateless and writes to stdout, no native notify path back to the owner.
+- **In-session recurring:** `/loop` + `CronCreate`/`CronList`/`CronDelete` (5-field cron, session-scoped). Agent stays ALIVE between turns → notifies via its own tools. Daily playbook in `.claude/loop.md` (same time-gated logic as openclaw `HEARTBEAT.md`). Self-paced `/loop` (no interval) lets Claude pick the gap each iteration. **Limits: 7-day expiry, fires only while session running+idle, cleared on new convo (restored on `--resume`).**
+- **Completion driver:** `/goal "<brief produced via /weekly-brief AND pushed> or stop after 25 turns"` — a fast-model Stop-hook evaluator re-runs turns until the condition holds. Pair with auto mode.
+- **Durable unattended:** **Routines** (Anthropic cloud, min 1h, runs machine-off, fresh clone) or **Desktop scheduled tasks** (local, min 1m, local files+venv) — one task per cadence slot. This is the production path; `/loop` is for an open session.
+- **Weekly brief = dynamic workflow:** `ultracode` keyword (or saved `/weekly-brief`) authors+runs `weekly-brief.workflow.js`, fanning quorum lenses in PARALLEL; returns the brief, loop/routine pushes it.
+- **Notify:** in-session/routine agent is alive → mobile **push** (ping) + messaging connector (Telegram MCP, full brief text). No external sender.
+- Auth: `ANTHROPIC_API_KEY` (or routine/connector creds). Subscription headless draws Agent SDK credit (effective 2026-06-15).
 
 ### hermes-ai — hermes scheduler / crontab (`SETUP-hermes.md`)
 - `hermes -s <skills> -p "$1"` one-shot. Register slots in native scheduler, else crontab (`CRON_TZ=UTC`).

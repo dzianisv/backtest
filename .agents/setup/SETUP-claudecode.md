@@ -1,79 +1,84 @@
 # Proactive Advisor on Claude Code
 
-Native primitives: **`claude -p` headless** (one-shot agent run) + **system crontab** (schedule) +
-**dynamic workflows** (the heavy weekly fan-out). Claude Code has no daemon — cron is the wake-up.
+Native primitives — NO OS crontab (it's stateless and has no notify channel back to you):
+
+| Primitive | Role here |
+|---|---|
+| **`/loop`** + `CronCreate`/`CronList`/`CronDelete` | recurring daily scans, **in-session** (agent stays alive → can notify via its own tools) |
+| **`/goal`** | drive one run to a completion condition ("…until the INVESTMENT BRIEF is produced and sent") |
+| **dynamic workflows** | the heavy weekly synthesis — parallel quorum lenses (`weekly-brief.workflow.js`) |
+| **Routines** (cloud) or **Desktop scheduled tasks** | durable unattended cadence — runs with the machine/ session closed |
+| **mobile push** + messaging connector (Telegram MCP) | the notify path — ping + full brief text |
+
+Why not `cron → claude -p`: headless `claude -p` is one-shot and writes to stdout. To reach your
+phone you'd bolt on an external sender. The native loop keeps a live agent that notifies itself.
 
 ## 1. Install skills
 
 ```bash
 npx -y skills add dzianisv/backtest --agent claude-code
-ls ~/.claude/skills/   # dip-screener, crypto-dip-scanner, regime-detection, ... present
+ls ~/.claude/skills/   # dip-screener, crypto-dip-scanner, signal-convergence-alert, regime-detection, ...
 ```
 
-## 2. The wake-up pattern: cron → `claude -p`
+## 2. Durable cadence — Routines (recommended) or Desktop tasks
 
-Each scheduled job is a headless run with a `/skill` in the prompt and a pre-approved toolset.
-`--bare` keeps it deterministic (skips local hook/MCP discovery).
+For runs that fire when your machine/session is closed, use **Routines** (Anthropic cloud, min interval
+1h — fine, our slots are daily) or **Desktop scheduled tasks** (local, min 1m, has local files + venv).
+One task per cadence slot; each runs the skill/workflow and notifies via its connector.
 
-```bash
-# scripts/run-skill.sh
-#!/usr/bin/env bash
-set -euo pipefail
-cd "$HOME/workspace/backtest"
-PROMPT="$1"
-claude --bare -p "$PROMPT" \
-  --allowedTools "Bash,Read,Write,WebFetch,WebSearch" \
-  --append-system-prompt "You are a RECOMMEND-ONLY investment advisor. Never trade. Never fabricate a number — emit [UNAVAILABLE] on failure. DM-style output only when an alert condition fires; otherwise print SILENT." \
-  --output-format text
+Example routine prompts (set schedule via `/schedule` in the CLI, or the Desktop task UI):
 ```
+# daily 07:45 local, weekdays
+/dip-screener — scan S&P100, check regime first. If a HIGH dip (>=-30%) in RISK_ON, push me the
+alert + route to /multi-lens-quorum. Else stay silent.
 
-## 3. crontab (the schedule)
+# daily 07:50
+/crypto-dip-scanner — alert only if a coin >=-30% from ATH AND Fear&Greed<25. Push me, else silent.
 
-```cron
-# m  h  dom mon dow   command   (all UTC — set CRON_TZ=UTC)
-CRON_TZ=UTC
-45  7  *   *   1-5   ~/workspace/backtest/scripts/run-skill.sh "/dip-screener: scan S&P100, check regime first, alert only HIGH dips in RISK_ON"            >> ~/advisor.log 2>&1
-50  7  *   *   1-5   ~/workspace/backtest/scripts/run-skill.sh "/crypto-dip-scanner: alert only if a coin >=-30% from ATH AND Fear&Greed<25"               >> ~/advisor.log 2>&1
-0   8  *   *   1-5   ~/workspace/backtest/scripts/run-skill.sh "/regime-detection + /fomc-monitor: DM one paragraph only if regime flipped or Fed moved"   >> ~/advisor.log 2>&1
-15  8  *   *   1-5   ~/workspace/backtest/scripts/run-skill.sh "/trend-stock-research broad: append catalyst tickers to /tmp/narrative.jsonl. No alert."   >> ~/advisor.log 2>&1
-30  8  *   *   1-5   ~/workspace/backtest/scripts/run-skill.sh "/signal-convergence-alert: DM if any ticker hit by >=2 independent signals today"          >> ~/advisor.log 2>&1
-30  9  *   *   1     ~/workspace/backtest/scripts/weekly-brief.sh                                                                                          >> ~/advisor.log 2>&1
+# Mon 09:30 — the weekly brief (runs the workflow)
+Run /weekly-brief and send me the INVESTMENT BRIEF.
 ```
+Routines run autonomously (no permission prompts). Wire a messaging connector so the push carries the
+brief text; otherwise the mobile push pings you to open the result.
 
-`SILENT` lines are dropped by a wrapper; any non-SILENT output is piped to your notifier (Telegram CLI,
-`osascript` notification, email — your choice). Example tail of `run-skill.sh`:
-```bash
-OUT=$(claude --bare -p "$PROMPT" ...)
-[ "${OUT//[[:space:]]/}" = "SILENT" ] || python3 ~/.claude/skills/telegram-cli-tool/telegram-cli.py send @you "$OUT"
+## 3. Interactive / always-on machine — `/loop` + `/goal`
+
+When you keep a session open (or a dedicated always-on terminal), schedule in-session:
+
+```text
+/loop 0 7-9 * * 1-5  run the due daily advisor slot (dip → crypto → regime → journalism → convergence)
+                     per .claude/loop.md; push me only real alerts
 ```
+Or let Claude self-pace: `/loop run the daily advisor scan and push me only HIGH-conviction alerts`
+(Claude picks the interval each iteration, shorter when markets active). Manage with `CronList` /
+`CronDelete`. Note: session-scoped, **7-day expiry**, restored on `--resume`. For permanence use §2.
 
-## 4. The weekly brief = a dynamic workflow (fan-out)
+Put the daily playbook in `.claude/loop.md` (same time-gated logic as the openclaw `HEARTBEAT.md`):
+the bare `/loop` then runs it each iteration.
 
-The weekly synthesis is heavy (quorum = N independent lenses). Use a **workflow** so the lenses run in
-parallel and only the verdict returns. `weekly-brief.sh`:
-```bash
-#!/usr/bin/env bash
-cd "$HOME/workspace/backtest"
-claude -p "Run the weekly investment brief as a workflow: collect regime+fed+13F+congress+narrative
-pool, cross-reference candidates, run multi-lens-quorum on the top 5 IN PARALLEL (one agent per lens),
-apply risk-management veto, synthesize the INVESTMENT BRIEF. ultracode" \
-  --allowedTools "Bash,Read,Write,WebFetch,WebSearch" --output-format text \
-  | python3 ~/.claude/skills/telegram-cli-tool/telegram-cli.py send @you -
+Drive the weekly brief to a verified end-state with `/goal`:
+```text
+/goal the weekly INVESTMENT BRIEF has been produced via /weekly-brief (regime+fed+13F+congress+
+narrative cross-referenced, quorum on top 5, risk veto applied) AND pushed to me — or stop after 25 turns
 ```
-The `ultracode` keyword makes Claude author + run a workflow (parallel quorum lenses, adversarial
-cross-check) instead of a serial pass. Save the run as `/weekly-brief` (`/workflows` → `s`) to reuse it.
+`/goal` re-runs turns until a fast model confirms the brief is built + sent. Pair with auto mode so each
+turn runs unattended.
 
-A reference workflow script is in `.agents/setup/weekly-brief.workflow.js` — load via
-`/workflows` or `claude` Workflow tool with `{scriptPath}`.
+## 4. The weekly brief = a dynamic workflow
 
-## 5. Auth for headless
+The heavy synthesis is `weekly-brief.workflow.js` (3 phases, parallel quorum). Run it via the
+`ultracode` keyword or save it as `/weekly-brief` (`/workflows` → `s`). The workflow returns the brief;
+the surrounding `/loop` or routine pushes it to you.
 
-`claude -p` on a schedule needs non-interactive auth: `ANTHROPIC_API_KEY` in the cron environment
-(or an `apiKeyHelper` in `--settings`). Subscription-plan headless usage draws from the Agent SDK
-credit (effective 2026-06-15).
+## 5. Notification
+
+In-session/routine agent is ALIVE, so it notifies with its own tools — no external sender:
+- **mobile push** — pings your phone when an alert fires / the brief is ready.
+- **messaging connector** (Telegram MCP, etc.) — delivers the full brief text.
+Configure the connector once; reference it in the loop/routine prompt ("push me", "send me").
 
 ## Done when
-- [ ] `~/.claude/skills/` has all skills.
-- [ ] `run-skill.sh` returns SILENT or a real alert (test: `bash scripts/run-skill.sh "/dip-screener ..."`).
-- [ ] crontab installed (`crontab -l` shows 6 jobs, CRON_TZ=UTC).
-- [ ] Weekly job runs a workflow and DMs the brief.
+- [ ] `~/.claude/skills/` has all skills; `/weekly-brief` workflow saved.
+- [ ] Durable cadence set (Routine or Desktop task per slot) OR an always-on `/loop` with `.claude/loop.md`.
+- [ ] A test alert reaches your phone (push + connector), not just stdout.
+- [ ] `/goal` drives the weekly brief to "produced + sent" without per-turn prompting.
