@@ -44,11 +44,14 @@ The notification-first slice: watch daily, DM the owner same-day on a time-sensi
 > `SETUP-hermes.md` + the `HEARTBEAT.template.md` / `AGENTS.template.md` / `weekly-brief.workflow.js`.
 > Same skills on all three backends; only the scheduling/notification wiring differs.
 >
-> **POD ACCURACY NOTE — the openclaw bot pod has NO PYTHON (node + curl only).** The advisor `.py`
-> skills (`dip_screener.py`, `crypto_dip_scanner.py`, `convergence.py`, `regime_monitor.py`) **cannot
-> run inside the openclaw pod** — they run on the local backends (claude-code / hermes), or need a
-> no-python `web_fetch` path on openclaw. Do **not** repeat the false "yfinance is pre-installed in the
-> pod" claim. (Agent-side cron is also unavailable in-pod, incident #1787 → heartbeat is the path.)
+> **POD ENV NOTE — validate in the AGENT SANDBOX, not `kubectl exec`.** Proven live 2026-06-14:
+> the investor agent runs bash at `HOME=/home/node` with **python3.12 + yfinance + Yahoo reachable**,
+> so the advisor `.py` skills (`dip_screener.py`, `crypto_dip_scanner.py`, `convergence.py`,
+> `regime_monitor.py`) **DO run in the agent context** — confirmed by a real dip-alert DM. The
+> separate `kubectl exec` container has only node+curl and Yahoo-429s — do NOT draw skill-capability
+> conclusions from it. **Agent-native CRON is the scheduler** (3 dip jobs registered live; the bot
+> already runs ~13 jobs); heartbeat is only a stuck-task nudge. The no-python `web_fetch` path in each
+> SKILL.md is a fallback if `yfinance` is ever absent. See memory `openclaw-pod-no-python`.
 
 ### `skills/` — desk sub-skills (the analysts the manager delegates to)
 | Skill | Role |
