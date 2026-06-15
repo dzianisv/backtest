@@ -615,7 +615,22 @@ converging = search_theme_convergence(min_sources=3, min_weeks=2)
 6. **Feed the convergence pool:** append each `building`/`actionable` ticker to `/tmp/narrative.jsonl`
    as `{"ticker":..,"reason":"narrative <building|actionable>: N sources/M weeks","date":"<today>"}`
    so `signal-convergence-alert` can cross it with dip/13F/congress signals (the SanDisk pattern).
-   (This stateful daily-ingest→weekly-acceleration IS the "narrative velocity" detector — no separate skill.)
+
+### Deterministic mention-velocity backstop (`mention_velocity.py`)
+
+SYNTHESIZE above is prose/theme-based. `mention_velocity.py` is the hard, testable companion: it counts
+RECENT-DATED Google News RSS headlines per watchlist ticker, compares to that ticker's OWN trailing
+baseline (persisted ledger), and FLAGS a spike — appending it to `/tmp/narrative.jsonl` automatically.
+```bash
+python3 .agents/skills/trend-stock-research/mention_velocity.py --tickers NVDA,WDC,STX,MU --days 7 --json
+```
+- Spike rule: `mentions_now >= --min-spike (3)` AND `>= --ratio (2.0) × trailing_avg` (or no baseline yet).
+- **Cold-start caveat:** Google serves a fixed ~100-item feed and re-stamps mega-cap pubDates as recent,
+  so the FIRST few runs over-fire (everything looks like a spike). The signal is only meaningful once
+  baselines accumulate over a few days — the real SanDisk signal is a name going **quiet→loud vs its own
+  history** (e.g. WDC 5/wk → 50/wk), not a high absolute count. Run it daily so baselines build.
+- Never fabricates: a failed fetch → that ticker is `[unavailable]`, not invented.
+- Schedule daily ~08:10 UTC (between journalism 08:15 and convergence 08:30) so spikes reach convergence.
 
 ### Mode: SEARCH (on-demand — "look up what we know")
 
