@@ -180,9 +180,16 @@ const memo = await agent(
   `30-45d lagged, NOT a time-sensitive signal". n_sources is crowdedness, not proven independence.\n` +
   `- A "WHAT WE COULD NOT VERIFY" section listing every [unverified] item and any desk that was rate-limited.\n` +
   `- 13F lag 45d, STOCK Act lag 30-45d — state it.\n` +
-  `Output ONLY the memo itself, starting with the line "# INVESTMENT COMMITTEE MEMO". No preamble, ` +
-  `no "I'll write…" meta, no tool talk. Format tight and skimmable.`,
+  `\nDELIVERABLE — write a MARKDOWN REPORT FILE:\n` +
+  `1. Get today's date: run bash \`date -u +%F\`.\n` +
+  `2. \`mkdir -p reports\` then WRITE the full memo to \`reports/hedge-fund-committee-<date>.md\` ` +
+  `(start the file with "# INVESTMENT COMMITTEE MEMO — <date>"). Use the Write tool.\n` +
+  `3. Confirm by reading back the first 3 lines of the file.\n` +
+  `Then return EXACTLY: the line "REPORT SAVED: reports/hedge-fund-committee-<date>.md" followed by the ` +
+  `full memo markdown. No preamble, no "I'll write…" meta beyond that.`,
   { label: 'cio-memo', phase: 'Decision' }
 )
 
-return { regime: macro?.summary, convergence: TOP, memo }
+// memo text contains "REPORT SAVED: <path>" as its first line (the durable artifact the owner opens).
+const reportPath = (memo.match(/REPORT SAVED:\s*(\S+)/) || [])[1] || null
+return { regime: macro?.summary, convergence: TOP, report_path: reportPath, memo }

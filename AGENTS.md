@@ -79,6 +79,14 @@ A notification-first advisor whose job is to **find the next stocks to buy**. Re
 Frontmatter on `skills/` modules must keep `compatibility: opencode`.
 
 ## Hard invariants (from @GOAL.md — an action breaking one is rejected)
+0. **SHIP THE ARTIFACT — NEVER OPERATE THE USER'S PRODUCTION SYSTEM.** When the task is "set up / install /
+   deploy an agent" (openclaw, Hermes, a bot), the deliverable is a **paste-able prompt / skill the user
+   installs**, and the *agent* self-installs and self-registers its own cron via its OWN native tools.
+   DO NOT `kubectl cp` into their pod, DO NOT hand-edit `~/.openclaw/cron/jobs.json` or any live config,
+   DO NOT register crons via Telegram, DO NOT restart their gateway. Triggering the live bot ONCE to
+   *verify a skill runs* is fine; *configuring/deploying/operating* it for them is not. Ask yourself:
+   "Am I building an installable artifact, or operating someone's prod?" — stop at the artifact.
+   (2026-06-15: hours were wasted live-mutating the bot when a paste-able setup prompt was the ask.)
 1. **Backtest-before-trade** — `strategy-discovery-backtest` runs first; only a PASS + human approval trades.
 2. **Notification-first / human-in-the-loop** — agent produces orders; human approves until paper-validated + signed off.
 3. **Hard caps + kill switch in deterministic code, outside the LLM** — size, drawdown, per-trade/day loss, leverage.

@@ -94,3 +94,7 @@ Already shipped: regime-detection (RISK_ON/OFF from SPY 200dMA+VIX+HY spread), f
 
 - No auto-trading. Recommend-only.
 - No paid data feeds.
+- **We do NOT operate the user's production systems.** The deliverable is a paste-able setup prompt
+  (`docs/setup-*.md`) the user installs; the *agent* self-installs its skills and self-registers its own
+  cron via its native tools. Never `kubectl cp`, edit a live `jobs.json`, register crons via Telegram, or
+  restart a gateway on the user's behalf. (Verifying a skill runs once is fine; deploying/operating is not.)

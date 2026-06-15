@@ -33,3 +33,6 @@ forecasts/
 # claude code session artifacts
 session.txt
 .claude/
+
+# committee report outputs (recommendations — not committed)
+reports/

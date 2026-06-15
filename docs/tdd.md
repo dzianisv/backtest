@@ -227,6 +227,11 @@ anti-groupthink protocol.
 - **risk-management VETO** over every buy: any name >10% book OR RISK_OFF → VETO all buys.
 - **Dedup ledgers idempotent.** Never re-propose a ticker already in 13F / congress ledger.
 - **Silence default.** A DM = a real fired condition; no "all quiet" chatter.
+- **DELIVERABLE = INSTALLABLE ARTIFACT, never operate the user's prod.** Setup = a paste-able prompt
+  (`docs/setup-*.md`); the agent self-installs + self-registers cron via its OWN native tools. No
+  `kubectl cp`, no editing a live `jobs.json`, no Telegram-registered crons, no gateway restart on the
+  user's behalf. Hand-editing `jobs.json` is also fragile (leaves the in-memory scheduler stale). Verify
+  a skill runs once if needed; do not deploy/operate. (See AGENTS.md hard invariant #0.)
 
 ## 8. v2 — Hedge-fund ORG of agent-employees (the decision architecture)
 

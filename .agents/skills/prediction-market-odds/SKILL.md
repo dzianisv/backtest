@@ -12,6 +12,23 @@ metadata:
 
 # Prediction-Market Odds (the crowd's priced probability)
 
+## HARD TRIGGER — read this first (added after a real miss)
+
+The instant you are about to **state a probability for a dated, observable outcome** (FOMC hold/cut/hike,
+CPI print, election, ETF ruling, "BTC ≤$X by [date]"), you MUST pull it with this skill — **before** you
+type the number. This fires even mid-analysis: if a sentence you're writing contains "% odds", "priced",
+"~X% chance", "markets expect" about such an outcome, STOP and run the recipe below.
+
+**Anti-pattern that bit us (2026-06-15):** quoting FOMC odds from a WebSearch *summary* / news blurb
+(IndexBox digest). Result: "93% hold" (real: 99.45%) and "70% hike by Dec" (real: ~32% — the digest had
+it **backwards**). News digests paraphrase and invert market numbers. A WebSearch result is NEVER an
+acceptable source for a priced probability — it's a pointer to *go pull the market*. If you find yourself
+citing a number you did not get from `gamma-api.polymarket.com` / Kalshi / FedWatch this turn, you have
+already failed; delete the number and run the recipe.
+
+If the skill isn't in your surfaced list, it's still on disk — `grep -ril polymarket .agents/skills/` and
+read it. Don't skip it because it wasn't pre-loaded.
+
 A prediction market price **is** an implied probability — thousands of betting wallets aggregating
 dispersed information (Hayek; Hanson; Wolfers & Zitzewitz). For any **dated, observable** outcome it beats
 your own guess. This skill = the HOW: find the market, read the odds, weight by liquidity, dodge the traps.
