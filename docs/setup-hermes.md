@@ -1,61 +1,66 @@
-# Proactive Advisor on Hermes-AI
+# Setup: AI Investment Advisor on Hermes-AI
 
-Native primitives: **hermes scheduler** (or system crontab) + **hermes skills** + preloaded sessions.
-Same RECOMMEND-ONLY skills as the other two backends.
+**How to use this:** paste the prompt block below to your Hermes investor agent in one message. The
+*agent* installs its skills and registers its own cron jobs via Hermes' native cron (`/cron add` /
+`hermes cron create`). Same recommend-only skills as the other backends.
 
-## 1. Install skills
+> Recommend-only / educational. Native primitive = **hermes cron** (`~/.hermes/cron/jobs.json`, ticks
+> every 60s, fresh agent session per job, `[SILENT]` suppresses delivery on healthy runs).
 
-```bash
-npx -y skills add dzianisv/backtest --agent hermes-agent
-# or by URL, per skill:
-hermes skills install https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills/dip-screener/SKILL.md
-hermes skills install https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills/crypto-dip-scanner/SKILL.md
-hermes skills install https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills/signal-convergence-alert/SKILL.md
-hermes skills install https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills/regime-detection/SKILL.md
-# ... + fomc-monitor, trend-stock-research, 13f-watch, congressman-stock-watch, multi-lens-quorum, risk-management
-hermes skills list   # each installed skill shows as a /slash-command
+---
+
+## 📋 PASTE THIS TO YOUR HERMES INVESTOR AGENT
+
+```text
+Set yourself up as my AI investment advisor (recommend-only, educational, never trade). Do each step,
+then report. Use Hermes' native cron (/cron add) to register jobs — they run in fresh sessions, so each
+prompt must be self-contained. Emit [SILENT] when a job has nothing to report.
+
+STEP 1 — INSTALL SKILLS (include the .py helpers, not just SKILL.md):
+  npx -y skills add dzianisv/backtest --agent hermes-agent --copy
+  Then: hermes skills list  — confirm dip-screener, crypto-dip-scanner, signal-convergence-alert,
+  liveness-monitor, trend-stock-research, regime-detection, fomc-monitor, 13f-watch,
+  congressman-stock-watch, multi-lens-quorum, risk-management, forecast-ledger appear.
+  Create a durable pool dir: mkdir -p ~/.openclaw/workspace/investor/pools
+  (or set $DIP_POOL/$NARRATIVE_POOL env to a persistent path your cron sessions share — NOT /tmp).
+
+STEP 2 — VERIFY one runs: python3 <skills>/crypto-dip-scanner/crypto_dip_scanner.py --json
+  Expect real JSON (high_52w_usd, pct_from_high, fear_greed). If it fabricates/errors, STOP and tell me.
+
+STEP 3 — REGISTER CRON (all UTC; each daily job ends by logging liveness; [SILENT] unless it fires):
+  • dip "45 7 * * 1-5":  run dip_screener.py --json --emit-pool + regime-detection; alert only HIGH dip
+    (pct_from_high<=-30) in RISK_ON; else [SILENT]; then liveness.py log --job dip-screener.
+  • crypto "50 7 * * *":  crypto_dip_scanner.py --json; alert only if coin pct_from_high<=-30 AND
+    fear_greed.value<25; else [SILENT]; then liveness.py log --job crypto-dip-scanner.
+  • narrative "10 8 * * 1-5":  mention_velocity.py --json (auto-feeds pool); collect only; liveness log.
+  • convergence "30 8 * * 1-5":  convergence.py --json --min-sources 2; alert only if n_sources>=2
+    (sources may be correlated); else [SILENT]; liveness log --job signal-convergence.
+  • health "0 9 * * 1-5":  liveness.py check --expect dip-screener,crypto-dip-scanner,signal-convergence,narrative-velocity --max-age-hours 26; alert only if STALE.
+  • weekly committee "30 9 * * 1":  run the WEEKLY HEDGE-FUND COMMITTEE — analysts gather (regime+fomc,
+    13f-watch, congressman-stock-watch 90d, trend-stock-research, dip + crypto scanners) → aggregate by
+    ticker (n_sources=crowdedness; flag flow_only 13F/congress as 30-45d lagged) → top 5 → each gets an
+    INDEPENDENT verdict from buffett/druckenmiller/lacy-hunt(dissent)/fundamental → quote the strongest
+    opposing vote verbatim → risk-management VETO (RISK_OFF or >10% book) else size CEILING (never invent
+    book weights) → DM a RANKED BUY LIST + dissent + "could not verify" + 13F/STOCK-Act lag → forecast-ledger
+    add+score+report. Then liveness.py log --job weekly-committee.
+
+STEP 4 — SET THE MANDATE: load the contents of .agents/templates/AGENTS.template.md into your standing
+system prompt so the recommend-only mandate + committee pipeline persists across fresh cron sessions.
+
+STEP 5 — CONFIRM: hermes cron list + hermes skills list; report anything that failed.
 ```
-The `dip-screener` / `crypto-dip-scanner` scripts ride along; ensure the install copies `scripts/`
-(URL install pulls SKILL.md only — for the .py helpers use `npx skills add ... --copy` or vendor them).
 
-## 2. Scheduled runs
+---
 
-If hermes has a native scheduler, register the slots there. Otherwise system crontab driving a preloaded
-hermes session:
-
-```bash
-# scripts/hermes-run.sh
-#!/usr/bin/env bash
-cd "$HOME/workspace/backtest"
-hermes -s dip-screener,crypto-dip-scanner,regime-detection,signal-convergence-alert \
-  -p "$1"   # one-shot prompt mode
-```
-
-```cron
-CRON_TZ=UTC
-45 7 * * 1-5  ~/workspace/backtest/scripts/hermes-run.sh "/dip-screener: scan, regime-gate, alert only HIGH dips in RISK_ON"
-50 7 * * 1-5  ~/workspace/backtest/scripts/hermes-run.sh "/crypto-dip-scanner: alert only if coin >=-30% from ATH AND F&G<25"
-0  8 * * 1-5  ~/workspace/backtest/scripts/hermes-run.sh "/regime-detection + /fomc-monitor: alert only if changed"
-15 8 * * 1-5  ~/workspace/backtest/scripts/hermes-run.sh "/trend-stock-research broad: append to the durable narrative pool, no alert"
-30 8 * * 1-5  ~/workspace/backtest/scripts/hermes-run.sh "/signal-convergence-alert: alert if >=2 signals same ticker"
-30 9 * * 1    ~/workspace/backtest/scripts/hermes-run.sh "Run full weekly brief pipeline (collect, quorum top5, risk veto, synthesize) and DM it"
-```
-
-## 3. Standing mandate
-
-Hermes loads agent identity from its system prompt / agent config. Paste the contents of
-`.agents/templates/AGENTS.template.md` into the hermes investor agent's system prompt so the standing
-RECOMMEND-ONLY mandate + weekly pipeline persists across sessions.
-
-## 4. Notify
-
-Pipe non-SILENT output to your channel (Telegram CLI / hermes' own delivery):
-```bash
-OUT=$(hermes -s ... -p "$1"); [ "${OUT//[[:space:]]/}" = SILENT ] || notify "$OUT"
-```
+## Notes (operator — not part of the paste)
+- Hermes cron runs each job in a **fresh session** with no chat history → every prompt is self-contained
+  (the block above is written that way). `context_from` can chain jobs if you want the committee to read a
+  prior job's output.
+- `--copy` is required so the `.py` helpers install (URL/`hermes skills install` pulls SKILL.md only).
+- Pools must be on a path the separate cron sessions share — a durable home dir, never `/tmp`.
 
 ## Done when
-- [ ] `hermes skills list` shows all skills as slash-commands.
-- [ ] Scheduler/crontab has the 6 slots (CRON_TZ=UTC).
-- [ ] AGENTS.template.md mandate is in the hermes system prompt.
-- [ ] A test run alerts on a real condition and prints SILENT otherwise.
+- [ ] `hermes skills list` shows the skills as slash-commands; one verified `--json` run.
+- [ ] `hermes cron list` shows all 6 jobs (5 daily + weekly committee).
+- [ ] AGENTS.template.md mandate is in the system prompt.
+- [ ] Health check registered; weekly committee logs to forecast-ledger.
