@@ -44,16 +44,21 @@ const REPORT = {
   },
   required: ['desk', 'summary', 'candidates'],
 }
+// A vote answers TWO SEPARATE questions — this split is the fix for the "NO-machine": a great business
+// worth OWNING can still be a WAIT on timing, and that must NOT collapse to PASS. `own` = the business/
+// value judgment (ignore short-term tape); `today` = the timing judgment (what to do RIGHT NOW).
 const VOTE = {
   type: 'object',
   properties: {
-    verdict: { type: 'string', enum: ['BUY', 'ADD', 'HOLD', 'TRIM', 'SELL', 'PASS'] },
+    own: { type: 'string', enum: ['YES', 'NO'] },              // worth OWNING at this price over 12-24mo, IGNORING timing
+    today: { type: 'string', enum: ['STARTER', 'WAIT', 'AVOID'] }, // RIGHT NOW: small first tranche / wait for trigger / not worth owning
     conviction: { type: 'integer', minimum: 1, maximum: 5 },
     reason: { type: 'string' },
+    add_trigger: { type: 'string' },          // the dated/price event that would make you ADD the next tranche
     invalidation: { type: 'string' },
     blind_spot: { type: 'string' },          // mandatory: what this lens is structurally bad at
   },
-  required: ['verdict', 'conviction', 'reason', 'invalidation', 'blind_spot'],
+  required: ['own', 'today', 'conviction', 'reason', 'add_trigger', 'invalidation', 'blind_spot'],
 }
 const RISK = {
   type: 'object',

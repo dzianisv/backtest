@@ -76,6 +76,7 @@ const gatherSpecs = [
   { label: 'macro-prints', skill: 'fomc-monitor' },
   { label: 'liquidity-flows', skill: 'crypto-liquidity-data' },
   { label: 'sentiment-regime', skill: 'regime-detection' },
+  { label: 'narrative-news', skill: 'narrative-news' },
 ]
 const gatherResults = await parallel(gatherSpecs.map(s => () =>
   agent(`Follow ${SKILL}/${s.skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). ${ctx}${seedNote}`,
