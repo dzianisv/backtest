@@ -15,17 +15,15 @@ run anything yourself, and nobody hand-edits the bot's internals.
 Set yourself up as my AI investment advisor (recommend-only, educational, never trade). Do each step,
 then report what you did. Use YOUR OWN native cron tool to register jobs — do NOT hand-edit jobs.json.
 
-STEP 1 — INSTALL SKILLS. In bash, pull each skill from the repo into your skills dir:
-  B=https://raw.githubusercontent.com/dzianisv/backtest/main/.agents/skills
-  S=~/.openclaw/workspace/investor/skills
-  for k in dip-screener crypto-dip-scanner signal-convergence-alert liveness-monitor; do
-    mkdir -p $S/$k; curl -sL -o $S/$k/SKILL.md $B/$k/SKILL.md; done
-  curl -sL -o $S/dip-screener/dip_screener.py             $B/dip-screener/dip_screener.py
-  curl -sL -o $S/crypto-dip-scanner/crypto_dip_scanner.py $B/crypto-dip-scanner/crypto_dip_scanner.py
-  curl -sL -o $S/signal-convergence-alert/convergence.py  $B/signal-convergence-alert/convergence.py
-  curl -sL -o $S/liveness-monitor/liveness.py             $B/liveness-monitor/liveness.py
-  curl -sL -o $S/trend-stock-research/mention_velocity.py $B/trend-stock-research/mention_velocity.py
+STEP 1 — INSTALL SKILLS. One command pulls every skill + its .py helpers (openclaw is a first-class
+target of the skills installer; --copy ships the Python files, not just SKILL.md):
+  npx -y skills add dzianisv/backtest --agent openclaw --copy --dangerously-accept-openclaw-risks
+  Confirm the install listed dip-screener, crypto-dip-scanner, signal-convergence-alert,
+  liveness-monitor, trend-stock-research, regime-detection (and the rest).
+  Then create the durable pool dir the cron sessions share (NOT /tmp):
   mkdir -p ~/.openclaw/workspace/investor/pools
+  (Skills install under your openclaw skills dir; reference the .py helpers there in the cron jobs below
+  — adjust $S to that path.)
 
 STEP 2 — VERIFY one skill actually runs (don't just trust the file). Run:
   python3 $S/crypto-dip-scanner/crypto_dip_scanner.py --json

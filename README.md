@@ -8,6 +8,40 @@ The agent proposes; the human approves every order. Recommend-only, always.
 
 ---
 
+## Install once, then just chat
+
+One command installs every skill onto your agent. It auto-detects the host (Claude Code, openclaw, hermes, Cursor, +others), pulls all skills, and wires them in:
+
+```bash
+npx skills add dzianisv/backtest
+```
+
+That's the whole setup. **You don't run a workflow or type a slash command** — the skills route themselves from what you say. After install, just ask:
+
+```
+"Should I buy the dip on BTC today?"          → crypto-advisor
+"Is HYPE a real infra token or just hype?"    → crypto-token-screener
+"What did Buffett just buy?"                   → 13f-watch
+"Run the weekly committee."                    → agentic-fund-orchestration
+"What's the market regime right now?"          → regime-detection
+```
+
+Each skill's description is written as a routing trigger, so the right desk answers the right question with no ceremony.
+
+### Per-runtime install
+
+| Runtime | Command |
+|---|---|
+| **Claude Code** | `npx skills add dzianisv/backtest` (auto-detected) |
+| **openclaw** | `npx skills add dzianisv/backtest --agent openclaw --copy` |
+| **hermes** | `npx skills add dzianisv/backtest --agent hermes-agent --copy` |
+
+`--copy` ships the Python helper scripts alongside each `SKILL.md` (needed for the data-pulling skills). For scheduled/proactive operation (daily scans + weekly committee), see [`docs/`](docs/) — `setup-claudecode.md`, `setup-openclaw.md`, `setup-hermes.md`.
+
+> **Workflows** (the multi-agent committee in `.agents/workflows/`) don't travel through the skill installer — they're a clone-the-repo power-user artifact. The everyday committee question is answered by the `agentic-fund-orchestration` skill, which installs normally.
+
+---
+
 ## Two active workstreams
 
 ### 1. Stocks / TradFi portfolio workflow
