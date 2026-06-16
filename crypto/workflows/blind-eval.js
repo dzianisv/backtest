@@ -7,9 +7,17 @@ export const meta = {
 // Why this is separate from improve-workflow: nested workflow() of a heavy target throws/returns null
 // in this runtime, so the loop CANNOT self-run the target. The supervisor runs the target (Workflow tool)
 // and passes report PATHS here. Measurement is a workflow; running+editing stays orchestrator-driven.
-const CASES = (args && args.cases) || []   // [{ question, portfolio, reportPath }]
+// Default proof-cases: blind-rank a known-BAD report (iter1, news seat failed) vs a known-GOOD one
+// (iter4). A trustworthy blind judge must score iter4 > iter1. Override via args.cases when available.
+const Q = 'BTC reached 65k$ from the drop to 61k$. I hold 30% in COIN. I don\'t have BTC direct exposure. Should I buy it today?'
+const P = '~30% COIN; no direct BTC; ~$0.5M risk capital.'
+const DEFAULT_CASES = [
+  { question: Q, portfolio: P, reportPath: '/Users/engineer/workspace/backtest/crypto/eval/iter1.report.md' },
+  { question: Q, portfolio: P, reportPath: '/Users/engineer/workspace/backtest/crypto/eval/iter4.report.md' },
+]
+const CASES = (args && args.cases && args.cases.length) ? args.cases : DEFAULT_CASES
 const JUDGES = (args && args.judges) || 3
-if (!CASES.length) log('WARNING: no cases. Pass args.cases=[{question,portfolio,reportPath}].')
+log(`blind-eval: ${CASES.length} case(s), ${JUDGES} judges each`)
 
 const JUDGE_SCHEMA = {
   type: 'object',
