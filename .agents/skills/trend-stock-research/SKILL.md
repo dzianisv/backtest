@@ -151,6 +151,16 @@ Always use a browser tool for paywalled publications.
 If NO browser tool is available at all, state clearly: "No browser tool available — cannot read
 paywalled sources. Gap: [what's missing]." Never hallucinate content you couldn't read.
 
+**Verified headless fallback (June 2026, tested live — see [[feed-ft]] / [[feed-wsj]]):** when you have
+no real browser (headless / CI / MCP-only) the chrome-use path is unavailable AND the
+chrome-devtools-remote may be DOWN. In that case the ONLY thing that works from plain bash `curl`/`web_fetch`
+is **web.archive.org**: `curl -L "http://web.archive.org/web/2/<url>"` (check
+`https://archive.org/wayback/available?url=<url>` first). This returns full **WSJ** bodies, but FT serves the
+Wayback crawler its `"Subscribe to read"` wall, so **FT bodies are usually NOT recoverable headlessly** — verify
+the snapshot isn't just the paywall. **archive.today is CAPTCHA-gated (HTTP 429) from datacenter IPs** and the
+**Googlebot-UA / AMP / direct-fetch tricks return 401/403** — do not rely on them here; they only work inside
+the user's real Chrome with bypass-paywalls-clean. ToS-gray; public-archive reading for the owner only, no redistribution.
+
 ### Fallback sources (no browser needed)
 
 These are always accessible via `web_fetch`:
