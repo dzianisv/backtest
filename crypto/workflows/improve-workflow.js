@@ -33,6 +33,9 @@ export const meta = {
 
 const SKILLS_DIR = (args && args.skillsDir) || '/Users/engineer/workspace/backtest/.agents/skills'
 const TARGET = (args && args.target) || 'research-crypto-market'
+// Invoke the target by FILE, not by name: research-*.js are committed scripts, not registered saved
+// workflows, so workflow(NAME) resolves to null and the target never runs (baseline scored 0). scriptPath is reliable.
+const TARGET_PATH = (args && args.targetPath) || `/Users/engineer/workspace/backtest/crypto/workflows/${TARGET}.js`
 const DATE = (args && args.date) || '2026-06-15'
 const K = (args && args.k) || 3
 const HOLDOUT = (args && args.holdout) || []
@@ -89,7 +92,11 @@ function aggregate(scores) {
 // Run the target on the whole holdout and blind-judge each run. Returns {meanMedian, perCaseGaps[]}.
 async function evalHoldout(label) {
   const caseResults = await pipeline(HOLDOUT, async (q) => {
-    const run = await workflow(TARGET, { question: q.question, portfolio: q.portfolio, ticker: q.ticker, date: DATE })
+    const run = await workflow({ scriptPath: TARGET_PATH }, { question: q.question, portfolio: q.portfolio, ticker: q.ticker, date: DATE })
+    if (!run || !run.decision) {  // loud, not a silent 0 — a non-running target must be visible, not scored
+      log(`ERROR [${label}]: target ${TARGET_PATH} returned no decision — eval is INVALID for this case, not a real 0.`)
+      return { caseMedian: null, gaps: [{ module: 'TARGET', gap: 'target workflow returned no decision (did not run)' }], invalid: true }
+    }
     // Judges see ONLY the run's product — brief + decision + votes. Never the code.
     const runView =
       `=== DECISION ===\n${JSON.stringify(run && run.decision, null, 1)}\n` +
@@ -102,15 +109,21 @@ async function evalHoldout(label) {
     const valid = judges.filter(Boolean)
     return { caseMedian: aggregate(valid), gaps: valid.flatMap(s => (s && s.module_gaps) || []) }
   })
-  const meanMedian = caseResults.length
-    ? caseResults.reduce((a, c) => a + c.caseMedian, 0) / caseResults.length : 0
-  const perCaseGaps = caseResults.map((c, i) => ({ case: i, median: c.caseMedian, gaps: c.gaps }))
-  return { meanMedian, perCaseGaps }
+  const validCases = caseResults.filter(c => c && c.caseMedian != null)  // exclude non-running targets
+  const meanMedian = validCases.length
+    ? validCases.reduce((a, c) => a + c.caseMedian, 0) / validCases.length : null
+  const perCaseGaps = caseResults.map((c, i) => ({ case: i, median: c && c.caseMedian, gaps: (c && c.gaps) || [] }))
+  return { meanMedian, perCaseGaps, invalid: validCases.length === 0 }
 }
 
 // ---------- Phase 1: EVAL (baseline measurement) ----------
 phase('Eval')
 const baseline = await evalHoldout('baseline')
+if (baseline.invalid || baseline.meanMedian == null) {  // target never ran — abort loudly, do NOT proceed on a fake 0
+  log(`ABORT: baseline eval invalid — target ${TARGET_PATH} produced no scorable runs. Fix the target invocation before optimizing.`)
+  return { round_summary: `ABORT: target did not run (no scorable baseline). Check ${TARGET_PATH}.`,
+    target: TARGET, weakest_module: null, baseline_score: null, best_candidate_score: null, accepted: false, commit: null, invalid: true }
+}
 log(`Baseline blind score (mean of per-case medians): ${baseline.meanMedian.toFixed(1)}`)
 
 // ---------- Phase 2: REFLEXION (diagnose the SINGLE weakest module) ----------
