@@ -29,6 +29,7 @@ A busy PM ($1M tradfi + ~$177k crypto, no research time) wants a weekly engine t
 ## Hard penalties (cap the score)
 - **All-PASS / zero actionable pick** while quality dips or live narratives are in the candidate set → max 45. (This is the system's signature failure.)
 - Any **fabricated number / price / headline** → max 40.
+- **FLAGSHIP-EXCLUSION (the fatal one) → max 35.** If a known-good / mandate-defining name (the SanDisk / Google-dip class the system exists to catch) was surfaced by discovery and did NOT reach the panel, that is a fatal failure of the system's core purpose — cap the score hard regardless of how polished the rest is. Check the run's "DISCOVERED BUT NOT PANELLED" / P0-DROP list: any narrative or conviction>=3 name in it triggers this cap. A run that downplays such a drop as minor scores LOWER than one that loudly flags it.
 - A **narrative name surfaced by discovery but filtered before the panel ever votes** → −15. (Convergence-gating defeats the SanDisk purpose.)
 - **Silently dropped desk** (no coverage flag) → max 60.
 - **Crypto absent** when the crypto desk could run → −10 (book is part crypto).

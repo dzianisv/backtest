@@ -174,7 +174,24 @@ if (FOCUS) {
   }
 }
 log(`Aggregated ${clustered.length} names; panel sees ${TOP.length}${thinWeek ? ' (THIN WEEK — watch-only fallback)' : ''}: ${TOP.map(t => `${t.ticker}(${t.n_sources}src,c${t.max_conviction}${t.flow_only ? ',flow-only' : ''})`).join(', ') || 'none'}`)
-if (!TOP.length) return { regime: macro?.summary, coverage, dead_desks: deadDesks, note: 'No candidates surfaced this cycle. No action.', reports }
+
+// ── DROP-VISIBILITY TRIPWIRE ─────────────────────────────────────────────────
+// A discovered name that never reaches the panel must NEVER be silent — that invisibility is exactly
+// how a flagship (SNDK) once got filtered and buried in a footnote. Every dropped name is surfaced with
+// its reason; a dropped NARRATIVE or conviction>=3 name is a P0 alarm (the system's whole job is catching
+// those), logged loud + handed to the CIO as a discovery gap, never "nothing to buy".
+const panelled = new Set(TOP.map(t => t.ticker))
+const dropped = clustered.filter(c => !panelled.has(c.ticker)).map(c => ({
+  ticker: c.ticker, n_sources: c.n_sources, max_conviction: c.max_conviction, sources: c.sources,
+  reason: (c.n_sources < 2 && c.max_conviction < 4 && !c.sources.some(s => NARRATIVE_DESKS.has(s)))
+    ? 'below gate (single-source, conviction<4, not narrative)'
+    : 'gate-passed but cut by the 8-name panel cap',
+}))
+const flaggedDrops = dropped.filter(c => c.sources.some(s => NARRATIVE_DESKS.has(s)) || c.max_conviction >= 3)
+if (flaggedDrops.length) log(`P0 DROP ALARM — narrative/high-conviction names discovered but NOT panelled: ${flaggedDrops.map(d => `${d.ticker}(${d.reason})`).join(', ')}`)
+else if (dropped.length) log(`Dropped ${dropped.length} low-signal name(s) before panel: ${dropped.map(d => d.ticker).join(', ')}`)
+
+if (!TOP.length) return { regime: macro?.summary, coverage, dead_desks: deadDesks, dropped, flagged_drops: flaggedDrops, note: 'No candidates surfaced this cycle. No action.', reports }
 
 // ── PHASE 2.5 — PRICE-GROUND every panel name (deterministic, paywall-proof) ──
 // Root cause of the SanDisk miss: the news desk discovered SNDK/SIMO but self-censored them to prose
@@ -304,6 +321,9 @@ const ERR_RX = /\b(40[0-9]|429|451|paywall|geo-?block|rate.?limit|unverified|una
 const errRows = coverage
   .filter(c => c.status === 'FAILED' || (c.note && ERR_RX.test(c.note)))
   .map(c => ({ desk: c.desk, status: c.status, detail: (c.note || '').replace(/\s+/g, ' ').slice(0, 400) }))
+// A flagged drop (narrative/high-conviction name that never reached the panel) is the SanDisk failure
+// mode — log it as P0 so it is never silent, even if everything else this run was clean.
+for (const d of flaggedDrops) errRows.push({ desk: `DROP:${d.sources.join('+')}`, status: 'P0-DROP', detail: `${d.ticker} discovered (c${d.max_conviction}, ${d.n_sources}src) but NOT panelled — ${d.reason}` })
 if (errRows.length) {
   await agent(
     `Append an error-log entry, then return only "ERRLOG OK". Steps:\n` +
@@ -328,6 +348,9 @@ const memo = await agent(
   `DESK COVERAGE (ran/empty/FAILED + n candidates): ${JSON.stringify(coverage)}\n` +
   `THIN WEEK (no name cleared the n_sources>=2 OR conviction>=4 gate; names below are WATCH-ONLY ` +
   `fallbacks, not earned candidates): ${thinWeek}\n` +
+  `DISCOVERED BUT NOT PANELLED (names a desk surfaced that did NOT reach the vote, with reason): ${JSON.stringify(dropped)}\n` +
+  `P0 DROP ALARM (narrative/high-conviction names that were dropped — these are the SanDisk failure mode and ` +
+  `MUST be surfaced loudly, never omitted): ${JSON.stringify(flaggedDrops)}\n` +
   `DECIDED CANDIDATES (each has \`votes\` with own/today, \`risk\` gate, code-computed \`plan.action\`, and \`minority\`): ${JSON.stringify(decided)}\n\n` +
 
   `HOW TO READ THE PLAN (code-computed, deterministic — you may NOT override it):\n` +
@@ -347,6 +370,8 @@ const memo = await agent(
   `"Add trigger" = the dated/price event for the next tranche. "Dissent" = minority lens + ≤6-word gist, or "unanimous (FLAG)".\n` +
   `- A "Watch next" line: names to re-test + the dated catalyst that flips them.\n` +
   `- A "Coverage" line: which desks were empty/FAILED (one phrase) if any.\n` +
+  `- IF the P0 DROP ALARM list is non-empty: a "⚠ Dropped before panel" line naming those tickers + reason — ` +
+  `these are discovered names that did NOT get a vote; the owner must see them. NEVER omit this when the list is non-empty.\n` +
   `NO verbatim quotes, NO per-name prose in the brief. One screen.\n\n` +
 
   `=== FILE 2 — THE FULL MEMO (\`reports/hedge-fund-committee-<date>.md\`) — the audit trail ===\n` +
@@ -376,4 +401,4 @@ const memo = await agent(
 const briefPath = (memo.match(/BRIEF SAVED:\s*(\S+)/) || [])[1] || null
 const reportPath = (memo.match(/REPORT SAVED:\s*(\S+)/) || [])[1] || null
 const plans = decided.map(d => ({ ticker: d.ticker, action: d.plan.action, own: `${d.plan.own_yes}/${d.plan.n}`, gate: d.risk?.gate }))
-return { regime: macro?.summary, coverage, dead_desks: deadDesks, thin_week: thinWeek, plans, convergence: TOP, brief_path: briefPath, report_path: reportPath, memo }
+return { regime: macro?.summary, coverage, dead_desks: deadDesks, thin_week: thinWeek, dropped, flagged_drops: flaggedDrops, plans, convergence: TOP, brief_path: briefPath, report_path: reportPath, memo }
