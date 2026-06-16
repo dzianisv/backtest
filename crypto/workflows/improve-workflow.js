@@ -1,3 +1,5 @@
+// NOTE (superseded): this self-contained loop is BLOCKED — workflow() cannot nest a heavy target here.
+// Use the ORCHESTRATED procedure in crypto/eval/IMPROVE-LOOP.md with pairwise-eval.js for selection.
 // improve-workflow.js — ONE round of a Reflexion + DSPy-style instruction-optimization loop.
 //
 // MEASUREMENT-AND-IMPROVEMENT ARE SEPARATED; a human gate is recommended before merging

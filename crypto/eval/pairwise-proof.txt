@@ -1,0 +1,5 @@
+pairwise-eval.js — iter1(news-failed) A vs iter4(complete) B, 5 judges, position-randomized
+RESULT: B wins 5-0 (a_wins=0, b_wins=5, ties=0), accept_B_over_A=true
+All 5 judges (mixed A-first/B-first) independently cited: iter1 §8 news seat DID NOT RUN; iter4 ran it.
+Contrast: pointwise on same pair = 88 vs 89, then 63.5 vs 64 (no separation).
+Conclusion: pairwise blind selection discriminates reliably; pointwise does not.
