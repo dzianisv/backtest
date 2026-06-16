@@ -38,9 +38,11 @@ To install skills onto another runtime (openclaw, hermes, Cursor):
 Workflow scripts live in `.agents/workflows/` and `crypto/workflows/`. Symlinks in `.claude/workflows/` register them as slash commands — present in this repo:
 
 ```
-.claude/workflows/hedge-fund-committee.js  -> ../../.agents/workflows/hedge-fund-committee.workflow.js
-.claude/workflows/research-market.js       -> ../../crypto/workflows/research-market.js
-.claude/workflows/pairwise-eval.js         -> ../../crypto/workflows/pairwise-eval.js
+.claude/workflows/hedge-fund-committee.js   -> ../../.agents/workflows/hedge-fund-committee.workflow.js
+.claude/workflows/research-market.js        -> ../../crypto/workflows/research-market.js
+.claude/workflows/pairwise-eval.js          -> ../../crypto/workflows/pairwise-eval.js
+.claude/workflows/multi-lens-quorum.js      # direct workflow (not a symlink)
+.claude/workflows/trend-stock-research.js   # direct workflow (not a symlink)
 ```
 
 To use them from another project, copy to `~/.claude/workflows/`:
@@ -72,13 +74,15 @@ With the repo open in Claude Code, the workflows are available as:
 /hedge-fund-committee    ← weekly equity committee → staged buy brief
 /research-market         ← ad-hoc crypto or equity research question
 /pairwise-eval           ← blind A/B comparison of two research reports
+/multi-lens-quorum       ← convene N independent analyst lenses on a judgment call
+/trend-stock-research    ← research-first trend-stock screen → nominees for quorum
 ```
 
 ### Explicit Workflow tool form
 
 Use this when you want to pass specific args (ticker, date, portfolio):
 
-**Ad-hoc research — crypto or equity** (`research-market`):
+**Ad-hoc research — crypto** (`research-market`):
 
 ```js
 Workflow({
@@ -88,6 +92,20 @@ Workflow({
     portfolio: "~30% of book in COIN (levered crypto-beta proxy); no direct BTC.",
     date:      "2026-06-16",   // required — Date.now() is unavailable in the workflow runtime
     anchor:    ""              // optional seed price; leave "" to let Gather fetch live
+  }
+})
+```
+
+**Ad-hoc research — equity / mixed** (`research-market`):
+
+```js
+Workflow({
+  scriptPath: "/path/to/financial-advisor-agents/crypto/workflows/research-market.js",
+  args: {
+    question:  "NVDA pulled back 15% from ATH. I'm 40% concentrated in it. Should I trim?",
+    portfolio: "40% NVDA, remainder unspecified. $1M tradfi book, no leverage.",
+    date:      "2026-06-16"
+    // assets + tickers are extracted from `question` by the manager LLM — no separate ticker arg needed
   }
 })
 ```
@@ -145,11 +163,12 @@ npx skills add dzianisv/financial-advisor-agents
 That's the whole setup. **You don't run a workflow or type a slash command** — the skills route themselves from what you say. After install, just ask:
 
 ```
-"Should I buy the dip on BTC today?"          → crypto-advisor
-"Is HYPE a real infra token or just hype?"    → crypto-token-screener
+"Should I buy the dip on BTC today?"          → crypto-dip-scanner / analyst-crypto
 "What did Buffett just buy?"                   → 13f-watch
 "Run the weekly committee."                    → agentic-fund-orchestration
 "What's the market regime right now?"          → regime-detection
+"What would Lyn Alden think of this?"          → analytics-lyn-alden
+"Is there a multi-source convergence signal?"  → signal-convergence-alert
 ```
 
 Each skill's description is written as a routing trigger, so the right desk answers the right question with no ceremony.
@@ -171,7 +190,7 @@ Each skill's description is written as a routing trigger, so the right desk answ
 ```bash
 # Option A — clone the repo, open Claude Code in it; the workflows are project /commands
 git clone https://github.com/dzianisv/financial-advisor-agents && cd financial-advisor-agents
-#   → /hedge-fund-committee   /research-market   /pairwise-eval
+#   → /hedge-fund-committee   /research-market   /pairwise-eval   /multi-lens-quorum   /trend-stock-research
 
 # Option B — make them global (available in every project)
 cp financial-advisor-agents/.claude/workflows/*.js ~/.claude/workflows/
@@ -179,7 +198,7 @@ cp financial-advisor-agents/.claude/workflows/*.js ~/.claude/workflows/
 
 Then run e.g. `/hedge-fund-committee` or `/research-market`. (Needs Claude Code ≥ v2.1.154 with Dynamic workflows enabled in `/config`. Workflows are a Claude Code feature — openclaw/hermes use the skills, which orchestrate via their own primitives.)
 
-> Note: the `.claude/workflows/*.js` entries are symlinks to `.agents/workflows/` and `crypto/workflows/` — they resolve on macOS/Linux. On Windows, copy the real files from those dirs instead.
+> Note: some `.claude/workflows/*.js` entries are symlinks to `.agents/workflows/` and `crypto/workflows/` (they resolve on macOS/Linux; on Windows copy the real files). `multi-lens-quorum.js` and `trend-stock-research.js` are standalone files in `.claude/workflows/` directly.
 
 ---
 
@@ -199,7 +218,13 @@ Key artifacts:
 | [`docs/tdd.md`](docs/tdd.md) | Architecture, wiring diagrams, data contracts |
 | [`.agents/workflows/hedge-fund-committee.workflow.js`](.agents/workflows/) | Weekly committee → ranked next-buy memo |
 
-Core skills: `regime-detection` · `trend-stock-research` · `dip-screener` · `fomc-monitor` · `prediction-market-odds` · `forecast-ledger` · `hedge-fund-manager` · `superforecasting` · `macro-panel` · `multi-lens-quorum`
+Core skills: `regime-detection` · `trend-stock-research` · `dip-screener` · `dip-tranches-strategy` · `fomc-monitor` · `prediction-market-odds` · `forecast-ledger` · `hedge-fund-manager` · `tradfi-portfolio-manager` · `superforecasting` · `macro-panel` · `multi-lens-quorum` · `portfolio-monitor` · `portfolio-construction` · `rebalancing` · `risk-management` · `fundamental-analysis` · `stock-chair` · `stock-research-desk` · `13f-watch` · `hedge-fund-13f-analysis` · `congressman-stock-watch` · `signal-convergence-alert` · `agentic-fund-orchestration`
+
+Analyst lenses: `analyst-crypto` · `analyst-derivatives-positioning` · `analyst-systematic-trading` · `analyst-technical-analysis`
+
+Macro-economist panel: `analytics-lyn-alden` · `analytics-ray-dalio` · `analytics-stanley-druckenmiller` · `analytics-lacy-hunt` · `analytics-michael-pettis` · `analytics-russell-napier` · `analytics-warren-buffett` · `analytics-benjamin-graham` · `analytics-morgan-housel`
+
+News feeds: `feed-bloomberg` · `feed-wsj` · `feed-ft` · `feed-bitcoinmagazine` · `feed-coindesk` · `feed-cointelegraph` · `feed-decrypt` · `feed-theblock` · `narrative-news`
 
 **Status:** fast-tier daily scanners live on openclaw (cron + liveness); weekly committee workflow validated (3 iterations); congress stock-watch wired (`congress/`).
 
@@ -211,7 +236,7 @@ Manages a **~$177k crypto book** with a BTC-as-hurdle filter — only deploy int
 
 Full spec: [`crypto/`](crypto/) — `crypto.goal.md` · `crypto.prd.md` · `crypto.tdd.md` · `crypto.loop.md`
 
-Core skills: `crypto-chair` · `crypto-research-desk` · `crypto-dip-scanner` · `crypto-liquidity-data` · `crypto-onchain-data` · `crypto-workflow-eval` · `analyst-crypto`
+Core skills: `crypto-chair` · `crypto-research-desk` · `crypto-dip-scanner` · `crypto-liquidity-data` · `crypto-onchain-data` · `crypto-news-store` · `crypto-workflow-eval` · `analyst-crypto` · `research-manager` · `defi-portfolio-manager` · `tax-loss-harvesting` · `trend-following`
 
 **Status:** skill tree designed + specced; G-Eval harness baselined (85/100); crypto.loop.md orchestrates daily dip-scan + weekly research desk cycle.
 
