@@ -73,11 +73,26 @@ const RISK = {
 // ── PHASE 1 — ANALYST FAN-OUT (employees gather, do NOT decide) ──────────────
 // Each runs ONE skill via the agent and returns a structured report. Parallel, fault-isolated.
 phase('Analysts')
+// PER-FEED news gather seats — one specialised analyst per SOURCE, because access methods genuinely
+// DIFFER (verified live: WSJ bodies recover via web.archive.org; FT bodies are NOT headless-recoverable,
+// chrome-use on the user's real Chrome only; trade press is free web_fetch; Reddit is public JSON). A
+// monolithic news desk can't encode per-source access — this mirrors the crypto side's feed-* adapters.
+// Every news seat emits TICKER + thesis + source ONLY; price is grounded downstream (the SanDisk fix).
+const NEWS_RULES = ' Emit each idea as a candidate {ticker, thesis, evidence=outlet + the dated headline you actually read}. ' +
+  'Do NOT fetch/estimate a price (grounded downstream); NEVER drop a ticker because its price or article body was paywalled. ' +
+  'Tag each PRICED_IN vs ACTIONABLE(early). Prefer non-obvious names where a narrative is BUILDING over weeks (the SanDisk pattern), not extended momentum. ' +
+  'Mark any unreadable body [unverified] and SAY which access method failed. Never invent a headline or number. candidates:[] if nothing real.'
+const NEWS_SEATS = [
+  { desk: 'news-ft',         prompt: 'You are the FT analyst. Pull FT markets/companies headlines (/feed-ft or ft.com/rss/home). Read bodies via chrome-use (the user\'s real Chrome + bypass-paywalls-chrome) when available. HEADLESS, FT bodies are usually UNREADABLE — verified: web.archive.org serves FT\'s "Subscribe to read" wall and archive.today is CAPTCHA-walled from a datacenter IP — so work from the dated headline/lead + free outlets citing FT, and mark bodies [unverified - FT paywall]. NEVER plain web_fetch ft.com.' + NEWS_RULES },
+  { desk: 'news-wsj',        prompt: 'You are the WSJ analyst. Pull WSJ Markets headlines (/feed-wsj or feeds.a.dj.com/rss/RSSMarketsMain.xml). Read BODIES via web.archive.org (VERIFIED working for WSJ): GET https://archive.org/wayback/available?url=<wsj-url>, then `curl -L http://web.archive.org/web/2/<url>`, and confirm the snapshot is the article, not a paywall stub. chrome-use if on the user machine. NEVER plain web_fetch wsj.com.' + NEWS_RULES },
+  { desk: 'news-tradepress', prompt: 'You are the trade/sector-press analyst — where the NON-OBVIOUS supply-chain alpha lives (power transformers, GOES electrical steel, HBM/memory, GLP-1 CDMOs). Run /trend-stock-research for the mention-velocity baseline, then READ free trade + business press (Reuters, pv-magazine, power-eng, EE Times, trade journals), IR pages, press releases, and SEC EDGAR full-text via web_fetch — these are NOT paywalled. This is the seat most likely to find the next SanDisk before the majors cover it.' + NEWS_RULES },
+  { desk: 'news-reddit',     prompt: 'You are the retail-sentiment analyst. Scan Reddit (r/stocks, r/wallstreetbets, r/investing) via the public JSON (e.g. https://www.reddit.com/r/wallstreetbets/hot.json?limit=50) for tickers with unusual, BUILDING attention plus a real catalyst — distinguish a durable narrative from a one-day meme squeeze (skip pure pumps).' + NEWS_RULES },
+]
 const DESKS = [
   { desk: 'macro-regime',        prompt: 'You are the macro/regime analyst. Run /regime-detection AND /fomc-monitor. Summary = regime (RISK_ON/NEUTRAL/RISK_OFF) + exposure dial + Fed tone/next-meeting. candidates: [] unless a regime/Fed shift implies a specific tilt.' },
   { desk: 'institutional-flows', prompt: 'You are the institutional-flows analyst. Run /13f-watch (Burry/Buffett/Ackman/Klarman/Li Lu). Return ONLY new, deduped institutional BUYS as candidates (source=13F, evidence=fund+filing). Drop puts/trims/exits. State the 45-day lag.' },
   { desk: 'political-flows',     prompt: 'You are the political-flows analyst. Run /congressman-stock-watch (last 90d). Return only NEW deduped congressional PURCHASES as candidates (evidence=member+date+amount). State the 30-45d disclosure lag. If the source is rate-limited, say so and return [].' },
-  { desk: 'news-narrative',      prompt: 'You are the news/narrative analyst. Surface the themes the financial press + retail are converging on, and the specific tickers with a LIVE catalyst. SOURCES (use them, do not just count RSS): run /trend-stock-research for the mention-velocity baseline, THEN actually READ headlines/leads via WebSearch + WebFetch across FT, WSJ, Bloomberg, Reuters AND retail sentiment (Reddit r/stocks, r/wallstreetbets, r/investing). For each candidate give evidence = a real dated headline/source you actually read (outlet + date), and tag PRICED_IN vs ACTIONABLE (still early). Prefer non-obvious names where a narrative is BUILDING over weeks (the SanDisk pattern), not already-extended momentum. Never invent a headline or a number; mark anything you could not read [unverified].' },
+  ...NEWS_SEATS,
   { desk: 'equity-dips',         prompt: 'You are the equity dip analyst. Run /dip-screener. Return HIGH/MEDIUM dips (>=25% below 52w high) as candidates (evidence=pct_from_high + 200dMA). Quality names only; a dip is a candidate, not a buy.' },
   { desk: 'crypto',              prompt: 'You are the crypto desk analyst. Run /crypto-dip-scanner. Return coins >=30% below 52w high as candidates with Fear&Greed in evidence. Note BTC-as-hurdle. Funding may be [unverified] (geo-block).' },
   { desk: 'crowd-odds',          prompt: 'You are the crowd-odds analyst. Run /prediction-market-odds for the macro/Fed/index markets that matter this week. Summary = what the crowd is pricing + implication for equities. candidates only if a market implies a specific name.' },
@@ -131,25 +146,87 @@ const clustered = Object.values(byTicker).map(e => {
   (b.n_sources - a.n_sources) || (a.flow_only === b.flow_only ? 0 : a.flow_only ? 1 : -1)
 )
 const macro = reports.find(r => r._key === 'macro-regime' || r._key === 'focus-research')
-// GATE before the expensive committee. The old top-5 fill admitted mechanical single-source dips with
-// no convergence and no conviction — spending a 4-lens panel just to PASS on them and bloating the memo.
-// A name EARNS the committee only if it shows convergence (n_sources>=2) OR a desk's high conviction
-// (>=4). If nothing clears (a genuinely thin week), fall back to the 2 best single-source names as
-// WATCH-ONLY rather than forcing a full slate — and tell the CIO it was thin so the memo says so.
+// GATE before the expensive committee. A name EARNS the committee if it shows convergence (n_sources>=2)
+// OR a desk's high conviction (>=4) OR it is a NARRATIVE thesis from the news desk. That last clause is
+// the SanDisk fix: convergence LAGS — by the time a 2nd desk corroborates a story it is already priced.
+// The whole edge (Google -30%, SanDisk's weeks-long FT/WSJ build) is catching a live-catalyst narrative
+// while only the news desk sees it, single-source. Gating discovery on convergence would defeat the
+// system's core purpose, so a news-narrative name always reaches the panel — the panel can still PASS it.
+const NARRATIVE_DESKS = new Set(['news-ft', 'news-wsj', 'news-tradepress', 'news-reddit'])
 let TOP, thinWeek = false
 if (FOCUS) {
   TOP = clustered.slice(0, 1)
 } else {
-  const gated = clustered.filter(c => c.n_sources >= 2 || c.max_conviction >= 4)
+  const gated = clustered.filter(c =>
+    c.n_sources >= 2 ||
+    c.max_conviction >= 4 ||
+    c.sources.some(s => NARRATIVE_DESKS.has(s)))   // live-catalyst news thesis reaches the panel even single-source
   if (gated.length) {
-    TOP = gated.slice(0, 7)
+    // Rank narrative names up so they aren't crowded out of the cap by mechanical dips.
+    TOP = gated.slice().sort((a, b) => {
+      const an = a.sources.some(s => NARRATIVE_DESKS.has(s)) ? 1 : 0
+      const bn = b.sources.some(s => NARRATIVE_DESKS.has(s)) ? 1 : 0
+      return (bn - an) || (b.n_sources - a.n_sources) || (b.max_conviction - a.max_conviction)
+    }).slice(0, 8)
   } else {
     thinWeek = true
     TOP = clustered.slice().sort((a, b) => b.max_conviction - a.max_conviction).slice(0, 2)
   }
 }
 log(`Aggregated ${clustered.length} names; panel sees ${TOP.length}${thinWeek ? ' (THIN WEEK — watch-only fallback)' : ''}: ${TOP.map(t => `${t.ticker}(${t.n_sources}src,c${t.max_conviction}${t.flow_only ? ',flow-only' : ''})`).join(', ') || 'none'}`)
-if (!TOP.length) return { regime: macro?.summary, coverage, dead_desks: deadDesks, note: 'No candidates surfaced this cycle. No action.', reports }
+
+// ── DROP-VISIBILITY TRIPWIRE ─────────────────────────────────────────────────
+// A discovered name that never reaches the panel must NEVER be silent — that invisibility is exactly
+// how a flagship (SNDK) once got filtered and buried in a footnote. Every dropped name is surfaced with
+// its reason; a dropped NARRATIVE or conviction>=3 name is a P0 alarm (the system's whole job is catching
+// those), logged loud + handed to the CIO as a discovery gap, never "nothing to buy".
+const panelled = new Set(TOP.map(t => t.ticker))
+const dropped = clustered.filter(c => !panelled.has(c.ticker)).map(c => ({
+  ticker: c.ticker, n_sources: c.n_sources, max_conviction: c.max_conviction, sources: c.sources,
+  reason: (c.n_sources < 2 && c.max_conviction < 4 && !c.sources.some(s => NARRATIVE_DESKS.has(s)))
+    ? 'below gate (single-source, conviction<4, not narrative)'
+    : 'gate-passed but cut by the 8-name panel cap',
+}))
+const flaggedDrops = dropped.filter(c => c.sources.some(s => NARRATIVE_DESKS.has(s)) || c.max_conviction >= 3)
+if (flaggedDrops.length) log(`P0 DROP ALARM — narrative/high-conviction names discovered but NOT panelled: ${flaggedDrops.map(d => `${d.ticker}(${d.reason})`).join(', ')}`)
+else if (dropped.length) log(`Dropped ${dropped.length} low-signal name(s) before panel: ${dropped.map(d => d.ticker).join(', ')}`)
+
+if (!TOP.length) return { regime: macro?.summary, coverage, dead_desks: deadDesks, dropped, flagged_drops: flaggedDrops, note: 'No candidates surfaced this cycle. No action.', reports }
+
+// ── PHASE 2.5 — PRICE-GROUND every panel name (deterministic, paywall-proof) ──
+// Root cause of the SanDisk miss: the news desk discovered SNDK/SIMO but self-censored them to prose
+// because it could only read a PAYWALLED price. Decouple discovery from pricing: news surfaces the
+// ticker+thesis+source; HERE we fetch a live 52w-high/200dMA from yfinance for every panel name,
+// independent of any article. This is what lets the panel tell an EARLY laggard (CMI -8% from high,
+// +23% vs 200dMA) from a LATE/priced-in narrative (SNDK +245% vs 200dMA) instead of guessing or missing.
+const groundJson = await agent(
+  `Use the /dip-screener skill in PRICE-GROUND mode. The skill's directory contains dip_screener.py — ` +
+  `find its absolute path (the /dip-screener skill tells you its base dir; or \`find . -path '*dip-screener/dip_screener.py'\`) ` +
+  `and run it with python3 against these tickers:\n` +
+  `  python3 <abs path>/dip_screener.py --tickers ${TOP.map(t => t.ticker).join(',')}\n` +
+  `It prints {"grounded":[...],"fetch_misses":[...]} — live yfinance 52w-high/200dMA, no dip threshold. ` +
+  `VERIFY you actually got JSON with a non-empty "grounded" array; if the command errored (path/python), ` +
+  `fix the path and re-run ONCE. A ticker with no yfinance data (e.g. BTC, or a non-US listing) belongs in ` +
+  `fetch_misses — that is correct, do not fabricate it. Return ONLY the raw JSON stdout, no prose.`,
+  { label: 'price-ground', phase: 'Aggregate' })
+try {
+  const g = JSON.parse((groundJson.match(/\{[\s\S]*\}/) || [])[0] || '{}')
+  const pxByTicker = Object.fromEntries((g.grounded || []).map(p => [p.ticker, p]))
+  for (const cand of TOP) {
+    const p = pxByTicker[cand.ticker]
+    if (p) {
+      cand.price = p
+      cand.notes.push(`price-ground: $${p.current} — ${p.pct_from_high}% from 52w high $${p.high_52w}` +
+        (p.pct_vs_200d != null ? `, ${p.pct_vs_200d >= 0 ? '+' : ''}${p.pct_vs_200d}% vs 200dMA $${p.sma200}` : ', 200dMA n/a') +
+        ` [yfinance ${p.as_of}]`)
+    } else {
+      cand.notes.push(`price-ground: [unavailable — no yfinance data; verify US listing manually]`)
+    }
+  }
+  log(`Price-grounded ${Object.keys(pxByTicker).length}/${TOP.length}${g.fetch_misses?.length ? ` (misses: ${g.fetch_misses.join(',')})` : ''}`)
+} catch (e) {
+  log(`Price-ground step could not parse output — panel proceeds without grounded price [${String(e).slice(0, 60)}]`)
+}
 
 // ── PHASE 3 — INVESTMENT COMMITTEE (panel) ───────────────────────────────────
 // Each lens votes INDEPENDENTLY (parallel = no anchoring on peers). Dissent is preserved, never averaged.
@@ -236,6 +313,29 @@ const decided = risked.map(j => {
   return { ...j, plan, minority: minorityVote(j.votes, plan.action) }
 })
 
+// ── PHASE 4.5 — ERROR LOG (durable, append-only across runs) ─────────────────
+// Every data-fetch failure (403/429/451, paywall, geo-block, [unverified]/[UNAVAILABLE]) is logged to
+// logs/error.log so recurring source problems (FRED OAS 403, FT/WSJ paywall, Binance geo-block) are
+// visible across runs instead of buried in one memo. A FAILED desk or any error-shaped note → a row.
+const ERR_RX = /\b(40[0-9]|429|451|paywall|geo-?block|rate.?limit|unverified|unavailable|could not (read|fetch)|timed out|no .*data)\b/i
+const errRows = coverage
+  .filter(c => c.status === 'FAILED' || (c.note && ERR_RX.test(c.note)))
+  .map(c => ({ desk: c.desk, status: c.status, detail: (c.note || '').replace(/\s+/g, ' ').slice(0, 400) }))
+// A flagged drop (narrative/high-conviction name that never reached the panel) is the SanDisk failure
+// mode — log it as P0 so it is never silent, even if everything else this run was clean.
+for (const d of flaggedDrops) errRows.push({ desk: `DROP:${d.sources.join('+')}`, status: 'P0-DROP', detail: `${d.ticker} discovered (c${d.max_conviction}, ${d.n_sources}src) but NOT panelled — ${d.reason}` })
+if (errRows.length) {
+  await agent(
+    `Append an error-log entry, then return only "ERRLOG OK". Steps:\n` +
+    `1. \`mkdir -p logs\`. 2. Get UTC timestamp: \`date -u +%FT%TZ\`.\n` +
+    `3. APPEND (do NOT overwrite — use >> or read-then-write) to \`logs/error.log\` a block:\n` +
+    `a header line \`=== <timestamp> hedge-fund-committee run ===\` then one line per row below as ` +
+    `\`<timestamp>\\t<desk>\\t<status>\\t<detail>\`. Rows (JSON): ${JSON.stringify(errRows)}\n` +
+    `Use the Write/bash append; never truncate existing log content.`,
+    { label: 'error-log', phase: 'Aggregate' })
+  log(`Logged ${errRows.length} fetch error(s) to logs/error.log`)
+}
+
 // ── PHASE 5 — CIO writes TWO artifacts: a 1-min BRIEF + the full audit MEMO ────
 // The owner is a busy PM. The BRIEF is the 30-second read (what / how much / why). The full MEMO is the
 // audit trail behind it. Length discipline: verbatim dissent ONLY on actionable verdicts; PASS/HOLD get
@@ -248,6 +348,9 @@ const memo = await agent(
   `DESK COVERAGE (ran/empty/FAILED + n candidates): ${JSON.stringify(coverage)}\n` +
   `THIN WEEK (no name cleared the n_sources>=2 OR conviction>=4 gate; names below are WATCH-ONLY ` +
   `fallbacks, not earned candidates): ${thinWeek}\n` +
+  `DISCOVERED BUT NOT PANELLED (names a desk surfaced that did NOT reach the vote, with reason): ${JSON.stringify(dropped)}\n` +
+  `P0 DROP ALARM (narrative/high-conviction names that were dropped — these are the SanDisk failure mode and ` +
+  `MUST be surfaced loudly, never omitted): ${JSON.stringify(flaggedDrops)}\n` +
   `DECIDED CANDIDATES (each has \`votes\` with own/today, \`risk\` gate, code-computed \`plan.action\`, and \`minority\`): ${JSON.stringify(decided)}\n\n` +
 
   `HOW TO READ THE PLAN (code-computed, deterministic — you may NOT override it):\n` +
@@ -267,6 +370,8 @@ const memo = await agent(
   `"Add trigger" = the dated/price event for the next tranche. "Dissent" = minority lens + ≤6-word gist, or "unanimous (FLAG)".\n` +
   `- A "Watch next" line: names to re-test + the dated catalyst that flips them.\n` +
   `- A "Coverage" line: which desks were empty/FAILED (one phrase) if any.\n` +
+  `- IF the P0 DROP ALARM list is non-empty: a "⚠ Dropped before panel" line naming those tickers + reason — ` +
+  `these are discovered names that did NOT get a vote; the owner must see them. NEVER omit this when the list is non-empty.\n` +
   `NO verbatim quotes, NO per-name prose in the brief. One screen.\n\n` +
 
   `=== FILE 2 — THE FULL MEMO (\`reports/hedge-fund-committee-<date>.md\`) — the audit trail ===\n` +
@@ -296,4 +401,4 @@ const memo = await agent(
 const briefPath = (memo.match(/BRIEF SAVED:\s*(\S+)/) || [])[1] || null
 const reportPath = (memo.match(/REPORT SAVED:\s*(\S+)/) || [])[1] || null
 const plans = decided.map(d => ({ ticker: d.ticker, action: d.plan.action, own: `${d.plan.own_yes}/${d.plan.n}`, gate: d.risk?.gate }))
-return { regime: macro?.summary, coverage, dead_desks: deadDesks, thin_week: thinWeek, plans, convergence: TOP, brief_path: briefPath, report_path: reportPath, memo }
+return { regime: macro?.summary, coverage, dead_desks: deadDesks, thin_week: thinWeek, dropped, flagged_drops: flaggedDrops, plans, convergence: TOP, brief_path: briefPath, report_path: reportPath, memo }

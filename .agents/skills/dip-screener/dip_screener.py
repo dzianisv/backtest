@@ -60,12 +60,16 @@ def _fetch_single(ticker: str):
     return close.dropna(), high.dropna()
 
 
-def _evaluate(ticker: str, cs, hs, threshold_pct: float):
+def _evaluate(ticker: str, cs, hs, threshold_pct: float, ground: bool = False):
     """Compute dip metrics for one ticker from its own close/high series.
 
     The as-of date is read from THIS ticker's own last data row (cs.index[-1]),
     so each row's date label is always the true date of that quote (mirrors the
-    regime skill's per-column as-of handling; no mismatched-year bug)."""
+    regime skill's per-column as-of handling; no mismatched-year bug).
+
+    ground=True returns metrics for ANY ticker regardless of the dip threshold —
+    used to price-ground narrative names (which may be UP, not dipping) so a
+    paywalled article never blocks a candidate from carrying a real 52w-high/200dMA."""
     if cs is None or hs is None or len(cs) < 20 or len(hs) < 20:
         return None
     current = float(cs.iloc[-1])
@@ -78,7 +82,7 @@ def _evaluate(ticker: str, cs, hs, threshold_pct: float):
     else:
         sma200 = None
         pct_vs_200d = None
-    if pct_from_high > -threshold_pct:
+    if not ground and pct_from_high > -threshold_pct:
         return None
     return {
         "ticker": ticker,
@@ -161,13 +165,40 @@ def emit_pool(hits: list[dict], path: str) -> int:
     return len(rows)
 
 
+def ground_tickers(tickers: list[str]) -> tuple[list[dict], list[str]]:
+    """Price-ground an arbitrary list of tickers (NOT the S&P-100 universe, NO dip
+    threshold). Returns (grounded, fetch_misses). Used by the committee workflow to
+    attach a live, paywall-independent 52w-high/200dMA to narrative names the news
+    desk discovered — decoupling discovery (news) from pricing (yfinance)."""
+    grounded, misses = [], []
+    for t in tickers:
+        t = t.strip().upper()
+        if not t:
+            continue
+        cs, hs = _fetch_single(t)
+        row = _evaluate(t, cs, hs, 0.0, ground=True)
+        if row is None:
+            misses.append(t)   # not US-listed / no yfinance data — honest, not silently dropped
+        else:
+            grounded.append(row)
+    return grounded, misses
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold", type=float, default=20.0)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--tickers", default=None,
+                    help="comma-separated tickers to PRICE-GROUND (no dip threshold, no S&P-100 scan); "
+                         "emits {grounded, fetch_misses} JSON. For grounding narrative names.")
     ap.add_argument("--emit-pool", nargs="?", const=DEFAULT_POOL, default=None,
                     help="append HIGH+MEDIUM dips to the durable convergence pool (default: %(default)s)")
     a = ap.parse_args()
+
+    if a.tickers:
+        grounded, misses = ground_tickers(a.tickers.split(","))
+        print(json.dumps({"grounded": grounded, "fetch_misses": misses}, indent=2))
+        return
 
     hits, fetch_misses = scan(a.threshold)
 
