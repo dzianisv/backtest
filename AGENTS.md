@@ -19,6 +19,28 @@ human-in-the-loop, both behind the backtest gate:
 **The one law (invariant #1):** any "trade X" request routes through `strategy-discovery-backtest`
 BEFORE any order exists. No untested idea reaches a live order. "No edge found" is a valid result.
 
+## Routing — which workflow/skill for which question
+
+| Question type | Route to | Notes |
+|---|---|---|
+| "What should I buy this week?" (open-universe) | `hedge-fund-committee` workflow | Weekly; no ticker needed |
+| "Should I buy/sell/trim X?" (known ticker) | `research-market` workflow | Pass question + portfolio + date |
+| "Find trending stocks" | `trend-stock-research` workflow | Pre-screen → journalism → quorum |
+| Hard judgment call (buy/hold/size) | `multi-lens-quorum` (method) | 4-7 independent lenses |
+| "Where does X go by [date]?" (probability) | `superforecasting` | Logs to forecast-ledger for scoring |
+| "What does the macro panel think?" | `macro-panel` | Convenes analytics-* thinker-lenses |
+| "Is it risk-on or risk-off?" | `regime-detection` | Weighted signal ensemble → exposure dial |
+| "Run the fund / daily cycle" | `hedge-fund-manager` | PM that delegates to sub-skills |
+| "Weekly portfolio review" | `tradfi-portfolio-manager` | REVIEW→ASSESS→RESEARCH→DECIDE→ORDER |
+| Compare two research outputs | `pairwise-eval` workflow | Blind A/B, N judges |
+
+**Three non-overlapping jobs — keep them distinct:**
+- `trend-stock-research` *finds WHICH* names (discovery → watchlist of hypotheses)
+- `multi-lens-quorum` *judges WHETHER / how much* (buy/hold/size verdict)
+- `superforecasting` *predicts WHAT happens by a date* (graded probability)
+
+They **chain**: scout picks → quorum judges → superforecaster times.
+
 ## The skills (your team)
 
 Two skill roots:
@@ -101,9 +123,6 @@ Frontmatter on `skills/` modules must keep `compatibility: opencode`.
 ## Repository Purpose
 
 Backtest + operate investment strategies for the @GOAL.md mission. Some results publish as Telegraph posts.
-**Second, separate track — crypto.** `crypto/` manages a live ~$177k multi-chain book with **its own
-goal in @crypto/GOAL.md**. Do not conflate with the $1M tradfi @GOAL.md.
-
 **Second, separate track — crypto.** `crypto/` manages a live ~$177k multi-chain crypto book
 (conservative, blue-chip-backed, bubble-defensive). It has **its own goal in @crypto/GOAL.md** — the
 optimal-allocation problem, constraints, and roadmap. Do not conflate it with the $1M tradfi @GOAL.md.
@@ -129,95 +148,20 @@ optimal-allocation problem, constraints, and roadmap. Do not conflate it with th
 ## The four pillars
 
 - **@GOAL.md** — the mission, the bubble evidence, and the done/not-done checklist. Start here.
-- **`strategy/`** — how our thinking evolved: `v1` (entry timing into the index), `v2` (can selection
-  beat the index? — mostly no), `v3` (Bubble-Aware All-Weather — **current recommendation**).
-  Start at @strategy/README.md.
-- **`research/`** — 9 cited research notes behind the strategy. Start at @research/README.md; the
-  synthesis is `research/08-the-1M-playbook.md`; the centerpiece evidence is
-  `backtests/crash_protection_backtest.py`.
-- **`skills/`** — opencode-compatible `SKILL.md` modules for an automated agent team: `regime-detection`,
-  `trend-following`, `portfolio-construction`, `risk-management`, `rebalancing`, `dip-tranches-strategy`,
-  `tax-loss-harvesting`, `fundamental-analysis`, `hedge-fund-13f-analysis`, the **macro-economist panel**
-  (`macro-panel` + the seven `analytics-*` thinker-lenses), the two **trading-discipline lenses**
-  (`analyst-systematic-trading` + `analyst-technical-analysis`), the **decision method**
-  `multi-lens-quorum`, the **forecasting stack** (`superforecasting` + `prediction-market-odds` +
-  `analyst-derivatives-positioning` + `forecast-ledger`), the **trend-stock finder**
-  `trend-stock-research`, and the top-level `agentic-fund-orchestration`.
+- **`strategy/`** — how our thinking evolved: v1 → v2 → v3 (Bubble-Aware All-Weather, **current**). Start at @strategy/README.md.
+- **`research/`** — 9 cited research notes. Synthesis: `research/08-the-1M-playbook.md`; evidence: `backtests/crash_protection_backtest.py`.
+- **`skills/`** — opencode SKILL.md modules. Each skill documents itself; read the individual SKILL.md for details.
+  Key groupings: desk sub-skills (regime, trend, construction, risk, rebalancing), macro-economist panel
+  (`macro-panel` + 7 `analytics-*` lenses), trading-discipline lenses (`analyst-systematic-trading` +
+  `analyst-technical-analysis`), forecasting stack (`superforecasting` + `prediction-market-odds` +
+  `analyst-derivatives-positioning` + `forecast-ledger`), and decision method (`multi-lens-quorum`).
 
-  **`multi-lens-quorum`** is the general orchestration method for hard JUDGMENT calls: convene 4-7
-  independent lenses (each subagent reads ONE skill, judges the SAME question on IDENTICAL facts,
-  returns verdict + conviction + what-would-change-my-mind + its own blind spot), then synthesize the
-  consensus **without averaging away dissent**. It carries a cost gate (only for reversible-expensive
-  "should I buy/sell/allocate" calls where frameworks genuinely disagree — answer trivial/factual
-  questions directly) and mandates a dissent seat. It is the GENERAL method over any lenses; `macro-panel`
-  is the special case that convenes the macro-thinker seats. Proven on the live BTC-tranche cadence call
-  (consensus $1k/wk × 6 calendar; Howell + Carver dissent preserved).
+> **Key design rules** (details in each SKILL.md):
+> - `multi-lens-quorum` = general method for judgment calls; `macro-panel` = special case for macro-thinker seats.
+> - Each analytics-* lens is a LENS, not gospel — carry per-skill Caveats; every thinker has been wrong/early.
+> - `hedge-fund-13f-analysis` is a lagging cross-check (45-day-old, long-only), never a trade trigger.
+> - `forecast-ledger` closes the Tetlock feedback loop — unscored forecasting is cosplay.
 
-  **The forecasting stack** turns a *dated* market question into a **scored probability** — distinct from
-  quorum's verdict. `superforecasting` is the method: frame a scored question (observable outcome + a
-  resolution date), convene lenses **via `multi-lens-quorum`**, anchor the probabilities to market-implied
-  odds, emit a base-case probability + alternates + falsifiable flip/de-risk triggers, and **log it to be
-  graded**. It is asset-agnostic (crypto, equities, indices, rates) and deliberately **excludes pure-value
-  seats** (Graham/Buffett) for short-horizon price forecasts — they answer *should I own this*, not *where
-  does price go by Friday*. It draws on two data skills: **`prediction-market-odds`** (the crowd's priced
-  probability of discrete dated events — Polymarket / Kalshi / CME FedWatch, liquidity-weighted, with the
-  slug-discovery / frozen-market / thin-liquidity traps handled) and **`analyst-derivatives-positioning`**
-  (the continuous options-implied distribution + positioning — futures funding/OI/basis/COT and options
-  skew/IV/max-pain/gamma, cross-asset crypto + equities; note its odds are *risk-neutral*, not real-world).
-  Forecasts are recorded by **`forecast-ledger`** (`ledger.py`: add → resolve → Brier + calibration by
-  lens/source), closing the Tetlock feedback loop — unscored forecasting is cosplay. `macro-panel` now
-  anchors any dated macro claim to `prediction-market-odds` and hands dated *predictions* to
-  `superforecasting`.
-
-  **Three non-overlapping jobs — keep them distinct.** `trend-stock-research` *finds WHICH* names
-  (open-universe discovery via quality journalism + a 180-name pre-screen → a watchlist of hypotheses);
-  `multi-lens-quorum` *judges WHETHER / how much* (a defended buy/hold/size verdict); `superforecasting`
-  *predicts WHAT happens by a date* (a graded probability). They **chain**: scout picks → quorum judges →
-  superforecaster times.
-
-  **The trading-discipline lenses** are book-grounded experts (sources in `books/`):
-  `analyst-systematic-trading` distils Robert Carver's *Systematic Trading* (2015) — the
-  how-to-*design/size/validate/automate* a rules-based strategy lens (modular framework, EWMAC+carry,
-  volatility targeting / Half-Kelly, handcrafting, the over-fitting/over-trading/over-betting pitfalls,
-  the cost "speed limit"); it operationalizes the GOAL.md mandate that any strategy be backtested with
-  realistic costs **before** trading. `analyst-technical-analysis` distils Jacob Bernstein's *The
-  Ultimate Day Trader* (2009) — the chart/indicator/Set-Up→Trigger→Follow-Through lens with exact
-  parameters — carried explicitly as **hypothesis-generation, not validated edge** (TA has a weak
-  empirical base; the house finding is hold/mid-risk beats day-trading after costs). The two pair: TA
-  proposes, `analyst-systematic-trading` validates. A third book-grounded lens,
-  `analyst-crypto` (Michael Howell *Capital Wars* + on-chain/sentiment/DCA), is the crypto-market analysis
-  brain for the `crypto/` book (liquidity governor → on-chain level → sentiment → tilted-DCA execution +
-  BTC-as-hurdle). And `analytics-morgan-housel` (Morgan Housel *The Psychology of Money*) is the
-  behavioral-finance / investor-psychology lens — the discipline guardrail over the trader who is "the
-  weakest link" — pairing with `analytics-warren-buffett` / `analytics-benjamin-graham` on temperament.
-
-  **The macro-economist panel** is a team of thinker-lenses, each a synthesis `SKILL.md` + per-theme KB
-  in `references/` distilled from that person's primary sources (full provenance in each skill's
-  `references/article-index.md`, aggregated in `macro-panel/SOURCES.md`). The seats:
-  `analytics-lyn-alden` (fiscal dominance / broad-money / eurodollar / BTC-as-hurdle / energy),
-  `analytics-ray-dalio` (debt cycles / changing world order / all-weather risk-parity),
-  `analytics-stanley-druckenmiller` (liquidity / timing / position-sizing),
-  `analytics-lacy-hunt` (the **deflation dissent** seat — debt→low-velocity→disinflation, long bonds),
-  `analytics-michael-pettis` (trade / capital-flows / China, S−I=CA),
-  `analytics-russell-napier` (financial repression / structural-inflation regime),
-  `analytics-warren-buffett` (bubble-discipline / quality-value / cash-as-option), and
-  `analytics-benjamin-graham` (the **rules-based value origin** — investment-vs-speculation, margin of
-  safety, Mr. Market, defensive vs enterprising, net-nets / the Graham number; the statistical-value
-  counterpart that Buffett evolved from). Use a single
-  `analytics-*` skill to apply one thinker's lens; use **`macro-panel`** to convene several at once and
-  surface their **agreement vs disagreement** (the disagreement is the signal — never average it away).
-  Each is a LENS, not gospel (carry the per-skill Caveats; every thinker has been wrong/early), and all
-  tactical/"current" claims must be re-checked against that thinker's `05-current-views.md` / newest
-  letter. Use
-  **`hedge-fund-13f-analysis`** whenever a position needs an
-  institutional-conviction cross-check — what notable funds (Buffett, Burry, Ackman, Tepper, Druckenmiller,
-  Klarman, Li Lu, Tiger, etc.) own and why, computed from SEC 13F filings, and overlapped against a book;
-  it pins the filing quarter, computes Q/Q deltas, infers the *why*, and persists the read to
-  `stocks/13f-overlap.md` + a memory pointer. It is a lagging cross-check, not a trade trigger — it
-  complements `fundamental-analysis` (the valuation gate), never replaces it. See
-  @skills/README.md. Frontmatter must keep `compatibility: opencode`. The committed
-  `dip-tranches-strategy/SKILL.md` was once mangled to whitespace — the canonical copies are restored;
-  `archive/skills.zip` is the backup archive.
 ## Rules
 
 ### File Placement
@@ -240,45 +184,25 @@ optimal-allocation problem, constraints, and roadmap. Do not conflate it with th
 Use `skill-supervisor` (propose/dispose). Re-run the eval harness (`evals/pm`, `evals/hf`) before
 shipping any SKILL.md edit; reject if score drops or an invariant gate trips. Never self-grade.
 
-### Mandatory execute→evaluate→improve loop (for every new skill or strategy)
+### Mandatory execute→evaluate→improve loop
 
-When you create or substantially rewrite a skill or strategy, you MUST run this loop before
-considering it shipped:
-
-1. **Execute** — run the skill/strategy end-to-end on a real or realistic input. For a research
-   skill, actually perform the research. For a backtest strategy, run the backtest. For a trading
-   skill, paper-trade it. Produce concrete output.
-2. **Evaluate** — critically assess the output against the skill's own `<success_criteria>` or
-   "Done when" checklist. Score each criterion PASS/PARTIAL/FAIL. Identify specific gaps:
-   - Did it actually read sources, or hallucinate/speculate?
-   - Is the output actionable and concrete, or vague fluff?
-   - Would a human trust this output enough to act on it?
-3. **Feedback** — write a specific, actionable list of what failed or was weak. Not "could be
-   better" — name the exact gap and how to fix it.
-4. **Improve** — edit the skill/strategy to address each feedback item. Change the prompt, add
-   constraints, tighten examples, fix the procedure.
-5. **Re-execute** — run again. Compare output quality to the previous iteration.
-6. **Repeat** until the output meets the success criteria and produces results a human would
-   actually use. Minimum 2 iterations; no maximum.
-
-This loop is NOT optional. A skill that has never been executed against real input is untested
-code — do not ship it. The first version is always wrong; the loop is how you find out how.
+Any new or substantially rewritten skill/strategy MUST pass this loop before shipping. The first
+version is always wrong; the loop is how you find out how. Minimum 2 iterations.
 
 ```
 create/edit skill → execute on real input → evaluate output → feedback (specific gaps)
        ↑                                                              │
        └──────────── improve skill ←──────────────────────────────────┘
-                     (repeat until output is good)
+                     (repeat until output meets success criteria)
 ```
 
 ### Research workflows + the trustworthy improve loop (built 2026-06-16)
 
-The crypto/equity research system = **3 thin workflows** in `crypto/workflows/` (orchestration only —
+The crypto/equity research system = **3 thin workflows** in `.agents/workflows/` (orchestration only —
 ALL substance lives in `.agents/skills/`). Do NOT re-derive this; run/extend it:
 
-- `research-crypto-market.js` — portfolio-aware crypto buy/sell research (gather → consolidate → panel → chair → ledger).
-- `research-stock-market.js` — same shape for equities (Buffett/Graham/Druckenmiller lenses, 13F/congress/fundamentals seats).
-- `pairwise-eval.js` — blind A/B selection for improving a workflow.
+- `research-market.workflow.js` — portfolio-aware crypto AND equity buy/sell research (gather → consolidate → panel → chair → ledger).
+- `pairwise-eval.workflow.js` — blind A/B selection for improving a workflow.
 
 Run via the Workflow tool with `scriptPath` + `args:{question, portfolio, date, ticker?}`. Each writes
 `research/research.{crypto,stock}.{date}.md` + a forecast-ledger row.
@@ -286,45 +210,26 @@ Run via the Workflow tool with `scriptPath` + `args:{question, portfolio, date, 
 Design + the eval loop are documented: `crypto/crypto.{goal,prd,tdd}.md` (product) and
 `crypto/eval/IMPROVE-LOOP.md` (the improve procedure). Hard lessons — violating these wasted a session:
 
-1. **Prefer pairwise to pointwise for selection.** To decide if an edit improved a workflow, use blind A/B
-   preference (`pairwise-eval.js`) rather than absolute 0–100 scores — pointwise clusters/fluctuates (lit:
-   Zheng 2023/MT-Bench). Caveat: so far pairwise is only validated here on a GROSS-defect pair; its ability to
-   rank SUBTLE improvements is unproven. Use a rubric the proposer did NOT author (else it points at the answer).
-2. **Never self-grade.** The agent that built/edits a workflow must not score it. Blind judges (see only the
-   output), roles separated (judge ≠ proposer ≠ executor). A self-graded loop once inflated 76→94 (real ~83).
-3. **Workflows can't nest a heavy target** (`workflow()`→null/throws). The improve loop is supervisor-orchestrated:
-   run target externally (Workflow tool) → reflect → propose skill edit → re-run → pairwise select → human gate.
+1. **Prefer pairwise to pointwise for selection.** Blind A/B preference (`pairwise-eval.workflow.js`)
+   beats absolute 0–100 scores (pointwise clusters/fluctuates). Caveat: only validated on gross-defect
+   pairs so far. Use a rubric the proposer did NOT author.
+2. **Never self-grade.** The agent that edits a workflow must not score it. Blind judges, roles separated.
+   A self-graded loop once inflated 76→94 (real ~83).
+3. **Workflows can't nest a heavy target** (`workflow()`→null/throws). The improve loop is
+   supervisor-orchestrated: run target externally → reflect → propose edit → re-run → pairwise select → human gate.
 4. **forecast-ledger Brier is the real ground truth.** LLM-judges are a coarse filter; the ledger validates over time.
 5. **Completeness contract:** a missing data category is `[UNAVAILABLE]` (loud), never silently dropped.
 
 ### Before building a NEW skill — STOP (anti-bloat guardrail)
-The product is the **agent + its proactive loop** (cron / heartbeat / dynamic workflow), NOT the skill
-count. Adding a skill is the low-value move; wiring an existing skill onto a reliable schedule is the
-high-value one. There are already 43 skills in `.agents/skills/` + dozens more in the live agent.
-1. **Audit first** — grep existing skills before writing one. If something already does it → REUSE/extend,
-   never duplicate. (2026-06 lessons: `recommendation-journal` deleted — `forecast-ledger` already scored
-   calls; `watchlist-monitor`/`narrative-velocity-tracker` cut for overlapping `portfolio-monitor` /
-   `trend-stock-research`.)
+The product is the **agent + its proactive loop**, NOT the skill count. There are already 43+ skills.
+1. **Audit first** — grep existing skills before writing one. If something already does it → REUSE/extend.
 2. **A new skill must name, in one line, the gap NO existing skill fills** — or it doesn't get built.
-3. **Test for real, then be skeptical** — running once ≠ correct. Check the logic makes sense, the field
-   names are honest (don't call a 52-week-high "ATH"), and failures degrade to `[UNAVAILABLE]`, never fabricate.
+3. **Test for real, then be skeptical** — running once ≠ correct. Failures degrade to `[UNAVAILABLE]`, never fabricate.
 
-### Capture recurring routines as skills (proactive — no instruction needed)
-When a **repeatable method** emerges in a session — the same multi-step analysis, screen, research
-fan-out, or eval done a second time, or any procedure worth re-running — **propose and author a skill
-for it on your own initiative.** Do not wait to be told.
-- **Skill vs doc:** a skill captures the *repeatable method* (the function); a `crypto/`, `research/`,
-  or `backtests/results/` file captures the *findings* (the dated output). Findings go stale; the skill
-  regenerates them. Write both — the skill cites the doc as its reference rationale.
-- **How:** follow the `write-skill` + `skill-creator` skills. Put deterministic data-pulls in a
-  bundled `scripts/` (so they can't drift); keep the body non-obvious-only and under ~500 lines; one
-  worked `<example>`; a "Done when" check. Frontmatter `description` carries the real trigger phrases.
-- **Where:** `skills/` for desk/analysis methods, `.agents/skills/` for operating skills. Build in a
-  worktree off `origin/main` (the local crypto branch lacks main's skills).
-- **Gate before trust:** every new skill gets a `skill-supervisor`-style eval; propose the skill (PR),
-  don't silently auto-merge it into the live set.
-- Trigger bar: you've done it twice, or you can already name the inputs→outputs cleanly. When in doubt,
-  draft the skill and say you did.
+### Capture recurring routines as skills (proactive)
+When a repeatable method emerges (done twice, or inputs→outputs are clearly nameable), propose a skill.
+Skill = repeatable method (the function); doc = dated findings (the output). Follow `write-skill` +
+`skill-creator`; gate with `skill-supervisor`-style eval before merging.
 
 ### Publishing
 - Charts → Imgur (Client-ID `546c25a59c58ad7`) → embedded in Telegraph.
