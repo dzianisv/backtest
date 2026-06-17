@@ -23,12 +23,77 @@ The advisor surfaces them **same-day, with a defended verdict**, before the wind
 - Runs a weekly investment brief: signals → quorum verdict → risk veto → ranked buy/sell ideas.
 - **Recommend-only.** No trades placed without your sign-off. Hard caps live in deterministic code.
 
-## Two books (separate ledgers — never conflate)
+## Two books (one advisor, separate ledgers)
 
-| Book | Size | Strategy | Goal |
-|------|------|----------|------|
-| **Tradfi** | ~$1M | Bubble-Aware All-Weather (v3): RSP 70% / GLD 15% / IEF 15% | S&P-like return, less AI-bubble concentration. Backtested: −42% max DD vs S&P −55%. |
-| **Crypto** | ~$177k | Yield-first conservative: maximize sustainable net yield on stable sleeve | Capital preservation first; no idle cash sits at 0%. See `crypto/GOAL.md`. |
+The advisor manages BOTH books through the same skill/workflow stack. Research workflows
+(`research-market`, `hedge-fund-committee`) route to the right desks automatically based on the
+question's asset class. Accounting stays separate — never conflate P&L across books.
+
+### Book 1: Tradfi (~$1M)
+
+**Strategy:** Bubble-Aware All-Weather (v3) — RSP 70% / GLD 15% / IEF 15%.
+**Goal:** S&P-like return, less AI-bubble concentration. Backtested: −42% max DD vs S&P −55%.
+**Details:** `strategy/v3-bubble-aware-all-weather.md`
+
+### Book 2: Crypto (~$177k)
+
+**Strategy:** Risk-aware yield — maximize sustainable net yield on stable sleeve, capital preservation first.
+**Goal:** No dollar sits idle; no dollar takes unpriced risk.
+
+#### The control loop (5 standing jobs)
+
+| Job | Trigger | Action |
+|-----|---------|--------|
+| **Deploy** | Cash sits idle > 3 days | Move to best C1-passing venue with capacity |
+| **Monitor** | Continuous (`portfolio.py`) | Track blended yield, idle $, concentration, collateral grade |
+| **Rotate** | Venue yield falls below clean frontier or collateral degrades | Exit to better eligible venue |
+| **Rebalance** | Sleeve/position drifts outside band | Trim/add back to target |
+| **Defend** | Crypto risk-off (BTC/ETH trend break, funding/vol spike, depeg/exploit) | Raise stable/gold weight, cut satellite |
+
+#### Hard constraints (C1–C9)
+
+| # | Constraint | Setting |
+|---|---|---|
+| C1 | **Collateral whitelist.** T-bills, BTC, ETH, SOL-staking, overcollateralized loans only. No reflexive/synthetic dollars, no PT/looped/long-tail. | per `research/10-crypto-lp-yield-state.md` |
+| C2 | Position concentration ≤ X% of book per vault/pool | 15% |
+| C3 | Protocol concentration ≤ Y% across all pools of one protocol | 25% |
+| C4 | Chain concentration ≤ Z% per chain outside Ethereum/Base | 10% |
+| C5 | Capacity — deposit ≤ 10% of pool TVL | 10% |
+| C6 | Liquidity — ≥ L% redeemable within D days | *investor input needed* |
+| C7 | Satellite cap (high-risk/perp-LP/points) ≤ S% total | 5% |
+| C8 | Sleeve bands — stable/ETH/SOL/BTC/gold/satellite within target ranges | *investor input needed* |
+| C9 | No idle cash below clean frontier longer than 3 days | 3 days |
+
+#### Optimization (two layers, top-down)
+
+1. **Strategic sleeves** — split across `{stable-yield, ETH, SOL, BTC, gold, satellite}`. Policy choice
+   from investor risk tolerance / horizon / liquidity, not yield-driven.
+2. **Within stable sleeve** — constrained yield-maximization: maximize `Σ wᵢ · r_netᵢ` subject to C1–C8.
+
+**Optimal** = on the efficient frontier: no feasible reallocation raises net yield without violating a constraint.
+
+#### Required investor inputs (unchecked = undefined)
+
+- [ ] Max tolerable drawdown on whole book in −60% crypto move
+- [ ] Time horizon — when is this capital needed?
+- [ ] Liquidity need — how much withdrawable within 1/7/30 days?
+- [ ] Stable vs directional split target
+- [ ] KYC willingness for RWA T-bill products (BUIDL/USTB/USDY)
+- [ ] Per-protocol trust caps or exclusions
+- [ ] Self-custody preference for blue-chip spot
+
+#### Current state (2026-05-30)
+
+| Metric | Value |
+|---|---|
+| Total | ~$177,145 |
+| Stablecoins | $122k (69%) |
+| Blended yield (live) | ~1.7% (~$2,989/yr) |
+| Stables earning <3% | ~$104k |
+
+Interim target: reallocate ~$113k idle stables → ~4.5% clean frontier = **$7,058/yr** (+$4,069 uplift).
+
+**Tooling:** `crypto/portfolio.py` (live tracker), `crypto/STRATEGY.md` (target allocation + venue menu).
 
 ## Installed (~60 skills + 1 workflow)
 
@@ -58,13 +123,13 @@ Setup prompts: `docs/InstallPrompt.md`. Per-backend wiring: `docs/setup-{opencla
 2. **Human in the loop.** Agent proposes; human approves. Notification-first until paper-validated.
 3. **No fabricated data.** Source down → `[UNAVAILABLE]`, never an invented price.
 4. **Risk management has veto.** RISK_OFF regime → no new buy alerts (logged to watchlist only).
-5. **Two books are separate.** Never conflate tradfi and crypto accounting.
+5. **Two books: one advisor, separate ledgers.** Never conflate tradfi and crypto accounting.
 6. **Hard caps in code, outside the LLM.** Size, drawdown, per-trade/day loss, leverage.
 
 ## Scope
 
 **IN:** daily dip scans (stock + crypto), regime/Fed monitoring, journalism narrative accumulation,
-signal convergence, weekly brief, proactive scheduling on 3 backends, recommend-only DMs.
+signal convergence, weekly brief, crypto yield monitoring + rotation, proactive scheduling on 3 backends, recommend-only DMs.
 
 **OUT:** auto-trading (recommend-only; execution tracks D/E in AGENTS.md), paid data feeds,
 intraday day-trading (gated by backtest skill, separate workstream).
@@ -78,3 +143,6 @@ intraday day-trading (gated by backtest skill, separate workstream).
 - [x] forecast-ledger wired: each DM'd call logged; 30/60/90d hit-rate scored in weekly brief.
 - [x] claude-code backend validated: skills load as `/commands`, run clean on live data.
 - [~] hermes backend: DEFERRED — no instance available. Setup documented; same skills apply when ready.
+- [x] Crypto book audited, tracker built (`portfolio.py`), strategy written (`STRATEGY.md`).
+- [ ] Investor inputs captured for C6/C8 — policy defaults set, not confirmed.
+- [ ] Crypto transition executed (investor signs).

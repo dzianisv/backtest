@@ -113,7 +113,7 @@ Frontmatter on `skills/` modules must keep `compatibility: opencode`.
 2. **Notification-first / human-in-the-loop** — agent produces orders; human approves until paper-validated + signed off.
 3. **Hard caps + kill switch in deterministic code, outside the LLM** — size, drawdown, per-trade/day loss, leverage.
 4. **Honest reporting** — net-of-cost results, drawdowns, bull-lag trade-off; "no edge found" is valid.
-5. **Two books stay separate** — $1M tradfi book vs the live ~$177k crypto book (`crypto/GOAL.md`). Never conflate.
+5. **Two books: one advisor, separate ledgers** — $1M tradfi book vs the live ~$177k crypto book. Never conflate accounting.
 
 ## Integration tracks (staged: connector → paper/notification → human sign-off → live with code-side caps)
 - **D — Robinhood agentic trading** (equities): https://robinhood.com/us/en/support/articles/agentic-trading-overview/
@@ -124,15 +124,15 @@ Frontmatter on `skills/` modules must keep `compatibility: opencode`.
 
 Backtest + operate investment strategies for the @GOAL.md mission. Some results publish as Telegraph posts.
 **Second, separate track — crypto.** `crypto/` manages a live ~$177k multi-chain crypto book
-(conservative, blue-chip-backed, bubble-defensive). It has **its own goal in @crypto/GOAL.md** — the
-optimal-allocation problem, constraints, and roadmap. Do not conflate it with the $1M tradfi @GOAL.md.
+(conservative, blue-chip-backed, bubble-defensive). The crypto book strategy (control loop,
+constraints C1–C9, optimization problem) is in @GOAL.md §Book 2. Do not conflate its accounting with tradfi.
 
 ## Directory Structure
 ```
 /
 ├── GOAL.md              # The mission + your operating prompt (read first)
 ├── AGENTS.md            # This file — conventions + skill map
-├── crypto/              # Separate track: live ~$177k crypto book — see @crypto/GOAL.md
+├── crypto/              # Crypto book tooling (portfolio.py, STRATEGY.md, research specs)
 ├── strategy/            # Strategy evolution: README + v1/v2/v3 (v3 current)
 ├── research/            # Research library (AI-bubble, crash protection, frameworks, $1M playbook)
 ├── backtests/           # Backtest + publisher scripts (run from repo root)
