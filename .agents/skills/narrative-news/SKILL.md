@@ -35,7 +35,7 @@ state), and returns the **ranked, question-relevant** deduped events in one shot
 
 ```bash
 python3 .agents/skills/crypto-news-store/news_fetch.py \
-  --db crypto/news/news.db --days 5 \
+  --db .db/news.db --days 5 \
   --query "<key entities from the question: e.g. bitcoin BTC ETF Strategy MicroStrategy treasury Fed Coinbase COIN>"
 # → {fetched, feeds_ok, unavailable:[...], events:[ {title, source_count, ...} ranked by relevance ]}
 ```
@@ -45,7 +45,7 @@ failures come back in `unavailable` (loud, NFR6) — never silently dropped.
 
 After the brief is written, the workflow marks events surfaced so they don't repeat next run:
 ```bash
-python3 .agents/skills/crypto-news-store/news_store.py --db crypto/news/news.db mark-surfaced --ids <ids...>
+python3 .agents/skills/crypto-news-store/news_store.py --db .db/news.db mark-surfaced --ids <ids...>
 ```
 
 **Fallback (only if news_fetch fails):** call the individual [[feed-decrypt]]…/[[feed-ft]] adapters by hand,

@@ -23,7 +23,7 @@ Never fabricate. The store only ever holds what `feed-*` actually fetched. It ju
 ## What it is
 
 `news_store.py` — **stdlib python3 + sqlite3 only** (runs in agent bash with python3.12; no network, no
-embedding model). Single SQLite file, default `crypto/news/news.db`.
+embedding model). Single SQLite file, default `.db/news.db`.
 
 - **`articles`** — one row per ingested article (+ `canonical_url`, `content_hash`, `simhash`).
 - **`articles_fts`** (FTS5) — BM25 over `title + summary` for named entities/tickers (`MSTR`, `$11B`, `ETF`).
@@ -56,7 +56,7 @@ Returns **events, not raw rows**.
 ```bash
 S="python3 .agents/skills/crypto-news-store/news_store.py"   # add --db <path> for a throwaway store
 
-$S --db crypto/news/news.db ingest --json records.json   # idempotent → {new, duplicate, events_touched}
+$S --db .db/news.db ingest --json records.json   # idempotent → {new, duplicate, events_touched}
 $S query --q "strategy bitcoin" --days 2 --k 10           # HYBRID BM25+near-dup, fused via RRF → events
 $S new-since --days 2                                     # events first_seen/last_updated in window AND
                                                           #   NOT yet surfaced_to_panel_on (panel feed)

@@ -6,7 +6,7 @@ This store is the dedup + state layer the `narrative-news` gather seat reads.
 
 Stdlib only (python3 + sqlite3). No network, no embedding model required.
 
-Storage (single SQLite file, default crypto/news/news.db):
+Storage (single SQLite file, default .db/news.db):
   articles  — one row per ingested article (canonical_url + content hash for exact dedup).
   articles_fts (FTS5) — BM25 over title+summary.
   events    — one row per event cluster (near-dup articles collapsed via SimHash), carrying
@@ -35,7 +35,7 @@ Commands:
   new-since --days N                     events with first_seen/last_updated in window AND not yet
                                          surfaced_to_panel_on (the state-aware feed for the panel)
   mark-surfaced --ids id1 id2 ...        stamp surfaced_to_panel_on = today (or --on)
-All commands take --db <path> (default crypto/news/news.db) so tests use a throwaway db.
+All commands take --db <path> (default .db/news.db) so tests use a throwaway db.
 """
 import argparse
 import hashlib
@@ -48,7 +48,7 @@ import sys
 import unicodedata
 from datetime import datetime, timezone, timedelta
 
-DEFAULT_DB = "crypto/news/news.db"
+DEFAULT_DB = ".db/news.db"
 SIMHASH_BITS = 64
 DEFAULT_JACCARD = 0.15        # >= this shingle-Jaccard => same event (near-dup)
 SHINGLE = 3                   # token window for SimHash features

@@ -3,6 +3,8 @@
 > **Educational analysis only — not financial advice.** APYs/balances pulled live from DefiLlama and
 > protocol APIs (last: **2026-05-30**) and move hourly. Verify against your own wallet before acting.
 > Read-only research mandate: **never** custody keys or sign transactions — the investor executes.
+>
+> **This is the YIELD BOOK strategy (~$177k DeFi portfolio).** The sibling `crypto.goal.md` is the separate RESEARCH/DECISION product (panel + workflow for BTC/alt buy-sell-hold calls). Two books, two goals — do not conflate.
 
 ## The mission
 

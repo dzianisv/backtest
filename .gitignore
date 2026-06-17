@@ -43,5 +43,18 @@ reports/
 crypto/news/
 .agents/skills/crypto-news-store/.fetch_tmp.json
 
+# session / runtime artifacts
+bundle.session.txt
+records.json
+.telegraph_path_v2
+
 # run error log (durable, not committed)
 logs/
+
+# unified news DB (runtime, re-created by news_fetch.py)
+.db/*
+!.db/.gitkeep
+
+# opencode / supervisor runtime state
+.opencode/
+.supervisor/

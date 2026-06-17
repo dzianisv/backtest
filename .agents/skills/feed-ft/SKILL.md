@@ -1,6 +1,6 @@
 ---
 name: feed-ft
-description: Source adapter for the Financial Times (FT) — PAYWALLED, so HEADLINES ONLY. Fetch + normalize the FT RSS into the common article record (headline + url + published_at) with body marked [UNAVAILABLE - paywall]. Use when gathering the crypto/macro news feed, when narrative-news needs FT macro coverage, or when asked for "FT headlines" / "Financial Times news". Fetch + normalize ONLY — no dedup/store/judge. NEVER fabricates a body.
+description: Source adapter for the Financial Times (FT) — PAYWALLED, RSS descriptions/teasers available as summary. Fetch + normalize the FT RSS into the common article record (headline + url + published_at) with body from RSS teaser (or [UNAVAILABLE - paywall] if empty). Use when gathering the crypto/macro news feed, when narrative-news needs FT coverage, or when asked for "FT headlines" / "Financial Times news". Fetch + normalize ONLY — no dedup/store/judge. NEVER fabricates a body.
 license: MIT
 compatibility: opencode
 metadata:
@@ -10,11 +10,12 @@ metadata:
   tier: macro-paywalled
 ---
 
-# feed-ft (Financial Times source adapter — headlines only)
+# feed-ft (Financial Times source adapter — RSS teasers available)
 
 Pure **fetch + normalize** adapter for a **paywalled** outlet. FT bodies are behind a hard paywall, so this
-adapter emits **headline + url + published_at only** and marks the body `[UNAVAILABLE - paywall]`. Dedup/
-store/judge live downstream in [[crypto-news-store]] + [[narrative-news]].
+adapter emits **headline + url + published_at + RSS teaser** (the publisher's own `description`) and marks
+the body `[UNAVAILABLE - paywall]` only when the RSS teaser is absent. Dedup/store/judge live downstream in
+[[crypto-news-store]] + [[narrative-news]].
 
 ## Hard rule (paywall)
 
@@ -75,5 +76,15 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 ```json
 {"source":"ft","status":"[UNAVAILABLE]","reason":"paywall / 403 bot-block / fetch failed"}
 ```
+
+## Interactive fallback — full article body
+
+When the RSS teaser is not enough and you need the full FT article, use the **bypass-paywalls** skill
+(`.agents/skills/bypass-paywalls/SKILL.md`) which navigates the user's Chrome (with
+bypass-paywalls-clean extension) to extract the full body interactively.
+
+The automated path (this skill) handles daily RSS ingestion; the interactive path handles ad-hoc reads.
+This is the same chrome-use + BPC method documented in §"Reading the BODY" above, packaged as a
+reusable skill with prerequisites, storage instructions, and limitations.
 
 > Educational, not advice. Headlines only; never fabricate a paywalled body.

@@ -1,6 +1,6 @@
 ---
 name: feed-wsj
-description: Source adapter for The Wall Street Journal (WSJ) Markets — PAYWALLED, so HEADLINES ONLY. Fetch + normalize the WSJ Markets RSS into the common article record (headline + url + published_at) with body marked [UNAVAILABLE - paywall]. Use when gathering the crypto/macro news feed, when narrative-news needs WSJ markets coverage, or when asked for "WSJ headlines" / "Wall Street Journal markets news". Fetch + normalize ONLY — no dedup/store/judge. NEVER fabricates a body.
+description: Source adapter for The Wall Street Journal (WSJ) Markets — PAYWALLED, RSS descriptions/teasers available as summary. Fetch + normalize the WSJ Markets RSS into the common article record (headline + url + published_at + publisher's RSS teaser). Use when gathering the crypto/macro news feed, when narrative-news needs WSJ markets coverage, or when asked for "WSJ headlines" / "Wall Street Journal markets news". Fetch + normalize ONLY — no dedup/store/judge. NEVER fabricates a body.
 license: MIT
 compatibility: opencode
 metadata:
@@ -10,11 +10,12 @@ metadata:
   tier: macro-paywalled
 ---
 
-# feed-wsj (WSJ Markets source adapter — headlines only)
+# feed-wsj (WSJ Markets source adapter — RSS teasers available)
 
 Pure **fetch + normalize** adapter for a **paywalled** outlet. WSJ bodies are behind a paywall, so this
-adapter emits **headline + url + published_at only** and marks the body `[UNAVAILABLE - paywall]`. Dedup/
-store/judge live downstream in [[crypto-news-store]] + [[narrative-news]].
+adapter emits **headline + url + published_at + RSS teaser** (the publisher's own `description`) and marks
+the body `[UNAVAILABLE - paywall]` only when the RSS teaser is absent. Dedup/store/judge live downstream in
+[[crypto-news-store]] + [[narrative-news]].
 
 ## Hard rule (paywall)
 
@@ -23,10 +24,11 @@ failure → `[UNAVAILABLE]`. Return **≥1 headline record or a clean `[UNAVAILA
 
 ## Retrieval recipe
 
-- **Endpoint (verified resolving, RSS 2.0 — WSJ Markets Main):** `https://feeds.a.dj.com/rss/RSSMarketsMain.xml`
-  Other WSJ feeds (same publisher, same paywall rule): `https://feeds.a.dj.com/rss/RSSWorldNews.xml`,
-  `https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml`.
-- Parse `channel > item`: `title`→title, `link`→url (canonicalize, strip `utm_*`), `pubDate`(RFC-822)→`published_at` (ISO-8601 UTC). The RSS `description` is WSJ's own teaser — keep verbatim as `summary` if present (publisher-provided, not fabricated), else `"[UNAVAILABLE - paywall]"`. **Do NOT scrape the full body.** `category`→`tags`, `lang: en`, `source: wsj`.
+- **Primary endpoint (verified working 2026-06-16):** Google News RSS filtered to WSJ:
+  `https://news.google.com/rss/search?q=site%3Awsj.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`
+  Returns ~100 articles/7 days. URLs are opaque Google News redirects (work in browsers, not directly resolvable).
+- **DEPRECATED (dead since Jan 2025):** `https://feeds.a.dj.com/rss/RSSMarketsMain.xml` and other DJ feeds — frozen, return stale data.
+- Parse `channel > item`: `title`→title (strip `" - The Wall Street Journal"` suffix), `link`→url (Google News redirect), `pubDate`(RFC-822)→`published_at` (ISO-8601 UTC). The RSS `description` is Google News's snippet — keep verbatim as `summary` if present, else `"[UNAVAILABLE - paywall]"`. **Do NOT scrape the full body.** `category`→`tags`, `lang: en`, `source: wsj`.
 
 ## Reading the BODY (verified method, June 2026)
 
@@ -67,5 +69,15 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 ```json
 {"source":"wsj","status":"[UNAVAILABLE]","reason":"paywall / fetch failed"}
 ```
+
+## Interactive fallback — full article body
+
+When the RSS teaser and Wayback snapshot are not enough and you need the full WSJ article, use the
+**bypass-paywalls** skill (`.agents/skills/bypass-paywalls/SKILL.md`) which navigates the user's
+Chrome (with bypass-paywalls-clean extension) to extract the full body interactively.
+
+The automated path (this skill) handles daily RSS ingestion + Wayback bodies; the interactive path
+handles ad-hoc reads when no Wayback snapshot exists or the snapshot is stale. This is the same
+chrome-use + BPC method documented in §"Reading the BODY" above, packaged as a reusable skill.
 
 > Educational, not advice. Headlines only; never fabricate a paywalled body.

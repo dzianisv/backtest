@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Deterministic crypto-news fetcher for the narrative-news gather seat.
+"""Deterministic unified news fetcher for the narrative-news gather seat.
 
-Fetches the crypto-native RSS feeds (the feed-* skills document the per-source
-quirks), normalizes to the common article record, pipes them into news_store.py
-(dedup + cross-run state), and prints the NEW/updated EVENTS as JSON.
+Fetches ALL RSS feeds (crypto-native + macro paywalled), normalizes to the common
+article record, pipes them into news_store.py (dedup + cross-run state), and
+prints the NEW/updated EVENTS as JSON.
 
 One reliable command instead of N fragile WebFetch calls:
-    python3 news_fetch.py --days 3 --db crypto/news/news.db
+    python3 news_fetch.py --days 3 --db .db/news.db
 
 Stdlib only. Per-feed failures degrade to a logged [UNAVAILABLE], never crash.
-Paywalled macro (ft/wsj/bloomberg) is intentionally NOT fetched here — those
-feed-* skills are headline-only/[UNAVAILABLE] and handled by an agent when needed.
+Macro feeds (FT/WSJ/Bloomberg) return RSS descriptions/teasers — full-body extraction
+is gated behind the article-paywall-bypass mechanism in trend-stock-research.
 """
 import argparse, json, os, re, ssl, sys, subprocess, urllib.request
 from email.utils import parsedate_to_datetime
@@ -21,15 +21,25 @@ from xml.etree import ElementTree as ET
 HERE = os.path.dirname(os.path.abspath(__file__))
 STORE = os.path.join(HERE, "news_store.py")
 
-# Verified-resolving crypto-native RSS (2026-06-15). coindesk 308-redirects.
-FEEDS = {
+# Verified-resolving RSS feeds (2026-06-15).
+# Crypto-native (full content):
+CRYPTO_FEEDS = {
     "decrypt": "https://decrypt.co/feed",
     "cointelegraph": "https://cointelegraph.com/rss",
     "coindesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "theblock": "https://www.theblock.co/rss.xml",
     "bitcoinmagazine": "https://bitcoinmagazine.com/feed",
 }
-UA = "Mozilla/5.0 (crypto-research; +https://example.invalid)"
+# Macro paywalled — FT/WSJ have RSS descriptions/teasers; Bloomberg is best-effort (podcast feed, often 403):
+MACRO_FEEDS = {
+    "ft": "https://www.ft.com/rss/home",
+    "ft-markets": "https://www.ft.com/rss/markets",
+    "wsj": "https://news.google.com/rss/search?q=site%3Awsj.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen",
+    "bloomberg": "https://www.bloomberg.com/feed/podcast/etf-report.xml",  # podcast feed, not news — often 403
+}
+
+FEEDS = {**CRYPTO_FEEDS, **MACRO_FEEDS}
+UA = "Mozilla/5.0 (news-research; +https://example.invalid)"
 TAG = re.compile(r"<[^>]+>")
 
 
@@ -81,14 +91,14 @@ def _parse(source, xml_bytes):
 
 def main():
     ap = argparse.ArgumentParser(description="fetch crypto RSS -> news_store -> new events")
-    ap.add_argument("--db", default=os.path.join(HERE, "..", "..", "..", "crypto", "news", "news.db"))
+    ap.add_argument("--db", default=".db/news.db")
     ap.add_argument("--days", type=int, default=3)
     ap.add_argument("--k", type=int, default=15)
     ap.add_argument("--query", default="", help="if set, return ranked question-relevant events (hybrid BM25+near-dup) instead of all new-since; cuts noise")
     args = ap.parse_args()
 
     records, unavailable = [], []
-    for name, url in FEEDS.items():
+    for name, url in sorted(FEEDS.items()):
         try:
             records += _parse(name, _fetch(url))
         except Exception as e:

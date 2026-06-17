@@ -1,8 +1,7 @@
 # Crypto Research & Decision — GOAL (1-min read)
 
 > Educational analysis only — not financial advice. Recommend-only, notification-first, human-in-the-loop.
-> Sibling to [crypto/GOAL.md](GOAL.md) (the DeFi *yield* book). This doc is the crypto **decision/research** product:
-> the panel + workflow + skills that answer **"should I buy/sell/hold BTC (or an alt) now, and how much?"**
+> **This is the RESEARCH/DECISION product** — the panel + workflow + skills that answer "should I buy/sell/hold BTC (or an alt) now, and how much?" The sibling [GOAL.md](GOAL.md) is the separate DeFi *yield* book (~$177k portfolio). Two books, two goals — do not conflate.
 
 ## The mission
 
