@@ -129,7 +129,7 @@ Deploy dip cash into the **de-concentrated mix**, not just into QQQ.
 
 ## How it runs — the agentic team
 
-Implemented as the [`../skills/`](../skills/README.md) `SKILL.md` set, coordinated by
+Implemented as the [`.agents/skills/`](../.agents/skills/README.md) `SKILL.md` set, coordinated by
 `agentic-fund-orchestration` in a daily, **notification-first** loop:
 
 ```
@@ -165,4 +165,4 @@ drawdown you can actually live through.
 
 ## Provenance
 `backtests/crash_protection_backtest.py` + `backtests/results/crash_protection_summary.txt`;
-`research/` notes 01-08; the agent team in `skills/`.
+`research/` notes 01-08; the agent team in `.agents/skills/`.

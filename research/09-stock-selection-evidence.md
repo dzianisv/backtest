@@ -108,7 +108,7 @@ screening only.
 **Practical conclusion for the fund:** don't license Morningstar. If you ever run a fundamental
 sleeve, **approximate moat/quality with computable proxies** (sustained high ROIC, gross
 profitability, low capital intensity, pricing-power margins) on point-in-time data, and make it clear
-the backtest gate (`skills/fundamental-analysis`) before any capital. The default remains the cheap
+the backtest gate (`.agents/skills/fundamental-analysis`) before any capital. The default remains the cheap
 ETF.
 
 **Even if you already have a Morningstar account:** use it only as a *manual context lens* (a
