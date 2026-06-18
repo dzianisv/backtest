@@ -1,55 +1,56 @@
 ---
 session: ses_12b8
-updated: 2026-06-17T21:59:13.675Z
+updated: 2026-06-17T22:23:08.135Z
 ---
 
 # Session Summary
 
 ## Goal
-Build or find a universal workflow CLI runner that executes `.agents/workflows/*.workflow.js` files from any agent backend (OpenClaw, Hermes, OpenCode) — not tied to OpenCode's plugin system.
+Research and select the best dynamic workflow plugin for OpenCode, then fork/create `dzianisv/opencode-dynamic-workflow` with fixes applied.
 
 ## Constraints & Preferences
-- Solution must work across OpenClaw, Hermes, and OpenCode agents
-- User frustrated with over-engineering — wants practical, working solution fast
-- No permanent changes to global OpenCode config (`/Users/engineer/.config/opencode/opencode.json`)
-- Caveman communication style preferred
+- Plugin must work with OpenCode's plugin loader (requires default export)
+- User prefers existing well-maintained solutions over rolling their own
+- Local-first, bring-your-own-model preferred
+- User wants script-as-orchestrator pattern (not prompt-only workflows)
 
 ## Progress
 ### Done
-- [x] Deleted `scripts/opencode-workflow-runner.mjs` and `tests/opencode-workflow-runner.test.mjs` (superseded by Drawers plugin)
-- [x] Rewrote README `### OpenCode workflow execution` section with Drawers `script_path` + `args` schema
-- [x] Created `.agents/knowledgebase/project-overview.md`
-- [x] Closed GitHub issues #41 (superseded) and #42 (duplicate)
-- [x] Smoke-tested via temporary wrapper: `opencode run` → `workflow` tool launched `wf_kvpflmoh` (pairwise-eval), completed 6.6s
-- [x] Identified root cause: `opencode-drawer-workflows@1.6.0` missing default export — temp `export default WorkflowsPlugin` wrapper fixed it
-- [x] Restored global config and deleted temp wrapper
+- [x] Diagnosed `opencode-drawer-workflows@1.6.0` silent load failure (named export vs required default export)
+- [x] Applied fix: appended `export default WorkflowsPlugin;` to `/Users/engineer/.config/opencode/node_modules/opencode-drawer-workflows/dist/index.js`
+- [x] Verified fix works via smoke test (workflow ID `wf_kvpflmoh` completed)
+- [x] Forked `fredcamaral/drawers` to `dzianisv` (fork in progress on GitHub)
+- [x] Researched competing OpenCode workflow plugins
 
 ### In Progress
-- [ ] Research/design universal workflow CLI runner (user's latest question, unanswered)
+- [ ] User asked to "research/review if there another plugins like this" — research completed, awaiting user decision on which to adopt
 
 ### Blocked
-- `opencode-drawer-workflows@1.6.0` ships only named export `WorkflowsPlugin`; OpenCode plugin loader expects default export → plugin silently fails without wrapper
-- No answer yet on whether a standalone CLI exists or needs building
+- Fork appeared as `dzianisv/drawers` not yet confirmed renamed to `opencode-dynamic-workflow`
 
 ## Key Decisions
-- **Delete custom runner instead of maintaining both**: Drawers plugin provides same capability with less maintenance
-- **Pivot goal to universal CLI**: User wants cross-agent solution, not OpenCode-only plugin fix
-- **User quote**: "took too much effort and solution wasn't built. is there an universal workflow cli runner that will allow to run a workflow from any agent, including openclaw, hermes, opencode?"
+- **Fix was a one-liner**: `export default WorkflowsPlugin;` — minimal patch, root cause confirmed
+- **Original repo**: `fredcamaral/drawers` at `git+https://github.com/fredcamaral/drawers.git`
 
 ## Next Steps
-1. Read `opencode-drawer-workflows/dist/lib.js` to determine if workflow engine is usable standalone (separate from plugin wrapper)
-2. Determine what globals workflow scripts expect (`agent()`, `pipeline()`, `parallel()`, `phase()`, `log()`, `args`, `budget`, `workflow()`)
-3. Assess feasibility of thin CLI wrapper around the engine that any agent can invoke via shell
-4. Build or recommend solution
+1. Present research findings to user and get decision on which plugin to adopt
+2. Either rename fork to `dzianisv/opencode-dynamic-workflow` and apply fix, OR switch to a better alternative
+3. Update `opencode.json` plugin reference to point to chosen solution
+4. Restart OpenCode to verify `workflow` tool loads
 
 ## Critical Context
-- Workflow files at `.agents/workflows/*.workflow.js` use DSL globals: `agent()`, `pipeline()`, `parallel()`, `phase()`, `log()`, `args`, `budget`, `workflow()`
-- Package structure: `dist/index.js` = OpenCode plugin interface; `dist/lib.js` = workflow engine runtime
-- Working wrapper pattern: `import { WorkflowsPlugin } from "file:///...dist/index.js"; export default WorkflowsPlugin;`
-- Smoke `wf_kvpflmoh` completed but child judge step had `status_error` (session `ses_1286d4bcaffeD6cyal50A5z4KG`) — tool registration works, business logic didn't execute cleanly
-- Global config line 17: `"opencode-drawer-workflows"` — currently broken without wrapper
-- Agent backends in user's ecosystem: OpenClaw (VMs), Hermes (gateway), OpenCode (CLI/TUI)
-- Installed plugin path: `/Users/engineer/.config/opencode/node_modules/opencode-drawer-workflows/`
+- **Top competing plugins found:**
+  - **`marcusrbrown/systematic`** — 22⭐, TypeScript, 40+ bundled skills, 50+ specialized agents, npm: `@fro.bot/systematic`, actively maintained (updated today). Structured engineering workflows, not script-as-orchestrator.
+  - **`Suraj1235/open-dynamic-workflows`** — 3⭐, JavaScript, MIT, "the script is the orchestrator, not the model". Supports OpenCode, Codex, Antigravity, VS Code. Local daemon, QuickJS/WASM sandbox, bring-your-own-model (Anthropic/OpenAI/Ollama). Closest to Claude Code's dynamic workflows pattern.
+  - **`534529531/ralph-flow`** — 13⭐, TypeScript, MIT, event-driven state machine with independent verification at every step. Forces AI to follow multi-step workflows with unbiased verification sessions. Pause/resume, JSON Lines logs, failure context on retry.
+  - **`fredcamaral/drawers`** (current) — 4⭐, what we have installed. Ports Claude Code's background agents & workflows to OpenCode.
+  - **`agustinusnathaniel/maestria`** — 0⭐, portable workflow patterns as plugin, MDX-based
+  - **`deivid22srk/dynamic-workflows-skill`** — autonomous multi-agent orchestration for large-scale migrations/audits
+
+- **Key differentiators:**
+  - `open-dynamic-workflows`: script-as-orchestrator, fan-out parallel agents, critics verify, local-first — most aligned with user's `.agents/workflows/*.workflow.js` pattern
+  - `ralph-flow`: state machine enforcement, independent verification sessions — best for "don't let AI skip steps"
+  - `systematic`: most popular/polished, but more opinionated (bundled skills/agents)
 
 ## File Operations
 ### Read
@@ -67,6 +68,7 @@ Build or find a universal workflow CLI runner that executes `.agents/workflows/*
 - `/Users/engineer/.config/opencode/opencode.json`
 - `/Users/engineer/.config/opencode/package.json`
 - `/Users/engineer/workspace/backtest/.agents/knowledgebase/project-overview.md`
+- `/Users/engineer/workspace/backtest/.agents/skills/signal-convergence-alert/convergence.py`
 - `/Users/engineer/workspace/backtest/.agents/workflows/hedge-fund-committee.workflow.js`
 - `/Users/engineer/workspace/backtest/.agents/workflows/pairwise-eval.workflow.js`
 - `/Users/engineer/workspace/backtest/.agents/workflows/research-market.workflow.js`
@@ -77,9 +79,8 @@ Build or find a universal workflow CLI runner that executes `.agents/workflows/*
 - `/Users/engineer/workspace/backtest/scripts/opencode-workflow-runner.mjs`
 - `/Users/engineer/workspace/backtest/strategy/README.md`
 - `/Users/engineer/workspace/backtest/tests/opencode-workflow-runner.test.mjs`
+- `/Users/engineer/workspace/backtest/thoughts/ledgers/CONTINUITY_ses_12b8.md`
 
 ### Modified
-- `README.md` — rewrote workflow execution section (uncommitted)
-- `.agents/knowledgebase/project-overview.md` — created (untracked)
-- `scripts/opencode-workflow-runner.mjs` — deleted (uncommitted)
-- `tests/opencode-workflow-runner.test.mjs` — deleted (uncommitted)
+- `/Users/engineer/workspace/backtest/.agents/skills/signal-convergence-alert/convergence.py`
+- `/Users/engineer/.config/opencode/node_modules/opencode-drawer-workflows/dist/index.js` (added `export default WorkflowsPlugin;`)

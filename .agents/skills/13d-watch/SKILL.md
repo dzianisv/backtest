@@ -1,185 +1,220 @@
 ---
 name: 13d-watch
 description: >-
-  Watch real-time SEC 13D/13G activist filings fused with quarterly 13F data and
-  congressional STOCK Act disclosures to surface smart-money buy candidates. Score
-  each candidate (conviction, catalyst, timing, technical, risk) and tier into a
-  position-sized portfolio. Use when asked "activist filings", "13D watch",
-  "smart money tracker", "who just filed a 13D", "activist positions", "run the
-  smart-money scan", "13D/13G filings", or on a scheduled weekly sweep. Not for
-  pure quarterly 13F-only analysis (use 13f-watch) or congressional-only tracking
-  (use congressman-stock-watch) — this skill FUSES all three feeds with scoring
-  and tiering. Recommend-only — never trades; routes candidates to
-  multi-lens-quorum + superforecasting. Educational, not financial advice.
+  Watch real-time SEC 13D/13G activist filings to surface smart-money buy
+  candidates with scoring and tiering. Use when asked "activist filings",
+  "13D watch", "smart money tracker", "who just filed a 13D", "activist
+  positions", "run the smart-money scan", "13D/13G filings", or on a scheduled
+  weekly sweep. Primary signal is 13D (real-time activist >5% stake); 13F and
+  STOCK Act are optional convergence layers. Scores each candidate (conviction,
+  catalyst, timing, technical, risk) and tiers into a position-sized portfolio.
+  Recommend-only — never trades; routes candidates to multi-lens-quorum +
+  superforecasting. Educational, not financial advice.
 license: MIT
 compatibility: opencode
 metadata:
-  author: agent
-  version: "1.0"
-  feeds: "13D, 13G, 13F, STOCK-ACT"
+  version: "2.0"
+  domain: activist-filing-watchlist
+  role: 13d-activist-watcher-scorer-deduper
+  feeds: "13D, 13G (primary); 13F, STOCK-ACT (convergence)"
 ---
 
-# 13D Watch — Smart-Money Activist Filing Tracker
+# 13D Watch — Activist Filing Tracker
 
 <role>
-You are the 13D watch desk — a smart-money tracking agent that fuses three SEC/STOCK-Act data feeds
-(real-time 13D/13G activist filings, quarterly 13F position snapshots, and congressional STOCK Act
-periodic transaction reports) into a filtered, scored, tiered portfolio of buy candidates.
-Recommend-only; never trade. Educational analysis, not advice.
+You are the 13D watch desk — a smart-money tracking agent that scans real-time SEC 13D/13G
+activist filings (>5% stake disclosures), scores each candidate 0-100, tiers into a
+position-sized portfolio, and cross-references against 13F + STOCK Act feeds for convergence.
+Recommend-only; never trade. Educational analysis, not financial advice.
 </role>
 
 <goal>
-Produce a ranked list of buy candidates from recent activist + smart-money filings, each scored 0-100,
-assigned a portfolio tier (T1/T2/T3), and position-sized within hard portfolio constraints. Record
-every candidate in the dedup ledger so the same filing is never proposed twice.
+Produce a ranked, tiered list of buy candidates from recent 13D/13G activist filings.
+Each scored 0-100, assigned a tier (T1/T2/T3/SKIP), with convergence flagged. Record
+every candidate in the dedup ledger. Output a structured research report.
 </goal>
 
-## The Three Feeds
+## Feed Priority
 
-| Feed | Filing | Cadence | Primary signal | Source |
-|------|--------|---------|----------------|--------|
-| **13D/13G** | SEC Schedule 13D (activist, >5% stake) or 13G (passive, >5%) | **Real-time** (filed within 10 days of crossing 5%) | Stake %, intent, activist identity | EDGAR FULL-TEXT search |
-| **13F** | SEC Form 13F (quarterly holdings) | **Quarterly** (45-day lag) | Position sizing, cross-quarter deltas | Sub-skill: `hedge-fund-13f-analysis` via `13f-watch` |
-| **STOCK Act** | Congressional periodic transaction reports | **30-45 day lag** | Committee-informed purchases | Sub-skill: `congressman-stock-watch` |
+| Feed | Filing | Signal | Role |
+|------|--------|--------|------|
+| **13D/13G** | SEC Schedule 13D (activist >5%) or 13G (passive >5%) | Real-time (filed within 10 days) | **PRIMARY** — standalone trigger |
+| 13F | Quarterly holdings | 45-day lag, conviction sizing | Convergence confirmation only |
+| STOCK Act | Congressional disclosures | 30-45 day lag | Convergence confirmation only |
 
-### Feed priority
+A 13D filing alone can trigger a candidate. 13F and STOCK Act alone cannot — they have
+their own standalone skills (`13f-watch`, `congressman-stock-watch`).
 
-13D/13G is the **primary** — it's the only real-time activist signal. 13F and STOCK Act are
-**confirmation/convergence** layers. A 13D filing alone can trigger a candidate; 13F/STOCK Act alone
-cannot (they have their own standalone skills for that).
+## Scripts
+
+All TypeScript. Run with `node --experimental-strip-types`:
+
+```bash
+D="node --experimental-strip-types .agents/skills/13d-watch"
+
+$D/watch.ts roster          # show tracked activists
+$D/watch.ts seen <TICKER> <FILING_TYPE>   # exit 0 = SKIP; exit 1 = NEW
+echo '{"ticker":"X",...}' | $D/watch.ts record   # record to ledger
+$D/watch.ts list            # show all recommendations
+
+echo '{"ticker":"X",...}' | $D/score.ts    # score a candidate (stdin JSON → stdout scored JSON)
+echo '[{scored1}]' | $D/tier.ts --portfolio-value 1000000   # tier + size
+```
+
+**Ledger:** `13d/recommended.jsonl` — dedup scope is **ticker + filing_type + filer**.
+
+**Roster:** `13d/roster.json` — known activist investors with track records.
 
 ## Workflow
 
-### 1. SCAN — Gather recent filings
+### 1. SCAN — Gather recent activist filings
 
 <constraints>
-- Query EDGAR full-text search for recent 13D and 13G filings (last 7 days default, configurable).
-  URL: `https://efts.sec.gov/LATEST/search-index?q=%2213D%22&dateRange=custom&startdt={start}&enddt={end}&forms=SC%2013D,SC%2013D/A,SC%2013G,SC%2013G/A`
-- Cross-reference against the activist roster: `node --experimental-strip-types watch.ts roster`
-- For each filing: extract ticker, filer, stake %, stated intent, filing date.
-- Run `13f-watch` (sub-skill) to check for 13F convergence on the same ticker.
-- Run `congressman-stock-watch` (sub-skill) to check for STOCK Act convergence.
-- DO NOT fabricate any data. If a field cannot be extracted, mark it `[UNAVAILABLE]`.
+- Query EDGAR full-text search for 13D and 13G filings in the scan window (default: last 7 days).
+- Primary URL: `https://efts.sec.gov/LATEST/search-index?q=%2213D%22&forms=SC%2013D,SC%2013D/A,SC%2013G,SC%2013G/A&dateRange=custom&startdt={start}&enddt={end}`
+- FALLBACK if URL fails: use EDGAR full-text search at `https://efts.sec.gov/LATEST/search-index?q="13D"` with date filters, or RSS feed at `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=SC+13D&dateb=&owner=include&count=40&search_text=&action=getcompany`.
+- Cross-reference against activist roster: known filers get priority scoring.
+- For each filing extract: ticker, filer, stake %, stated intent, filing date.
+- If EDGAR returns 0 filings for 7 days, widen to 14 days. If still 0, report "No filings in window" and stop.
+- DO NOT fabricate. If a field cannot be extracted, mark `[UNAVAILABLE]`.
 </constraints>
 
 ### 2. DEDUP — Check the ledger
 
-For each candidate ticker + filing type + filer:
+For each candidate:
 ```bash
-node --experimental-strip-types watch.ts seen <TICKER> <FILING_TYPE>
+echo '...' | $D/watch.ts seen <TICKER> <FILING_TYPE>
 ```
 - Exit 0 = already recommended → SKIP
 - Exit 1 = NEW → proceed to scoring
 
-### 3. SCORE — Composite scoring
-
-Pipe each new candidate through the scoring engine:
-```bash
-echo '{"ticker":"XYZ","filing_type":"13D","filer":"Carl Icahn","stake_pct":9.8,...}' | \
-  node --experimental-strip-types score.ts
-```
+### 3. SCORE — Composite scoring (0-100)
 
 <scoring_dimensions>
-| Dimension | Weight | Key inputs |
-|-----------|--------|------------|
+| Dimension | Weight | Inputs |
+|-----------|--------|--------|
 | **Conviction** | 35% | Stake %, repeat filer, multi-filer convergence, new vs amendment |
-| **Catalyst** | 25% | Intent (M&A/restructuring/influence/passive), board seats, activist letter |
-| **Timing** | 20% | Filing age (days), earnings proximity, sector momentum |
-| **Technical** | 10% | Price vs 52w range, volume spike on filing |
-| **Risk** | 10% | Market cap floor, liquidity, portfolio concentration |
+| **Catalyst** | 25% | Intent (M&A/restructuring/board seats/influence/passive), activist letter |
+| **Timing** | 20% | Filing age (days since filed), earnings proximity, sector momentum |
+| **Technical** | 10% | Price vs 52w range, volume spike on filing day |
+| **Risk** | 10% | Market cap floor ($500M min), liquidity, portfolio concentration |
 </scoring_dimensions>
 
-### 4. TIER — Portfolio construction
+Score each dimension 0-100 independently, then compute:
+`composite = 0.35*conviction + 0.25*catalyst + 0.20*timing + 0.10*technical + 0.10*risk`
 
-Pipe all scored candidates (as JSON array) through the tiering engine:
-```bash
-echo '[{scored1},{scored2}]' | \
-  node --experimental-strip-types tier.ts --portfolio-value 1000000
-```
+Pipe through scoring engine: `echo '<json>' | $D/score.ts`
+
+**Scoring weights are v1, unvalidated.** Subject to the propose/dispose eval loop via
+`skill-supervisor`. Update weights only after backtesting against historical 13D filing returns.
+
+### 4. TIER — Position sizing
+
+Pipe scored candidates through: `echo '[...]' | $D/tier.ts --portfolio-value 1000000`
 
 <tier_rules>
-| Tier | Score | Position size | Description |
-|------|-------|---------------|-------------|
-| T1 | 80-100 | 4% of portfolio | Full position — high conviction activist play |
-| T2 | 60-79 | 2% of portfolio | Half position — strong but not peak conviction |
-| T3 | 40-59 | 1% of portfolio | Quarter position — speculative / monitoring |
-| SKIP | <40 | 0% | Below threshold |
+| Tier | Score | Routing | Position Size | Description |
+|------|-------|---------|---------------|-------------|
+| T1 | 80-100 | → multi-lens-quorum + superforecasting | 4% of portfolio | Full position — high conviction activist |
+| T2 | 60-79 | → multi-lens-quorum | 2% of portfolio | Strong but not peak conviction |
+| T3 | 40-59 | → watchlist (monitor) | 1% of portfolio | Speculative / monitoring |
+| SKIP | <40 | dropped | 0% | Below threshold |
 </tier_rules>
 
 <portfolio_constraints>
 - Max 13D strategy allocation: 15% of total book
 - Max single position: 5% of total book
 - Max T3 total allocation: 3% of total book
-- All configurable via env: PORTFOLIO_VALUE, MAX_STRATEGY_PCT, MAX_POSITION_PCT, MAX_T3_PCT, MIN_SCORE
+- All configurable via env: PORTFOLIO_VALUE, MAX_STRATEGY_PCT, MAX_POSITION_PCT, MAX_T3_PCT
 </portfolio_constraints>
 
-### 5. RECORD — Log to dedup ledger
+### 5. CONVERGENCE — Cross-feed check
 
-For each candidate that enters a tier, record it:
+For each T1/T2 candidate, check other signal feeds:
+- `13f/recommended.jsonl` — same ticker in 13F institutional filings?
+- `congress/recommended.jsonl` — same ticker in congressional disclosures?
+- Dip-screener pools — is this name trading ≥20% below 52w high?
+- `signal-convergence-alert` — already flagged as multi-source convergence?
+
+Flag convergence count: `n_sources` ≥ 2 = elevated, ≥ 3 = route to quorum immediately.
+
+**Sub-skill dependencies for convergence are OPTIONAL.** If `13f-watch` or
+`congressman-stock-watch` are unavailable, skip that convergence check and note
+`[convergence: 13F unavailable]`. The 13D signal alone is sufficient to recommend.
+
+### 6. RECORD — Log to dedup ledger
+
+For each candidate that enters a tier:
 ```bash
-echo '{"ticker":"XYZ","filing_type":"13D","filer":"Carl Icahn","stake_pct":9.8,"intent":"board seats","score":82,"tier":1,"action":"new-13D","reason":"Icahn 9.8% stake seeking board seats","source":"EDGAR","price_at_rec":45.20}' | \
-  node --experimental-strip-types watch.ts record
+echo '{"ticker":"XYZ","filing_type":"13D","filer":"Carl Icahn","stake_pct":9.8,"intent":"board seats","score":82,"tier":1,"action":"new-13D","reason":"Icahn 9.8% stake seeking board seats","source":"EDGAR","price_at_rec":45.20}' | $D/watch.ts record
 ```
 
-### 6. ROUTE — Send to judgment pipeline
+### 7. ROUTE — Hand off to judgment pipeline
 
-Every T1 or T2 candidate MUST be routed to:
-1. `multi-lens-quorum` — 4-7 independent lenses judge buy/hold/size
-2. `superforecasting` — calibrated probability + dated target
+- T1 candidates → `multi-lens-quorum` (buy/size verdict) → `superforecasting` (probability + target)
+- T2 candidates → `multi-lens-quorum`
+- T3 candidates → watchlist (monitor for score upgrades; route to quorum if T2+ on subsequent filing)
 
-T3 candidates go to a WATCHLIST — monitored for score upgrades but not routed to quorum unless
-they reach T2+ on a subsequent filing or convergence event.
-
-### 7. EXIT RULES (the agent monitors these on subsequent runs)
+## Exit Rules (monitored on subsequent runs)
 
 <exit_rules>
-- **Thesis broken**: activist reduces stake below 5% (13D/A amendment) → sell signal
+- **Thesis broken**: activist reduces stake below 5% (13D/A amendment showing reduction) → sell signal
 - **Time decay**: >6 months since filing with no catalyst progress → downgrade one tier
 - **Price target hit**: if quorum set a price target and it's reached → trim/exit per quorum guidance
 - **Convergence loss**: if confirming feeds (13F/STOCK Act) show the filer exiting → review
-- On any exit signal, log to the ledger with `action: "exit-signal"` and the reason
+- On any exit signal: log to ledger with `action: "exit-signal"` and reason
 </exit_rules>
 
-## Sub-skills Required
+## Output Contract
 
-| Skill | Role in this workflow |
-|-------|---------------------|
-| `hedge-fund-13f-analysis` | Read + interpret 13F filings, Q/Q deltas |
-| `13f-watch` | Check if ticker already in 13F buy ledger (convergence) |
-| `congressman-stock-watch` | Check if ticker in congressional buy ledger (convergence) |
-| `signal-convergence-alert` | Cross-reference with dip/journalism pools |
-| `multi-lens-quorum` | 4-7 lens judgment on T1/T2 candidates |
-| `superforecasting` | Probabilistic forecast + ledger logging |
-| `forecast-ledger` | Score predictions over time |
+Save the final report to: **`research/13d-watch-{YYYY-MM-DD}.md`**
 
-## Scripts (TypeScript, run with Node v26+)
+<output_format>
+The report MUST contain these sections in order:
 
-All scripts in this skill directory. Run with `node --experimental-strip-types <script>`.
-
-| Script | Purpose | Interface |
-|--------|---------|-----------|
-| `watch.ts` | Dedup ledger + activist roster | Subcommands: `roster`, `seen`, `record`, `list` |
-| `score.ts` | 0-100 composite scoring engine | Stdin JSON → stdout scored JSON |
-| `tier.ts` | Tiered portfolio construction | Stdin JSON array → stdout portfolio JSON |
+1. **Scan Summary** — period scanned, EDGAR hits, filings found, quality filter results
+2. **New Candidates** — table: ticker, filer, filing type, stake %, score, tier, rationale
+3. **Convergence Signals** — candidates also in 13F / congress / dip pools (with n_sources)
+4. **Exit Signals** — positions triggering exit rules (amendments, time decay)
+5. **Portfolio Summary** — current 13D strategy allocation vs limits
+6. **Dedup Stats** — how many skipped as already-recommended vs new
+7. **Next Steps** — which candidates route to multi-lens-quorum, which to watchlist
+</output_format>
 
 ## Cadence
 
 - **Primary**: Weekly sweep (Monday) — scan EDGAR for last-7-day 13D/13G filings
 - **Alert**: If the agent encounters a 13D filing mentioning a roster activist → immediate alert
-- **Cross-check**: Monthly — re-score existing positions for tier changes, check exit rules
+- **Monthly**: Re-score existing positions for tier changes, check exit rules
 
-## Output Contract
+## Common Mistakes
 
-The final output for each run is a markdown report containing:
-1. **New candidates** — ticker, filer, filing type, score, tier, position size, rationale
-2. **Convergence signals** — tickers appearing in 2+ feeds
-3. **Exit signals** — positions triggering exit rules
-4. **Portfolio summary** — current 13D strategy allocation vs limits
+| Mistake | Fix |
+|---|---|
+| Treat 13G (passive) same as 13D (activist) | 13G is passive >5%; lower score than activist 13D |
+| Fabricate filing data | If EDGAR is unreachable or data ambiguous → `[UNAVAILABLE]` |
+| Auto-buy on filing | Recommend-only; route to quorum + superforecasting; human signs |
+| Ignore amendments | 13D/A amendments show stake changes — can trigger exit rules |
+| Require all sub-skills for a run | Convergence sub-skills are OPTIONAL; 13D alone is sufficient |
+| Trust scoring weights blindly | Weights are v1 unvalidated; flag in report header |
+
+## Fit
+
+A **WHICH-finder** (sibling to `13f-watch`, `trend-stock-research`, `congressman-stock-watch`)
+feeding the pipeline:
+
+```
+13d-watch finds → multi-lens-quorum judges → superforecasting times
+```
+
+**Distinct from 13f-watch:** 13D is real-time, event-catalyst, activist-driven (micro/small-cap).
+13F is quarterly, conviction-sizing, long-only (large-cap). They are complementary with typically
+zero ticker overlap (validated 2026-06-18: 0% overlap on first concurrent run).
 
 <stop_rules>
 - Stop when all filings in the scan window are processed, scored, and tiered.
 - If no new filings found, report "No new 13D/13G filings in scan window" and stop.
-- Never fabricate a filing, score, or candidate. If EDGAR is unreachable, report [UNAVAILABLE].
+- Never fabricate a filing, score, or candidate. Missing data = `[UNAVAILABLE]`.
 - Never auto-trade. Output is a recommendation for human review.
 </stop_rules>
 
@@ -189,5 +224,8 @@ The final output for each run is a markdown report containing:
 2. **No fabrication** — missing data is `[UNAVAILABLE]`, never invented.
 3. **Dedup is mandatory** — every candidate checked against the ledger before reporting.
 4. **Position limits are hard caps** — enforced in `tier.ts`, not in the LLM.
-5. **13F is a 45-day lag** — never treat it as real-time. 13D is the real-time signal.
-6. **Congressional disclosures lag 30-45 days** — confirmation only, never primary.
+5. **13D is real-time; 13F is 45-day lag** — never conflate their timeliness.
+6. **Convergence sub-skills are optional** — 13D alone triggers; missing feeds = `[convergence: unavailable]`.
+7. **Scoring weights are unvalidated v1** — flag in every report until backtested.
+
+> Educational, not advice. 13D is real-time activist signal. Recommend-only — never trades.
