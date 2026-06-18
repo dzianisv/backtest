@@ -80,7 +80,7 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 ## Interactive fallback — full article body
 
 When the RSS teaser is not enough and you need the full FT article, use the **bypass-paywalls** skill
-(`.agents/skills/bypass-paywalls/SKILL.md`) which navigates the user's Chrome (with
+(`~/.agents/skills/bypass-paywalls/SKILL.md`) which navigates the user's Chrome (with
 bypass-paywalls-clean extension) to extract the full body interactively.
 
 The automated path (this skill) handles daily RSS ingestion; the interactive path handles ad-hoc reads.

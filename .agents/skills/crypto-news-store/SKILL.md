@@ -14,7 +14,7 @@ metadata:
 The dedup + state layer the [[narrative-news]] gather seat reads. The [[feed-*]] adapters fetch + normalize
 articles; this store **collapses multi-outlet coverage of the same event into ONE event** carrying a
 `source_count` (crowdedness, NFR2), and **keeps state across runs** so the panel never re-reads news it
-already saw — the same "no re-alert" discipline as [[13f-watch]] / [[crypto-dip-scanner]].
+already saw — the same "no re-alert" discipline as [[13f-watch]] / [[dip-scanner]].
 
 ## Hard rule
 

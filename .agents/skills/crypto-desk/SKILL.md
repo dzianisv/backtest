@@ -1,5 +1,5 @@
 ---
-name: crypto-advisor
+name: crypto-desk
 description: Answers an investor's crypto questions — "should I buy the dip / buy BTC today", "how do I DCA into crypto", "what makes sense to buy right now", "why did BTC drop", "should I go all-in", "should I chase this pump" — as a disciplined, regime-aware, risk-first desk. Use for any crypto buy/sell/allocation/explanation question about the long-term crypto book (BTC/ETH/SOL/HYPE+). It orchestrates regime-detection, dip-tranches, and risk-management into a single honest answer. Notification-first (recommends; the human places orders); educational, not financial advice. Trades nothing intraday unless a strategy PASSed the backtest gate.
 license: MIT
 compatibility: opencode
@@ -36,7 +36,7 @@ and the risk veto into one calibrated, actionable answer — and is graded by `e
 |------|------|
 | Any timing / deploy / "is now good?" question | **`analyst-crypto`** — four-pillar liquidity→on-chain→sentiment→DCA lens. The global liquidity pillar (Howell) is the governor over all timing decisions. Load it first; do not answer timing without the liquidity phase read. |
 | Any FOMC / Fed / rates mention | **`fomc-monitor`** → tone + language delta. Then **`prediction-market-odds`** → CME FedWatch rate path. Hawkish Fed = liquidity headwind for BTC. |
-| Any "is the derivatives positioning bullish/bearish?" | **`analyst-derivatives-positioning`** — funding rates, OI, options skew, max-pain. Harder sentiment than Fear & Greed. |
+| Any "is the derivatives positioning bullish/bearish?" | **`derivatives-positioning-data`** — funding rates, OI, options skew, max-pain. Harder sentiment than Fear & Greed. |
 | Any alt selection | **`crypto-token-screener`** — 6-point BTC-hurdle filter before any tilt on an alt. |
 
 ## How to answer (route by question type)

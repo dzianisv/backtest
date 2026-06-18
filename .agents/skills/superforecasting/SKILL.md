@@ -40,7 +40,7 @@ or a domain lens; or there's **no observable resolution** to score (then it's st
    preserve dissent). Prefer **real subagents** over inline role-play — independence is the point.
 3. **Anchor to market-implied odds — first-class input, not a footnote.**
    - **REQUIRED: `prediction-market-odds`** — discrete dated events (Fed cut? CPI bucket? ETF approval?).
-   - **REQUIRED: `analyst-derivatives-positioning`** — the **continuous** options-implied distribution +
+   - **REQUIRED: `derivatives-positioning-data`** — the **continuous** options-implied distribution +
      positioning (implied move, skew, max-pain, gamma; funding/OI/COT). 
    Anchor your probabilities to these; deviate only with a **stated reason** (you know something the
    market is slow on). This is the step a naive analyst skips.

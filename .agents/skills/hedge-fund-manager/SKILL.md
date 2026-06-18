@@ -21,7 +21,7 @@ trail.
 - Each **sub-skill** in `skills/` is one analyst's playbook — you delegate that function to a subagent
   running that skill.
 - **`tradfi-portfolio-manager`** is your weekly-note desk — delegate the weekly REVIEW→DECIDE→ORDER to it.
-- **`agentic-fund-orchestration`** is the *builder's* architecture doc — reference, not run here.
+- **`agentic-fund-orchestration`** is the deprecated architecture doc — superseded by this skill.
 - **`skill-supervisor`** is how this skill is itself evaluated/improved — not part of running the fund.
 
 **Read first:** `GOAL.md`, `strategy/v3-bubble-aware-all-weather.md`, `strategy/v3-etf-rationale.md`. The

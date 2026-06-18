@@ -1,5 +1,5 @@
 ---
-name: analyst-derivatives-positioning
+name: derivatives-positioning-data
 description: Use when a market read needs to know how traders are POSITIONED and what derivatives are PRICING — futures funding/basis/open-interest, options put/call, skew, implied vol, max pain, dealer gamma, COT, VIX term structure, options-implied probability of a move. The positioning/market-implied seat for a quorum or forecast. Works for CRYPTO (Coinglass/Deribit/CME) and EQUITIES/indices (CBOE/VIX/COT/OCC). Use for "how is the market positioned", "what are options pricing", "funding/skew/gamma read", "is leverage crowded", "options-implied move", "max pain". Educational, not advice; positioning is necessary-not-sufficient, and options odds are risk-neutral, not real-world.
 license: MIT
 compatibility: opencode

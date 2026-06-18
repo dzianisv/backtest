@@ -95,7 +95,7 @@ A notification-first advisor whose job is to **find the next stocks to buy**. Re
 | `dip-tranches-strategy` | tiered dip-buying of dry powder (`check_drawdown.py`). |
 | `tax-loss-harvesting` | harvest losses without wash-sale trips. |
 | `fundamental-analysis` | data/sources, valuation context, defensive-sleeve choice, backtest gate. |
-| `agentic-fund-orchestration` | the top-level daily-loop playbook wiring the desk together. |
+
 
 Frontmatter on skill modules must keep `compatibility: opencode`.
 
@@ -149,16 +149,16 @@ constraints C1–C9, optimization problem) is in @GOAL.md §Book 2. Do not confl
 - **`strategy/`** — how our thinking evolved: v1 → v2 → v3 (Bubble-Aware All-Weather, **current**). Start at @strategy/README.md.
 - **`research/`** — 9 cited research notes. Synthesis: `research/08-the-1M-playbook.md`; evidence: `backtests/crash_protection_backtest.py`.
 - **`.agents/skills/`** — opencode SKILL.md modules. Each skill documents itself; read the individual SKILL.md for details.
-  **See [`.agents/skills/README.md`](.agents/skills/README.md) for full architecture flow diagrams** showing how every skill delegates to sub-skills (15 ASCII diagrams covering all ~68 skills).
+  **See [`.agents/skills/README.md`](.agents/skills/README.md) for full architecture flow diagrams** showing how every skill delegates to sub-skills (15 ASCII diagrams covering all ~63 skills).
   Key groupings: desk sub-skills (regime, trend, construction, risk, rebalancing), macro-economist panel
   (`macro-panel` + 9 `analytics-*` lenses), trading-discipline lenses (`analyst-systematic-trading` +
   `analyst-technical-analysis`), forecasting stack (`superforecasting` + `prediction-market-odds` +
-  `analyst-derivatives-positioning` + `forecast-ledger`), and decision method (`multi-lens-quorum`).
+  `derivatives-positioning-data` + `forecast-ledger`), and decision method (`multi-lens-quorum`).
 
 > **Key design rules** (details in each SKILL.md):
 > - `multi-lens-quorum` = general method for judgment calls; `macro-panel` = special case for macro-thinker seats.
 > - Each analytics-* lens is a LENS, not gospel — carry per-skill Caveats; every thinker has been wrong/early.
-> - `hedge-fund-13f-analysis` is a lagging cross-check (45-day-old, long-only), never a trade trigger.
+> - `13f-watch` is a lagging cross-check (45-day-old, long-only), never a trade trigger.
 > - `forecast-ledger` closes the Tetlock feedback loop — unscored forecasting is cosplay.
 
 ## Rules

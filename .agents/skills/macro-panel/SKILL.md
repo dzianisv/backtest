@@ -102,7 +102,7 @@ seat's current view.)
 - **Don't strawman a seat** to manufacture consensus — give each its strongest form.
 - **Ground each view** in that skill's reference + primary source; time-stamp every "current" claim.
 - This skill **composes** the `analytics-*` skills and complements `fundamental-analysis` /
-  `hedge-fund-13f-analysis`; it informs `regime-detection` / `portfolio-construction`. It does not
+  `13f-watch`; it informs `regime-detection` / `portfolio-construction`. It does not
   replace the backtest/valuation gate or your own judgment.
 
 ## Done when

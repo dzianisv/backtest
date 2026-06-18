@@ -69,7 +69,7 @@ batch call; dead or merged tickers show `no-data` and are skipped gracefully.
 names you DON'T own yet ("alert if GOOGL hits $150"), point `--csv` at a watchlist file using the same
 columns — put the level in `Price_Flag` with a literal `$` (e.g. `"$150 = buy starter"`). The script
 fires/NEARs those triggers and reports % from 52-week high identically. This covers the candidate-trigger
-use case without a dedicated watchlist skill; `dip-screener` already catches generic quality dips, so
+use case without a dedicated watchlist skill; `dip-scanner` already catches generic quality dips, so
 reserve the watchlist for specific hand-set levels.
 
 ## Output: `stocks/monitor-report-<date>.md`

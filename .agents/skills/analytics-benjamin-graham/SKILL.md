@@ -121,7 +121,7 @@ balance sheet, not this one screen."
 - **Ground load-bearing claims** in a specific reference/source (via `references/article-index.md`).
 - This skill is the **rules-based deep-value discipline** that pairs with `analytics-warren-buffett` (the
   qualitative-moat evolution of the same school) and complements `fundamental-analysis` +
-  `hedge-fund-13f-analysis`; it does not replace the backtest/valuation gate.
+  `13f-watch`; it does not replace the backtest/valuation gate.
 
 ## Done when
 
