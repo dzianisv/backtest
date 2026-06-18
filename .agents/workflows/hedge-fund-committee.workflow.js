@@ -11,6 +11,9 @@ export const meta = {
   ],
 }
 
+// Explicit model — OpenCode's default model picker can fail when copilot model-list fetch is flaky.
+const MODEL = 'claude-sonnet-4'
+
 // args (optional): { ticker: "GOOGL" } to deep-dive ONE name, else the full discovery sweep.
 //                  { portfolio: "<holdings text/CSV>" } to ground sizing/concentration in the REAL book.
 const FOCUS = (args && args.ticker) ? String(args.ticker).toUpperCase() : null
@@ -105,7 +108,7 @@ const desks = FOCUS
 // a silently-dropped crypto/congress desk reads as "nothing to buy there" when it actually never ran.
 const reports = await parallel(desks.map(d => () =>
   agent(d.prompt + ' Educational only, recommend-only. Mark anything you could not fetch [unverified] — NEVER fabricate a number, price, or headline.',
-    { label: `analyst:${d.desk}`, phase: 'Analysts', schema: REPORT })
+    { label: `analyst:${d.desk}`, phase: 'Analysts', schema: REPORT, model: MODEL })
     // Tag with OUR controlled key — never rely on the agent's free-text `desk` field for lookups.
     .then(r => r
       ? { ...r, _key: d.desk, _status: 'ran' }
@@ -208,7 +211,7 @@ const groundJson = await agent(
   `VERIFY you actually got JSON with a non-empty "grounded" array; if the command errored (path/python), ` +
   `fix the path and re-run ONCE. A ticker with no yfinance data (e.g. BTC, or a non-US listing) belongs in ` +
   `fetch_misses — that is correct, do not fabricate it. Return ONLY the raw JSON stdout, no prose.`,
-  { label: 'price-ground', phase: 'Aggregate' })
+  { label: 'price-ground', phase: 'Aggregate', model: MODEL })
 try {
   const g = JSON.parse((groundJson.match(/\{[\s\S]*\}/) || [])[0] || '{}')
   const pxByTicker = Object.fromEntries((g.grounded || []).map(p => [p.ticker, p]))
@@ -262,7 +265,7 @@ const lensPrompt = (cand, lens) => {
 const judged = await parallel(TOP.map(cand => () =>
   parallel(LENSES.map(lens => () =>
     agent(lensPrompt(cand, lens),
-      { label: `vote:${cand.ticker}:${lens.key.replace('analytics-', '')}`, phase: 'Committee', schema: VOTE })
+      { label: `vote:${cand.ticker}:${lens.key.replace('analytics-', '')}`, phase: 'Committee', schema: VOTE, model: MODEL })
       .then(v => ({ lens: lens.key, ...v }))
   )).then(votes => ({ ...cand, votes: votes.filter(Boolean) }))
 ))
@@ -277,7 +280,7 @@ const risked = await parallel(judged.filter(Boolean).map(j => () =>
     `VETO if: RISK_OFF regime, or this would take any name >10% of book, or (only if a book is supplied) the sector is already concentrated. ` +
     `Else PASS with a max size. Note the engine STAGES entries (a STARTER is a small first tranche, typically ~20-30% of the max size), ` +
     `so a PASS gate blocks even the starter; size the CEILING, the engine sizes the tranche. Deterministic risk discipline, not opinion. Never fabricate a portfolio weight.`,
-    { label: `risk:${j.ticker}`, phase: 'Risk', schema: RISK })
+    { label: `risk:${j.ticker}`, phase: 'Risk', schema: RISK, model: MODEL })
     .then(risk => ({ ...j, risk }))
 )).then(a => a.filter(Boolean))
 
@@ -332,7 +335,7 @@ if (errRows.length) {
     `a header line \`=== <timestamp> hedge-fund-committee run ===\` then one line per row below as ` +
     `\`<timestamp>\\t<desk>\\t<status>\\t<detail>\`. Rows (JSON): ${JSON.stringify(errRows)}\n` +
     `Use the Write/bash append; never truncate existing log content.`,
-    { label: 'error-log', phase: 'Aggregate' })
+    { label: 'error-log', phase: 'Aggregate', model: MODEL })
   log(`Logged ${errRows.length} fetch error(s) to logs/error.log`)
 }
 
@@ -394,7 +397,7 @@ const memo = await agent(
   `"BRIEF SAVED: reports/hedge-fund-brief-<date>.md"\n` +
   `"REPORT SAVED: reports/hedge-fund-committee-<date>.md"\n` +
   `followed by the BRIEF markdown only (not the full memo). No preamble.`,
-  { label: 'cio-memo', phase: 'Decision' }
+  { label: 'cio-memo', phase: 'Decision', model: MODEL }
 )
 
 // memo text leads with "BRIEF SAVED:" + "REPORT SAVED:" — the two durable artifacts the owner opens.

@@ -7,6 +7,9 @@ export const meta = {
 // Why pairwise not pointwise: research (Zheng 2023 / AlpacaEval / MT-Bench) shows LLM judges are far more
 // stable comparing two outputs than assigning an absolute score. Pointwise gave iter1=88/iter4=89 then
 // 63.5/64 — no separation. Pairwise asks only "which is better", no calibrated scale to game.
+// Explicit model — OpenCode's default model picker can fail when copilot model-list fetch is flaky.
+const MODEL = 'claude-sonnet-4'
+
 const A_PATH = (args && args.a) || '/Users/engineer/workspace/backtest/crypto/eval/iter1.report.md'  // hypothesis: WORSE (news seat failed)
 const B_PATH = (args && args.b) || '/Users/engineer/workspace/backtest/crypto/eval/iter4.report.md'  // hypothesis: BETTER (complete)
 const QUESTION = (args && args.question) ||
@@ -46,7 +49,7 @@ const votes = (await parallel(Array.from({ length: N }, (_, j) => () => {
     `Use the Read tool on BOTH files (they are the only thing you may see), then decide:\n` +
     `FIRST report:  ${firstPath}\nSECOND report: ${secondPath}\n` +
     `Reply winner=FIRST or SECOND.`
-  return agent(prompt, { label: `judge${j}-${aFirst ? 'A1st' : 'B1st'}`, phase: 'Compare', schema: VOTE_SCHEMA })
+  return agent(prompt, { label: `judge${j}-${aFirst ? 'A1st' : 'B1st'}`, phase: 'Compare', schema: VOTE_SCHEMA, model: MODEL })
     .then(v => {
       if (!v) return null
       // translate positional winner -> file label A/B

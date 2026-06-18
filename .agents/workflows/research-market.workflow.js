@@ -11,6 +11,9 @@ export const meta = {
   ],
 }
 
+// Explicit model — OpenCode's default model picker can fail when copilot model-list fetch is flaky.
+const MODEL = 'claude-sonnet-4'
+
 const SKILL = '/Users/engineer/workspace/backtest/.agents/skills'
 const LEDGER_PY = `${SKILL}/forecast-ledger/ledger.py`
 
@@ -93,7 +96,7 @@ const plan = await agent(
   `live (list ${SKILL}/ and read each SKILL.md description — do NOT rely on memory), THEN return the research plan ` +
   `naming every component by its real discovered directory name.\n` +
   `RAW QUERY: ${QUESTION}\nPORTFOLIO PASSED BY CALLER: ${RAW_PORTFOLIO || '(none — caller gave no holdings; do NOT invent any)'}\nAs-of: ${REPORT_DATE}`,
-  { label: 'manager-intake', phase: 'Intake', schema: PLAN_SCHEMA })
+  { label: 'manager-intake', phase: 'Intake', schema: PLAN_SCHEMA, model: MODEL })
 
 if (!plan) { log('FATAL: manager returned no plan; aborting.'); return { error: 'no plan from manager' } }
 
@@ -128,7 +131,7 @@ const seedNote = ANCHOR ? `\nSeed (verify+extend): ${ANCHOR}` : `\nNo seed — f
 phase('Gather')
 const gatherResults = await parallel(gatherSkills.map(skill => () =>
   agent(`Follow ${SKILL}/${skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). ${ctx}${seedNote}`,
-    { label: skill, phase: 'Gather', schema: DATA_SCHEMA })
+    { label: skill, phase: 'Gather', schema: DATA_SCHEMA, model: MODEL })
 ))
 // Completeness contract: a failed seat is never silently dropped — made LOUD.
 const rawData = gatherResults.map((r, i) => (r && r.findings) ? r
@@ -143,20 +146,20 @@ phase('Consolidate')
 const completeNote = gatherComplete ? 'All selected seats returned.' : `INCOMPLETE — [UNAVAILABLE]: ${missingSeats.join(', ')}. Surface as DATA GAPS; do not paper over.`
 const brief = await agent(
   `Follow ${SKILL}/${deskSkill}/SKILL.md. ${ctx}\nCompleteness: ${completeNote}\nRAW DATA:\n${JSON.stringify(rawData, null, 1)}`,
-  { label: deskSkill || 'consolidate', phase: 'Consolidate' })
+  { label: deskSkill || 'consolidate', phase: 'Consolidate', model: MODEL })
 
 // ---------- Phase 3: PANEL (manager-selected lenses reason over the brief) ----------
 phase('Panel')
 const verdicts = (await parallel(panelSkills.map(skill => () =>
   agent(`Apply the lens in ${SKILL}/${skill}/SKILL.md to answer the question, reasoning ONLY over the brief (don't re-fetch). ${ctx}\nReturn seat (=${skill}), read, verdict, sizing, flip-condition, confidence.\n=== BRIEF ===\n${brief}`,
-    { label: skill, phase: 'Panel', schema: PANEL_SCHEMA })
+    { label: skill, phase: 'Panel', schema: PANEL_SCHEMA, model: MODEL })
 ))).map((r, i) => r || { seat: panelSkills[i], read: '[UNAVAILABLE: seat failed]', verdict: 'WAIT', confidence: 'low' })
 log(`Panel: ${verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length}/${panelSkills.length} lenses voted`)
 
 // Non-voting behavioral guardrail (manager-selected; process + sizing only).
 const guardrail = guardrailSkill ? await agent(
   `Follow ${SKILL}/${guardrailSkill}/SKILL.md as a NON-VOTING guardrail (no BUY/SELL verdict). ${ctx}\nAssess: FOMO-vs-anchoring trap, is a staged scale-in sound, is sizing survivable to -50%, one guardrail rule. Reason over the brief.\n=== BRIEF ===\n${brief}`,
-  { label: guardrailSkill, phase: 'Panel' }) : '(no guardrail skill selected)'
+  { label: guardrailSkill, phase: 'Panel', model: MODEL }) : '(no guardrail skill selected)'
 
 // ---------- Phase 4: DECIDE (manager-selected chair) ----------
 phase('Decide')
@@ -164,7 +167,7 @@ const decision = await agent(
   `Follow ${SKILL}/${chairSkill}/SKILL.md to chair the committee and answer the question for THIS portfolio. ${ctx}\n` +
   `Chair framing (from manager): ${FRAMING || 'none'}\n` +
   `=== BRIEF ===\n${brief}\n=== VOTING VERDICTS ===\n${JSON.stringify(verdicts, null, 1)}\n=== GUARDRAIL (non-voting) ===\n${guardrail}`,
-  { label: chairSkill || 'chair-decision', phase: 'Decide', schema: DECISION_SCHEMA })
+  { label: chairSkill || 'chair-decision', phase: 'Decide', schema: DECISION_SCHEMA, model: MODEL })
 
 // ---------- Phase 5: WRITE REPORT ----------
 const reportPath = `/Users/engineer/workspace/backtest/research/research.${ASSET_CLASS}.${REPORT_DATE}.md`
@@ -211,7 +214,7 @@ ${guardrail}
 ${brief}
 `
 await agent(`Use the Write tool to create EXACTLY this file:\n${reportPath}\nWrite this content VERBATIM (no edits/summary). Create parent dirs. Reply with just the path.\n--- BEGIN ---\n${reportMd}\n--- END ---`,
-  { label: 'write-report', phase: 'Decide' })
+  { label: 'write-report', phase: 'Decide', model: MODEL })
 log(`Report written: ${reportPath}`)
 
 // ---------- Phase 6: LEDGER (one row per asset) ----------
@@ -229,7 +232,7 @@ const ledgerLogs = await parallel(ASSETS.map(asset => () =>
     `--p ${impliedProb.toFixed(2)} --by ${JSON.stringify(horizon)} --lens ${JSON.stringify(votingLenses)} ` +
     `--source research-market --flip ${JSON.stringify(decision.invalidation || 'n/a')} --created ${JSON.stringify(REPORT_DATE)}\n\n` +
     `--p is derived from the voting tally (${bullCount}/${votes.length} deploy) — do not change it. If "id exists", re-run once with --id ${asset.toLowerCase()}-${REPORT_DATE}-panel. Reply with the CLI's stdout line.`,
-    { label: `ledger-${asset}`, phase: 'Ledger' }))
+    { label: `ledger-${asset}`, phase: 'Ledger', model: MODEL }))
 )
 const ledgerLog = ASSETS.map((a, i) => `${a}: ${ledgerLogs[i]}`).join(' | ')
 log(`Ledger: ${ledgerLog}`)

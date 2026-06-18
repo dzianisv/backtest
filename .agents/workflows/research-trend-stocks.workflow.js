@@ -11,6 +11,9 @@ export const meta = {
   ],
 }
 
+// Explicit model — OpenCode's default model picker can fail when copilot model-list fetch is flaky.
+const MODEL = 'claude-sonnet-4'
+
 const SKILL = '/Users/engineer/workspace/backtest/.agents/skills'
 const SCAN_PY = `${SKILL}/trend-stock-research/scripts/emerging_scan.py`
 const VELOCITY_PY = `${SKILL}/trend-stock-research/scripts/mention_velocity.py`
@@ -108,7 +111,7 @@ const scanResult = await agent(
   `Also run mention velocity if available: python3 ${VELOCITY_PY}\n` +
   `Group results by THEME (AI/semis, energy transition, biotech, defense, fintech, etc.).\n` +
   `Date: ${REPORT_DATE}`,
-  { label: 'prescreen', phase: 'Pre-screen', schema: SCAN_SCHEMA }
+  { label: 'prescreen', phase: 'Pre-screen', schema: SCAN_SCHEMA, model: MODEL }
 )
 
 if (!scanResult || !scanResult.tickers || !scanResult.tickers.length) {
@@ -159,7 +162,7 @@ const journalismResults = await parallel(themes.map(theme => () => {
     `3. Only report findings backed by something you actually read.\n` +
     `4. Skip tickers with no signal — do not pad with weak findings.\n` +
     `Date: ${REPORT_DATE}`,
-    { label: `journalism-${theme}`, phase: 'Journalism', schema: JOURNALISM_SCHEMA }
+    { label: `journalism-${theme}`, phase: 'Journalism', schema: JOURNALISM_SCHEMA, model: MODEL }
   )
 }))
 
@@ -175,7 +178,7 @@ if (MODE === 'daily') {
     `Date: ${REPORT_DATE}\nThemes: ${themes.join(', ')}\n` +
     `Findings:\n${JSON.stringify(journalism, null, 1)}\n` +
     `Write VERBATIM. Create parent dirs if needed.`,
-    { label: 'write-ingest', phase: 'Journalism' }
+    { label: 'write-ingest', phase: 'Journalism', model: MODEL }
   )
   log(`Daily ingest written: ${ingestPath}`)
   return { mode: 'daily', ingestPath, themes, totalFindings, tickers: tickers.length }
@@ -197,7 +200,7 @@ const beneficiaryResult = await agent(
   `- Ignore beneficiaries already in the top-25 scan (those are obvious)\n\n` +
   `JOURNALISM FINDINGS:\n${JSON.stringify(journalism, null, 1)}\n` +
   `SCAN TICKERS (exclude these as beneficiaries — they're already obvious):\n${tickers.map(t => t.symbol).join(', ')}`,
-  { label: 'beneficiary-map', phase: 'Beneficiary', schema: BENEFICIARY_SCHEMA }
+  { label: 'beneficiary-map', phase: 'Beneficiary', schema: BENEFICIARY_SCHEMA, model: MODEL }
 )
 
 const chains = (beneficiaryResult && beneficiaryResult.chains) || []
@@ -230,7 +233,7 @@ const skepticResult = await agent(
   `JOURNALISM CONTEXT:\n${JSON.stringify(journalism, null, 1)}\n` +
   `BENEFICIARY CHAINS:\n${JSON.stringify(chains, null, 1)}\n` +
   `Date: ${REPORT_DATE}`,
-  { label: 'skeptic-filter', phase: 'Skeptic', schema: SKEPTIC_SCHEMA }
+  { label: 'skeptic-filter', phase: 'Skeptic', schema: SKEPTIC_SCHEMA, model: MODEL }
 )
 
 const survivors = (skepticResult && skepticResult.survivors) ? skepticResult.survivors.filter(s => s.passed) : []
@@ -245,7 +248,7 @@ if (!survivors.length) {
     `## Result: NO SURVIVORS\n\nAll ${allCandidates.length} candidates killed by skeptic filter.\n` +
     `Killed: ${killed.join(', ')}\n\nThis is a valid result — "no edge found" is honest.\n` +
     `Write VERBATIM.`,
-    { label: 'write-empty', phase: 'Skeptic' }
+    { label: 'write-empty', phase: 'Skeptic', model: MODEL }
   )
   return { mode: MODE, date: REPORT_DATE, survivors: 0, killed: killed.length, reportPath: emptyPath }
 }
@@ -288,7 +291,7 @@ const quorumResults = await parallel(quorumCandidates.map(s => () => {
     `Use 4-5 lenses from: analytics-warren-buffett, analytics-stanley-druckenmiller, ` +
     `analyst-systematic-trading, analyst-technical-analysis, analytics-lyn-alden.\n` +
     `Return: ticker, verdict (BUY/SCALE_IN/WATCHLIST/PASS), consensus, dissent, sizing, invalidation, confidence.`,
-    { label: `quorum-${ticker}`, phase: 'Quorum', schema: QUORUM_SCHEMA }
+    { label: `quorum-${ticker}`, phase: 'Quorum', schema: QUORUM_SCHEMA, model: MODEL }
   )
 }))
 
@@ -354,7 +357,7 @@ ${tickers.length > 10 ? `\n... and ${tickers.length - 10} more` : ''}
 
 await agent(
   `Use the Write tool to create EXACTLY this file:\n${reportPath}\nWrite this content VERBATIM (no edits). Create parent dirs if needed. Reply with the path.\n--- BEGIN ---\n${reportMd}\n--- END ---`,
-  { label: 'write-report', phase: 'Report' }
+    { label: 'write-report', phase: 'Report', model: MODEL }
 )
 log(`Report written: ${reportPath}`)
 
@@ -372,7 +375,7 @@ if (buys.length) {
       `--flip ${JSON.stringify(b.invalidation || 'thesis break')} ` +
       `--created ${JSON.stringify(REPORT_DATE)}\n\n` +
       `If "id exists" error, append -trend to the id. Reply with stdout.`,
-      { label: `ledger-${b.ticker}`, phase: 'Report' }
+      { label: `ledger-${b.ticker}`, phase: 'Report', model: MODEL }
     )
   ))
   log(`Ledger: ${buys.length} entries logged`)
@@ -387,7 +390,7 @@ if (buys.length) {
   }))
   await agent(
     `Append these lines to ${poolPath} (create if missing):\n${poolLines.join('\n')}\n\nUse bash: mkdir -p ... && echo ... >> ...`,
-    { label: 'pool-write', phase: 'Report' }
+    { label: 'pool-write', phase: 'Report', model: MODEL }
   )
   log(`Pool: ${buys.length} entries appended to narrative.jsonl`)
 }
