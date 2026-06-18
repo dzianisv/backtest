@@ -1,0 +1,72 @@
+[
+  {
+    "id": "icahn",
+    "name": "Carl Icahn",
+    "cik": "0000921669",
+    "style": "activist-value",
+    "notes": "Classic corporate raider turned activist. Targets underperforming companies for board seats, asset sales, buybacks. Track 13D filings via Icahn Enterprises."
+  },
+  {
+    "id": "ackman",
+    "name": "Bill Ackman",
+    "cik": "0001336528",
+    "style": "concentrated-activist",
+    "notes": "Pershing Square. 5-8 concentrated positions, activist or friendly. Mix of value and growth-at-reasonable-price. Also files 13F quarterly."
+  },
+  {
+    "id": "loeb",
+    "name": "Dan Loeb",
+    "cik": "0001040273",
+    "style": "event-driven-activist",
+    "notes": "Third Point. Known for poison-pen letters demanding change. Mix of activist, event-driven, distressed."
+  },
+  {
+    "id": "singer",
+    "name": "Paul Singer",
+    "cik": "0001028361",
+    "style": "aggressive-activist",
+    "notes": "Elliott Management. Aggressive activist, often forces M&A, board changes, operational restructuring. Large positions. Also in distressed/sovereign debt."
+  },
+  {
+    "id": "peltz",
+    "name": "Nelson Peltz",
+    "cik": "0001345471",
+    "style": "operational-activist",
+    "notes": "Trian Partners. Focuses on operational improvements at large-caps (P&G, Disney, Unilever). Board seats, not hostile takeovers."
+  },
+  {
+    "id": "starboard",
+    "name": "Jeff Smith",
+    "cik": "0001517137",
+    "style": "operational-activist",
+    "notes": "Starboard Value. Mid/large-cap operational activist. Board representation, cost cuts, margin improvement. ~100 campaigns."
+  },
+  {
+    "id": "jana",
+    "name": "Barry Rosenstein",
+    "cik": "0001159159",
+    "style": "constructivist",
+    "notes": "JANA Partners. 'Constructivist' — typically works behind scenes. Targets conglomerates for breakups. Also ESG activism."
+  },
+  {
+    "id": "valueact",
+    "name": "Jeff Ubben / Mason Morfit",
+    "cik": "0001345471",
+    "style": "friendly-activist",
+    "notes": "ValueAct Capital. Friendly activist — takes board seats by invitation. Long holding periods. Tech, healthcare."
+  },
+  {
+    "id": "buffett",
+    "name": "Warren Buffett",
+    "cik": "0001067983",
+    "style": "value-investor",
+    "notes": "Berkshire Hathaway. Rarely files 13D (mostly 13G passive), but a 13D from Berkshire is a massive signal. Cross-ref with 13F."
+  },
+  {
+    "id": "burry",
+    "name": "Michael Burry",
+    "cik": "0001649339",
+    "style": "deep-value",
+    "notes": "Scion Asset Management. Deep value, contrarian. CAUTION: heavy options/puts usage — a 13F put position is bearish, not bullish."
+  }
+]
