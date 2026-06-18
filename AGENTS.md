@@ -60,11 +60,10 @@ A notification-first advisor whose job is to **find the next stocks to buy**. Re
 
 | Skill / artifact | Tier | Role |
 |------------------|------|------|
-| `dip-screener` | fast | daily S&P100 scan, `≥20/25/30%` below 52w high; HIGH (`≤−30%`) DMs only in RISK_ON; `--emit-pool` deterministically writes the **durable** convergence pool. Ships `dip_screener.py`. Catches Google −30%. |
-| `crypto-dip-scanner` | fast | daily BTC/ETH/SOL/BNB/AVAX/LINK % from 52w high + Fear&Greed; PRIMARY = dip `≤−30%` AND F&G`<25` (funding = bonus; `fapi.binance.com` geo-blocked 451). Ships `crypto_dip_scanner.py`. Catches BTC $61k. |
+| `dip-scanner` | fast | unified equity+crypto dip scan (`--universe equity\|crypto\|all`). Equity: S&P100 `≥20/25/30%` below 52w high, RISK_ON gate, catches Google −30%. Crypto: BTC/ETH/SOL/BNB/AVAX/LINK + Fear&Greed `<25` gate, catches BTC $61k. Ships `dip_scanner.py`. `--emit-pool` writes the **durable** convergence pool. |
 | `signal-convergence-alert` | fast | crosses the daily pools/ledgers; DMs when `≥2` sources (MAY be correlated, not independent) hit one ticker (`≥3` → `multi-lens-quorum`). Ships `convergence.py`. SanDisk multi-signal. |
 | `trend-stock-research` (`mention_velocity.py`) | fast | rolling news mention-velocity vs the ticker's OWN baseline → feeds the convergence pool (cold-start-guarded). |
-| `liveness-monitor` | ops | dead-man's-switch: each scan logs a heartbeat; a health cron DMs only when a job goes stale (so silence ≠ broken). Ships `liveness.py`. |
+
 | **`hedge-fund-committee.workflow.js`** | **slow** | the WEEKLY decision engine: analyst fan-out → aggregate by conviction → 4-lens panel (independent vote, **code-enforced dissent**) → CRO risk veto → CIO **ranked BUY memo**. Open-universe (no ticker). In `.agents/workflows/`. |
 
 > **Advisor docs:** north-star @docs/GOAL.md, the **what** @docs/prd.md, the **how** + full wiring

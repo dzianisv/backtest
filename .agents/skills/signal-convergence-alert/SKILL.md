@@ -1,6 +1,6 @@
 ---
 name: signal-convergence-alert
-description: Cross-reference the day's signal pools (dip-screener, journalism/narrative, 13F buys, congressional buys) and fire an immediate alert when the SAME ticker is surfaced by 2+ sources. Convergence = elevated (NOT proven) conviction, time-sensitive — sources may be CORRELATED (a stock dips BECAUSE of the headlines), so treat n_sources as crowdedness, not independent triangulation. Use when asked "anything converging", "what's showing up across signals", "run the convergence check", or on the daily proactive schedule after the other scans.
+description: Cross-reference the day's signal pools (dip-scanner, journalism/narrative, 13F buys, congressional buys) and fire an immediate alert when the SAME ticker is surfaced by 2+ sources. Convergence = elevated (NOT proven) conviction, time-sensitive — sources may be CORRELATED (a stock dips BECAUSE of the headlines), so treat n_sources as crowdedness, not independent triangulation. Use when asked "anything converging", "what's showing up across signals", "run the convergence check", or on the daily proactive schedule after the other scans.
 license: MIT
 compatibility: opencode
 metadata:
@@ -27,7 +27,7 @@ It reads the day's accumulated pools (whichever exist):
 
 | Source | Pool file | Written by |
 |--------|-----------|------------|
-| `dip` | `~/.openclaw/workspace/investor/pools/dip_candidates.jsonl` (≤5d) | dip-screener (07:45, `--emit-pool`) |
+| `dip` | `~/.openclaw/workspace/investor/pools/dip_candidates.jsonl` (≤5d) | dip-scanner (07:45, `--emit-pool`) |
 | `journalism` | `~/.openclaw/workspace/investor/pools/narrative.jsonl` (≤5d) | mention_velocity (08:10) |
 | `13f` | 13F dedup ledger (last 14d) | 13f-watch |
 | `congress` | congress dedup ledger (last 14d) | congressman-stock-watch |

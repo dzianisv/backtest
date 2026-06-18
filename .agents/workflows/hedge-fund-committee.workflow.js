@@ -96,8 +96,8 @@ const DESKS = [
   { desk: 'institutional-flows', prompt: 'You are the institutional-flows analyst. Run /13f-watch (Burry/Buffett/Ackman/Klarman/Li Lu). Return ONLY new, deduped institutional BUYS as candidates (source=13F, evidence=fund+filing). Drop puts/trims/exits. State the 45-day lag.' },
   { desk: 'political-flows',     prompt: 'You are the political-flows analyst. Run /congressman-stock-watch (last 90d). Return only NEW deduped congressional PURCHASES as candidates (evidence=member+date+amount). State the 30-45d disclosure lag. If the source is rate-limited, say so and return [].' },
   ...NEWS_SEATS,
-  { desk: 'equity-dips',         prompt: 'You are the equity dip analyst. Run /dip-screener. Return HIGH/MEDIUM dips (>=25% below 52w high) as candidates (evidence=pct_from_high + 200dMA). Quality names only; a dip is a candidate, not a buy.' },
-  { desk: 'crypto',              prompt: 'You are the crypto desk analyst. Run /crypto-dip-scanner. Return coins >=30% below 52w high as candidates with Fear&Greed in evidence. Note BTC-as-hurdle. Funding may be [unverified] (geo-block).' },
+  { desk: 'equity-dips',         prompt: 'You are the equity dip analyst. Run /dip-scanner with --universe equity. Return HIGH/MEDIUM dips (>=25% below 52w high) as candidates (evidence=pct_from_high + 200dMA). Quality names only; a dip is a candidate, not a buy.' },
+  { desk: 'crypto',              prompt: 'You are the crypto desk analyst. Run /dip-scanner with --universe crypto. Return coins >=30% below 52w high as candidates with Fear&Greed in evidence. Note BTC-as-hurdle. Funding may be [unverified] (geo-block).' },
   { desk: 'crowd-odds',          prompt: 'You are the crowd-odds analyst. Run /prediction-market-odds for the macro/Fed/index markets that matter this week. Summary = what the crowd is pricing + implication for equities. candidates only if a market implies a specific name.' },
 ]
 const desks = FOCUS
@@ -203,8 +203,8 @@ if (!TOP.length) return { regime: macro?.summary, coverage, dead_desks: deadDesk
 // independent of any article. This is what lets the panel tell an EARLY laggard (CMI -8% from high,
 // +23% vs 200dMA) from a LATE/priced-in narrative (SNDK +245% vs 200dMA) instead of guessing or missing.
 const groundJson = await agent(
-  `Use the /dip-screener skill in PRICE-GROUND mode. The skill's directory contains dip_screener.py — ` +
-  `find its absolute path (the /dip-screener skill tells you its base dir; or \`find . -path '*dip-screener/dip_screener.py'\`) ` +
+  `Use the /dip-scanner skill in PRICE-GROUND mode. The skill's directory contains dip_scanner.py — ` +
+  `find its absolute path (the /dip-scanner skill tells you its base dir; or \`find . -path '*dip-scanner/dip_scanner.py'\`) ` +
   `and run it with python3 against these tickers:\n` +
   `  python3 <abs path>/dip_screener.py --tickers ${TOP.map(t => t.ticker).join(',')}\n` +
   `It prints {"grounded":[...],"fetch_misses":[...]} — live yfinance 52w-high/200dMA, no dip threshold. ` +

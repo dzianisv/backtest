@@ -97,7 +97,7 @@ Interim target: reallocate ~$113k idle stables → ~4.5% clean frontier = **$7,0
 
 ## Installed (~60 skills + 1 workflow)
 
-**Signals** — regime-detection, fomc-monitor, dip-screener, crypto-dip-scanner, trend-stock-research, signal-convergence-alert, 13f-watch, congressman-stock-watch, feed-{bloomberg,ft,wsj,coindesk,…}
+**Signals** — regime-detection, fomc-monitor, dip-scanner, trend-stock-research, signal-convergence-alert, 13f-watch, congressman-stock-watch, feed-{bloomberg,ft,wsj,coindesk,…}
 
 **Analysis** — macro-panel (7 thinker lenses), multi-lens-quorum (buy/sell/hold verdict), superforecasting, fundamental-analysis, analyst-{technical,systematic,crypto,derivatives}
 
@@ -136,7 +136,7 @@ intraday day-trading (gated by backtest skill, separate workstream).
 
 ## Done (advisor sub-project — all [x] or deferred)
 
-- [x] dip-screener, crypto-dip-scanner, signal-convergence-alert — built + evaluated on live data.
+- [x] dip-scanner (unified equity+crypto), signal-convergence-alert — built + evaluated on live data.
 - [x] 3-backend proactive setup documented (heartbeat / cron / hermes scheduler).
 - [x] Skills deployed + validated on LIVE openclaw (2026-06-14): python3.12+yfinance in agent bash; live DM fired.
 - [x] Agent-native CRON owns the schedule (3 dip jobs + regime 08:00, journalism 08:15, weekly brief Mon).
