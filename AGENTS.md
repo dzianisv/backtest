@@ -150,8 +150,9 @@ constraints C1–C9, optimization problem) is in @GOAL.md §Book 2. Do not confl
 - **`strategy/`** — how our thinking evolved: v1 → v2 → v3 (Bubble-Aware All-Weather, **current**). Start at @strategy/README.md.
 - **`research/`** — 9 cited research notes. Synthesis: `research/08-the-1M-playbook.md`; evidence: `backtests/crash_protection_backtest.py`.
 - **`.agents/skills/`** — opencode SKILL.md modules. Each skill documents itself; read the individual SKILL.md for details.
+  **See [`.agents/skills/README.md`](.agents/skills/README.md) for full architecture flow diagrams** showing how every skill delegates to sub-skills (15 ASCII diagrams covering all ~68 skills).
   Key groupings: desk sub-skills (regime, trend, construction, risk, rebalancing), macro-economist panel
-  (`macro-panel` + 7 `analytics-*` lenses), trading-discipline lenses (`analyst-systematic-trading` +
+  (`macro-panel` + 9 `analytics-*` lenses), trading-discipline lenses (`analyst-systematic-trading` +
   `analyst-technical-analysis`), forecasting stack (`superforecasting` + `prediction-market-odds` +
   `analyst-derivatives-positioning` + `forecast-ledger`), and decision method (`multi-lens-quorum`).
 
