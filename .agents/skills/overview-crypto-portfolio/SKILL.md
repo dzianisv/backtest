@@ -162,8 +162,9 @@ Gas note: [wallet] has [X] ETH — [sufficient/needs top-up] for mainnet txns.
 
 ### Upgrade recommendations
 
-After the rotation summary, print the upgrade recommendations from `fetch_apys.py` output.
-For every position with APY >1.5% below the best available trusted pool in DeFiLlama:
+After the rotation summary, compare the **AVAILABLE POOLS** tables from `fetch_apys.py` against each portfolio position and give concrete upgrade suggestions. The script outputs raw pool data — you do the reasoning here.
+
+For each stablecoin position, check AVAILABLE POOLS for the relevant chain and flag any upgrade worth acting on:
 
 ```
 UPGRADE: [Position label]
@@ -174,31 +175,29 @@ UPGRADE: [Position label]
   Link:     https://defillama.com/yields/pool/<pool-id>
 ```
 
-Threshold rules:
-- Recommend only if gain ≥ 1.5% APY and TVL > $5M and protocol is in trusted list
-- Prefer same-chain upgrades (cheap gas) over cross-chain
+Reasoning rules (agent applies these, not the script):
+- Recommend if gain ≥ 1.5% APY and TVL > $5M and protocol is in the trusted list
+- Prefer same-chain upgrades (cheaper gas)
 - Base gas ~$0.10/tx — low threshold; ETH mainnet ~$15-30/tx — note break-even time
-- 0% positions (Universal USDC, idle USDT) always flag as priority upgrades — any yield is better
-- HLP vault: note it as event-driven (lumpy) but flag if below threshold; don't blindly recommend exiting
+- 0% positions (Universal USDC, idle USDT) always flag as priority — any yield is better
+- HLP vault: note it as event-driven (lumpy); don't blindly recommend exiting
+- Include DeFiLlama link, estimated +$X/yr gain, and gas cost note for every recommendation
 
 </output_format>
 
-## Live APY fetch + upgrade recommendations
+## Live APY fetch
 
 **Do not use the static table below — it drifts. Always fetch live first.**
 
 ```bash
-# Full run: APYs + upgrade recommendations
 python3 /Users/engineer/workspace/backtest/.agents/skills/overview-crypto-portfolio/fetch_apys.py
-
-# APYs only (skip recommendation engine)
-python3 /Users/engineer/workspace/backtest/.agents/skills/overview-crypto-portfolio/fetch_apys.py --apys-only
 ```
 
-This script:
-1. Fetches live APYs from Morpho Blue, DeFiLlama, Ethena, Hyperliquid
-2. **Recommends upgrades**: finds trusted USDC/stablecoin pools that beat current positions by >1.5% APY, sourced from DeFiLlama `yields.llama.fi/pools` (single-asset, no-IL, trusted protocols, TVL >$5M)
-3. Prints top USDC pools on Base and Ethereum as reference
+This script outputs two things:
+1. **Live portfolio APYs** — Morpho Blue, DeFiLlama (Maple/LIDO/ExtraFi/Avantis), Ethena, Hyperliquid
+2. **Best available USDC/stablecoin pools** from DeFiLlama — top ~20 per chain (Base + Ethereum), sorted by APY descending; trusted protocols, single-asset, no-IL, TVL >$1M
+
+After running the script, compare the **AVAILABLE POOLS** table against your portfolio positions and give concrete upgrade suggestions — include DeFiLlama links, estimated +$X/yr gain, and gas cost note (Base ~$0.10, mainnet ~$15-30).
 
 If a vault returns `[UNAVAILABLE]`, mark its APY as `[VERIFY LIVE]` in the decision matrix rather than guessing.
 

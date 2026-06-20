@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 """
-Fetch live APYs for DeFi protocols in the crypto portfolio and recommend upgrades.
+Fetch live APYs for DeFi protocols in the crypto portfolio, plus the best
+available stablecoin pools from DeFiLlama for the agent to reason about.
 No API key required. Sources:
   - Morpho Blue: blue-api.morpho.org/graphql      (Base + ETH vaults)
   - DeFiLlama:  yields.llama.fi/pools             (Maple Syrup, LIDO, ExtraFi XLend, Avantis + pool discovery)
   - Ethena:     ethena.fi/api/yields/...           (sUSDe staking yield)
   - Hyperliquid: api.hyperliquid.xyz/info          (HLP vault APR via userVaultEquities)
 
+Output:
+  1. Live portfolio APYs (Morpho, DeFiLlama, Ethena, Hyperliquid)
+  2. Top ~20 trusted, single-asset, no-IL USDC/stablecoin pools on Base and
+     Ethereum from DeFiLlama, sorted by APY descending — for the agent to do
+     recommendation reasoning (it knows gas costs, positions, risk tolerance, etc.)
+
 Usage:
-  python3 fetch_apys.py              # APYs + upgrade recommendations
-  python3 fetch_apys.py --apys-only  # APYs only, skip recommendations
+  python3 fetch_apys.py
 """
 
 import json
 import sys
 import urllib.request
-
-UPGRADE_THRESHOLD_PCT = 1.5  # recommend upgrade if better pool is >1.5% higher APY
-MIN_TVL_M = 5                # only recommend pools with >$5M TVL
 
 # Trusted protocols — audited, battle-tested, won't rug
 TRUSTED_PROTOCOLS = {
@@ -27,6 +30,12 @@ TRUSTED_PROTOCOLS = {
     "euler-v2", "moonwell", "seamless-protocol",
     "extra-finance-xlend", "steakhouse",
 }
+
+# Minimum TVL to surface a pool in the available-pools table
+MIN_TVL_M = 1
+
+# How many pools to show per chain
+TOP_N = 20
 
 def fetch(url, method="GET", data=None, headers=None):
     req = urllib.request.Request(url, method=method)
@@ -102,7 +111,7 @@ def defi_llama_apys():
         elif "avantis" in proj and "usdc" in sym and chain == "base":
             portfolio_apys["avantis_junior_usdc"] = apy
 
-        # --- Pool discovery candidates (stable, single-asset, trusted, Base or ETH) ---
+        # --- Pool discovery candidates (stable, single-asset, no-IL, trusted, Base or ETH) ---
         is_trusted = any(t in proj for t in TRUSTED_PROTOCOLS)
         if (chain in ["base", "ethereum"]
                 and p.get("stablecoin")
@@ -158,59 +167,46 @@ def hyperliquid_vault_apr(user_addr, vault_addr=None):
     apr_pct = round((details["apr"] or 0) * 100, 2)
     return {"hyperliquid_hlp_vault": apr_pct, "_vault_name": details.get("name", target)}
 
-def find_better_pool(current_apy, asset_sym, chain, all_pools):
-    """
-    Find the best DeFiLlama pool for an asset that beats current_apy by UPGRADE_THRESHOLD_PCT.
-    Prefers same chain (cheaper gas). Returns None if no upgrade found.
-    """
-    if current_apy is None:
-        current_apy = 0
-
-    sym_lower = asset_sym.lower()
-    chain_lower = chain.lower()
-
-    # Score: same-chain pools rank higher
-    candidates = []
-    for p in all_pools:
-        p_sym = p["symbol"].lower()
-        p_chain = p["chain"].lower()
-        # Must contain the asset (e.g. USDC) in the symbol
-        if sym_lower not in p_sym:
+def print_apy_section(results):
+    """Print the LIVE APYs section."""
+    print("\n--- LIVE APYs ---")
+    for k, v in results.items():
+        if k == "sources" or k.startswith("_"):
             continue
-        if p["apy"] < current_apy + UPGRADE_THRESHOLD_PCT:
+        label = k
+        if v is None:
+            print(f"  {label}: [UNAVAILABLE — API returned no data]")
+        elif isinstance(v, str):
+            print(f"  {label}: {v}")
+        elif isinstance(v, (int, float)) and v == 0.0 and "morpho" in k:
+            print(f"  {label}: 0.0%  [IDLE]")
+        else:
+            print(f"  {label}: {v}%")
+
+def print_pools_section(all_pools):
+    """Print available pools tables for Base and Ethereum, top N each, sorted by APY desc."""
+    for chain_name in ["Base", "Ethereum"]:
+        chain_pools = sorted(
+            [p for p in all_pools if p["chain"] == chain_name],
+            key=lambda x: -x["apy"]
+        )[:TOP_N]
+
+        print(f"\n--- AVAILABLE POOLS ({chain_name}) ---")
+        if not chain_pools:
+            print("  [NONE — DeFiLlama unavailable or no matching pools]")
             continue
-        same_chain = (p_chain == chain_lower)
-        candidates.append((not same_chain, -p["apy"], p))  # sort: same chain first, then desc APY
 
-    if not candidates:
-        return None
-
-    candidates.sort(key=lambda x: (x[0], x[1]))
-    return candidates[0][2]
-
-# --- Position table: what we know about the portfolio (USD size, asset, chain) ---
-# These are updated when DeBank scan finds new values; defaults from last scan 2026-06-19.
-POSITIONS = [
-    {"label": "L3 Morpho Seamless USDC",    "key": "morpho_seamless_usdc_base",  "usd": 29366, "asset": "USDC", "chain": "Base"},
-    {"label": "L3 Morpho Universal USDC",   "key": "morpho_universal_usdc_base", "usd": 10186, "asset": "USDC", "chain": "Base"},
-    {"label": "L3 Morpho eUSD",             "key": "morpho_eusd_base",           "usd":  6204, "asset": "eUSD", "chain": "Base"},
-    {"label": "L3 ExtraFi XLend USDC",      "key": "extrafi_xlend_usdc_base",    "usd": 10232, "asset": "USDC", "chain": "Base"},
-    {"label": "L3 Maple Syrup USDC",        "key": "maple_syrup_usdc",           "usd":  9207, "asset": "USDC", "chain": "Ethereum"},
-    {"label": "L3 Ethena sUSDe",            "key": "ethena_susde",               "usd":  2938, "asset": "USDe", "chain": "Ethereum"},
-    {"label": "L3 LIDO stETH",              "key": "lido_steth",                 "usd":  2442, "asset": "ETH",  "chain": "Ethereum"},
-    {"label": "L3 Hyperliquid HLP",         "key": "hyperliquid_hlp_vault",      "usd":  5340, "asset": "USDC", "chain": "Hyperliquid"},
-    {"label": "L1 Morpho Universal USDC",   "key": "morpho_universal_usdc_base", "usd":  4295, "asset": "USDC", "chain": "Base"},
-    {"label": "L1 Morpho eUSD",             "key": "morpho_eusd_base",           "usd":  2840, "asset": "eUSD", "chain": "Base"},
-    {"label": "B3 Maple Syrup USDC",        "key": "maple_syrup_usdc",           "usd":  8456, "asset": "USDC", "chain": "Ethereum"},
-    {"label": "B3 Idle USDT",               "key": None,                         "usd": 15616, "asset": "USDT", "chain": "Ethereum"},
-    {"label": "B3 Avantis Junior USDC",     "key": "avantis_junior_usdc",        "usd":  1040, "asset": "USDC", "chain": "Base"},
-]
+        header = f"{'Rank':<5}  {'APY':>7}  {'Project':<25}  {'Symbol':<18}  {'TVL($M)':>7}  URL"
+        print(header)
+        for i, p in enumerate(chain_pools, 1):
+            meta = f" [{p['meta']}]" if p["meta"] else ""
+            sym = p["symbol"] + meta
+            print(f"{i:<5}  {p['apy']:>6.2f}%  {p['project']:<25}  {sym:<18}  {p['tvl_m']:>7.1f}  {p['url']}")
 
 def main():
-    apys_only = "--apys-only" in sys.argv
     results = {"sources": {}}
 
-    print("Fetching Morpho Blue vaults...", flush=True)
+    print("Fetching Morpho Blue vaults...", file=sys.stderr, flush=True)
     morpho = morpho_apys()
     if "error" in morpho:
         results["sources"]["morpho"] = f"[UNAVAILABLE: {morpho['error']}]"
@@ -218,7 +214,7 @@ def main():
         results.update(morpho)
         results["sources"]["morpho"] = "blue-api.morpho.org/graphql"
 
-    print("Fetching DeFiLlama (Maple/LIDO/ExtraFi/Avantis + pool discovery)...", flush=True)
+    print("Fetching DeFiLlama (Maple/LIDO/ExtraFi/Avantis + pool discovery)...", file=sys.stderr, flush=True)
     llama_apys, all_pools = defi_llama_apys()
     if "error" in llama_apys:
         results["sources"]["defi_llama"] = f"[UNAVAILABLE: {llama_apys['error']}]"
@@ -227,7 +223,7 @@ def main():
         results.update(llama_apys)
         results["sources"]["defi_llama"] = f"yields.llama.fi/pools ({len(all_pools)} trusted pools indexed)"
 
-    print("Fetching Ethena sUSDe...", flush=True)
+    print("Fetching Ethena sUSDe...", file=sys.stderr, flush=True)
     ethena = ethena_apy()
     if "error" in ethena:
         results["sources"]["ethena"] = f"[UNAVAILABLE: {ethena['error']}]"
@@ -235,7 +231,7 @@ def main():
         results.update(ethena)
         results["sources"]["ethena"] = "ethena.fi/api/yields"
 
-    print("Fetching Hyperliquid HLP vault (L3)...", flush=True)
+    print("Fetching Hyperliquid HLP vault (L3)...", file=sys.stderr, flush=True)
     hlp = hyperliquid_vault_apr("0x5d039ece117073323ade5057a516864f4c40e653")
     if "error" in hlp:
         results["hyperliquid_hlp_vault"] = None
@@ -245,104 +241,12 @@ def main():
         results["_hyperliquid_vault_name"] = hlp.get("_vault_name", "")
         results["sources"]["hyperliquid"] = f"api.hyperliquid.xyz ({hlp.get('_vault_name', '')})"
 
-    # Print live APYs
-    print("\n--- LIVE APYs ---")
-    for k, v in results.items():
-        if k == "sources" or k.startswith("_"):
-            continue
-        label = k.replace("_", " ").title()
-        if v is None:
-            print(f"  {label}: [UNAVAILABLE — API returned no data]")
-        elif isinstance(v, str):
-            print(f"  {label}: {v}")
-        elif v == 0.0 and "morpho" in k:
-            print(f"  {label}: 0% ⚠️ IDLE — verify on morpho.org")
-        else:
-            print(f"  {label}: {v}%")
+    print_apy_section(results)
+    print_pools_section(all_pools)
 
     print("\n--- SOURCES ---")
     for k, v in results["sources"].items():
         print(f"  {k}: {v}")
-
-    if apys_only:
-        return
-
-    # --- UPGRADE RECOMMENDATIONS ---
-    print("\n--- UPGRADE RECOMMENDATIONS ---")
-    print(f"(threshold: >{UPGRADE_THRESHOLD_PCT}% APY gain, trusted protocols only, TVL >${MIN_TVL_M}M)\n")
-
-    recs = []
-    for pos in POSITIONS:
-        current_apy = results.get(pos["key"]) if pos["key"] else 0.0
-        if current_apy is None:
-            current_apy = 0.0
-
-        # Skip non-stable assets (ETH, HLP) and high-APY positions already well-placed
-        if pos["asset"] not in ("USDC", "USDT", "eUSD", "USDe"):
-            continue
-        if pos["chain"] == "Hyperliquid":
-            # HLP has structural lumpy returns — don't blindly recommend switching
-            if isinstance(current_apy, (int, float)) and current_apy < UPGRADE_THRESHOLD_PCT:
-                print(f"  ⚠️  {pos['label']} ({current_apy}% — HLP trough): consider USDC alternatives below")
-            continue
-
-        better = find_better_pool(current_apy or 0, pos["asset"], pos["chain"], all_pools)
-        if better:
-            gain = round(better["apy"] - (current_apy or 0), 2)
-            annual_gain = round((pos["usd"] * gain) / 100, 0)
-            same_chain = better["chain"].lower() == pos["chain"].lower()
-            gas_note = "~$0.10 gas (Base)" if same_chain and pos["chain"] == "Base" else "~$15-30 gas (mainnet)" if pos["chain"] == "Ethereum" else "check gas"
-            recs.append({
-                "position": pos["label"],
-                "usd": pos["usd"],
-                "current_apy": current_apy,
-                "better_project": better["project"],
-                "better_symbol": better["symbol"],
-                "better_chain": better["chain"],
-                "better_apy": better["apy"],
-                "better_tvl_m": better["tvl_m"],
-                "gain_pct": gain,
-                "annual_gain_usd": annual_gain,
-                "gas_note": gas_note,
-                "url": better["url"],
-            })
-            print(f"  UPGRADE: {pos['label']}")
-            print(f"    Current:  {current_apy}% (${pos['usd']:,})")
-            print(f"    Better:   {better['project']} — {better['symbol']} on {better['chain']} @ {better['apy']}% (TVL ${better['tvl_m']}M)")
-            print(f"    Gain:     +{gain}% = +${annual_gain:,.0f}/yr")
-            print(f"    Gas:      {gas_note}")
-            print(f"    Link:     {better['url']}")
-            print()
-        elif isinstance(current_apy, (int, float)) and current_apy == 0.0:
-            print(f"  ⚠️  {pos['label']}: 0% — deploy to any yielding pool (see best options below)")
-            print()
-
-    if not recs:
-        print("  No upgrades found above threshold — all positions near-optimal.\n")
-
-    # Show top 5 best available USDC pools on Base as reference
-    usdc_base = sorted(
-        [p for p in all_pools if "usdc" in p["symbol"].lower() and p["chain"] == "Base"],
-        key=lambda x: -x["apy"]
-    )[:5]
-    if usdc_base:
-        print("--- TOP USDC POOLS ON BASE (reference) ---")
-        for p in usdc_base:
-            print(f"  {p['apy']:6.2f}%  {p['project']:30}  TVL ${p['tvl_m']}M  {p['url']}")
-
-    usdc_eth = sorted(
-        [p for p in all_pools if "usdc" in p["symbol"].lower() and p["chain"] == "Ethereum"],
-        key=lambda x: -x["apy"]
-    )[:5]
-    if usdc_eth:
-        print("\n--- TOP USDC POOLS ON ETHEREUM (reference) ---")
-        for p in usdc_eth:
-            print(f"  {p['apy']:6.2f}%  {p['project']:30}  TVL ${p['tvl_m']}M  {p['url']}")
-
-    print("\nJSON:")
-    print(json.dumps({"apys": {k: v for k, v in results.items() if not k.startswith("_") and k != "sources"},
-                      "sources": results["sources"],
-                      "recommendations": recs}, indent=2))
 
 if __name__ == "__main__":
     main()
