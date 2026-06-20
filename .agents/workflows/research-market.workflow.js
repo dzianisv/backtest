@@ -2,7 +2,10 @@ export const meta = {
   name: 'research-market',
   description: 'Unified portfolio-aware research (crypto + equities). An LLM CIO discovers the available skills live and decides the screening strategy and desk — then the team runs: screen → gather → consolidate → panel → decide → report → ledger. NOTHING about the roster or tickers is hardcoded here; this script only dispatches the full skill names the CIO returns. All substance lives in .agents/skills.',
   phases: [
+    { title: 'LoadState', detail: 'read cross-run state file (prior screened tickers + verdicts)' },
     { title: 'Intake', detail: 'CIO reads mandate, decides screen strategy + assembles desk (no tickers)' },
+    { title: 'CIO-Review', detail: 'CIO decides STOP (have a BUY / exhausted) or CONTINUE (screen a fresh slice)' },
+    { title: 'SaveState', detail: 'persist screened tickers + per-asset verdicts for the next run' },
     { title: 'ThemeCycle', detail: 'assess whether the theme/sector is already extended; if so, widen to adjacent laggards' },
     { title: 'Screen', detail: 'research team autonomously finds 5-10 candidates via web search + screener logic' },
     { title: 'Gather', detail: 'parallel data seats (manager-selected), each following its own skill' },
@@ -143,6 +146,25 @@ const DECISION_SCHEMA = {
   required: ['answer', 'decision', 'tranche_plan', 'agreement', 'disagreement'],
 }
 
+// Iterative-search review verdict. Code only reads verdict/next_scope/next_criteria (+rationale for logs);
+// the CIO may return extra fields -- ignore them.
+const REVIEW_SCHEMA = {
+  type: 'object',
+  properties: {
+    verdict: { type: 'string', enum: ['STOP', 'CONTINUE'] },
+    rationale: { type: 'string' },
+    next_scope: { type: 'string' },
+    next_criteria: { type: 'string' },
+  },
+  required: ['verdict'],
+}
+
+// ---------- Phase -0.5: LOAD STATE (cross-run memory so the CIO avoids re-screening prior names) ----------
+phase('LoadState')
+const priorState = await agent(
+  `Run Bash EXACTLY: \`cat /Users/engineer/workspace/backtest/research/.state/research-market.json 2>/dev/null || echo EMPTY\`. Reply with ONLY the file contents (raw JSON) or the word EMPTY.`,
+  { label: 'load-state', phase: 'LoadState', model: MODEL })
+
 // ---------- Phase 0: INTAKE (CIO discovers skills live + plans the desk -- no tickers) ----------
 phase('Intake')
 const plan = await agent(
@@ -151,7 +173,8 @@ const plan = await agent(
   `RAW QUERY: ${QUESTION}\nPORTFOLIO PASSED BY CALLER: ${RAW_PORTFOLIO || '(none -- caller gave no holdings; do NOT invent any)'}\nAs-of: ${REPORT_DATE}\n\n` +
   `Set screen_scope (what universe/sector/theme to screen, e.g. "AI supply chain semiconductors -- mid/small cap names not yet surged") and screen_criteria (what makes a good candidate, e.g. "valuation gap vs peers, upcoming catalysts, supply inflection point").\n` +
   `Do NOT populate assets[] -- leave it empty or omit it. The screening team decides which stocks to analyze.\n` +
-  `Keep all existing skill-discovery instructions for gather_skills, panel_skills, desk_skill, chair_skill.`,
+  `Keep all existing skill-discovery instructions for gather_skills, panel_skills, desk_skill, chair_skill.` +
+  `\nPRIOR-RUN STATE (already-screened tickers + verdicts from earlier runs — avoid repeating; the dedup list is enforced separately):\n${priorState}`,
   { label: 'manager-intake', phase: 'Intake', schema: PLAN_SCHEMA, model: MODEL })
 
 if (!plan) { log('FATAL: manager returned no plan; aborting.'); return { error: 'no plan from manager' } }
@@ -253,236 +276,219 @@ if (FORCED_ASSETS.length) {
   }
 }
 
-// ASSET_LIST computed here, AFTER screener has populated ASSETS.
-const ASSET_LIST = ASSETS.join(', ')
-
 const abovePT = (screened && Array.isArray(screened.candidates) ? screened.candidates : []).filter(c => c.above_consensus_pt)
 if (abovePT.length) log(`Screen: ${abovePT.length} candidates above consensus PT (chair will judge): ${abovePT.map(c => c.ticker).join(', ')}`)
 
-// Per-asset context builder -- each agent focuses on ONE asset, avoiding giant multi-asset context blowup.
-const ctxFor = (asset) =>
-  `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nFocus asset: ${asset}\nAll assets in this research: ${ASSET_LIST}\nDesk focus: ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nNews feeds: ${FEEDS.length ? FEEDS.join(', ') : '(none)'}\nAs-of: ${REPORT_DATE}`
 const seedNote = ANCHOR ? `\nSeed (verify+extend): ${ANCHOR}` : `\nNo seed -- fetch LIVE; never fabricate, mark UNAVAILABLE if gated.`
-
-// ---------- Phase 2: GATHER -- per-asset pipeline (each asset x all gather skills in parallel) ----------
-// Old: one agent covers ALL assets per skill -> massive context, stalls on large lists.
-// New: pipeline(assets) so each asset gets dedicated gather agents -> O(1 asset) wall-clock.
-phase('Gather')
-const gatherByAsset = await pipeline(
-  ASSETS,
-  async (asset) => {
-    const seats = await parallel(gatherSkills.map(skill => () =>
-      agent(
-        `Follow ${SKILL}/${skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). Focus on: ${asset} only.\n${ctxFor(asset)}${seedNote}`,
-        { label: `${skill}:${asset}`, phase: 'Gather', schema: DATA_SCHEMA, model: MODEL }
-      )
-    ))
-    const filled = seats.map((r, i) => (r && r.findings) ? r
-      : { seat: gatherSkills[i], status: 'UNAVAILABLE', findings: [], summary: `[UNAVAILABLE: ${gatherSkills[i]} seat failed]` })
-    const missing = filled.filter(r => r.status === 'UNAVAILABLE').map(r => r.seat)
-    if (missing.length) log(`Gather ${asset}: UNAVAILABLE: ${missing.join(', ')}`)
-    return { asset, seats: filled, complete: missing.length === 0 }
-  }
-)
-const gatherComplete = gatherByAsset.filter(Boolean).every(r => r.complete)
-log(`Gather: ${gatherByAsset.filter(Boolean).length}/${ASSETS.length} assets complete`)
-
-// ---------- Phase 3: CONSOLIDATE -- per-asset desk brief ----------
-phase('Consolidate')
-const briefByAsset = await pipeline(
-  gatherByAsset.filter(Boolean),
-  async ({ asset, seats, complete }) => {
-    const brief = await agent(
-      `Follow ${SKILL}/${deskSkill}/SKILL.md. Focus on: ${asset}.\n${ctxFor(asset)}\nCompleteness: ${complete ? 'All seats returned.' : 'INCOMPLETE -- surface DATA GAPS; do not paper over.'}\nRAW DATA:\n${JSON.stringify(seats, null, 1)}`,
-      { label: `${deskSkill}:${asset}`, phase: 'Consolidate', model: MODEL }
-    )
-    return { asset, brief: brief || '[UNAVAILABLE: desk returned nothing]' }
-  }
-)
-log(`Consolidate: ${briefByAsset.filter(Boolean).length}/${ASSETS.length} briefs`)
-
-// ---------- Phase 4: PANEL -- per-asset lenses (each asset x all panel skills in parallel) ----------
-phase('Panel')
-const panelByAsset = await pipeline(
-  briefByAsset.filter(Boolean),
-  async ({ asset, brief }) => {
-    const votes = await parallel(panelSkills.map(skill => () =>
-      agent(
-        `Apply the lens in ${SKILL}/${skill}/SKILL.md. Focus ONLY on: ${asset}.\n${ctxFor(asset)}\nReturn seat (=${skill}), read, verdict, sizing, flip-condition, confidence.\n=== BRIEF (${asset}) ===\n${brief}`,
-        { label: `${skill}:${asset}`, phase: 'Panel', schema: PANEL_SCHEMA, model: MODEL }
-      )
-    ))
-    const filled = votes.map((v, i) => v || { seat: panelSkills[i], read: '[UNAVAILABLE: seat failed]', verdict: 'WAIT', confidence: 'low' })
-    return { asset, brief, votes: filled }
-  }
-)
-log(`Panel: ${panelByAsset.filter(Boolean).length}/${ASSETS.length} assets voted`)
-
-// Guardrail -- cross-asset (reads all briefs; non-voting process check only).
-const allBriefs = briefByAsset.filter(Boolean).map(b => `=== ${b.asset} ===\n${b.brief}`).join('\n\n')
-const guardrail = guardrailSkill ? await agent(
-  `Follow ${SKILL}/${guardrailSkill}/SKILL.md as a NON-VOTING guardrail (no BUY/SELL verdict). Question: ${QUESTION}\nAssets: ${ASSET_LIST}\nAssess: FOMO-vs-anchoring trap, staged scale-in soundness, sizing survivable to -50%, one guardrail rule per asset.\n${allBriefs}`,
-  { label: guardrailSkill, phase: 'Panel', model: MODEL }) : '(no guardrail skill selected)'
-
-// Flatten all per-asset votes for report/ledger compatibility.
-const verdicts = panelByAsset.filter(Boolean)
-  .flatMap(({ asset, votes }) => votes.map(v => ({ ...v, asset })))
-log(`Panel: ${verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length}/${verdicts.length} total votes cast`)
-
-// ---------- Phase 5: DECIDE -- cross-asset chair ranks all assets ----------
-phase('Decide')
-const totalVotes = verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length
-const decision = await agent(
-  `Follow ${SKILL}/${chairSkill}/SKILL.md to chair the committee.\nQuestion: ${QUESTION}\nAssets: ${ASSET_LIST}\nChair framing: ${FRAMING || 'none'}\nPortfolio: ${PORTFOLIO}\n` +
-  `Populate per_asset[] for EVERY asset (${ASSET_LIST}): {asset, conviction high|medium|low, prob 0..1 bull thesis by ${REPORT_DATE.slice(0,4)}-12-31, action, invalidation}. Rank by conviction -- do NOT give every asset the same prob.\n` +
-  `For assets near but not yet at their entry zone: use action BUY_ON_TOUCH and set entry_trigger to the specific limit price or condition (e.g. "bid $31 limit", "buy on touch of 200d MA $28.50").\n` +
-  `EXACT VOTING-SEAT COUNT = ${totalVotes}. verdict_tally buckets MUST sum to ${totalVotes}.\n` +
-  `=== PER-ASSET PANEL VERDICTS ===\n${JSON.stringify(panelByAsset.filter(Boolean), null, 1)}\n=== GUARDRAIL (non-voting) ===\n${guardrail}`,
-  { label: chairSkill || 'chair-decision', phase: 'Decide', schema: DECISION_SCHEMA, model: MODEL })
-
-// ---------- RE-SCREEN LOOP ----------
-// If chair issued zero BUY/ADD and dominant rejection is valuation, re-screen once with a
-// cheaper/adjacent scope and run the FULL pipeline on the new names. The _rescreened flag
-// prevents infinite loops (cap = 1 retry). Workflow must resolve autonomously — never hand
-// "look deeper" back to the user.
 const bullActions = ['BUY_NOW', 'ADD', 'SCALE', 'DCA', 'BUY_ON_TOUCH']
-const hasBuySignal = decision && Array.isArray(decision.per_asset) &&
-  decision.per_asset.some(a => bullActions.includes(String(a.action || '').toUpperCase()))
-const valuationRejection = decision && decision.decision &&
-  (decision.decision.toLowerCase().includes('margin of safety') ||
-   decision.decision.toLowerCase().includes('already priced') ||
-   decision.decision.toLowerCase().includes('above fair value') ||
-   decision.decision.toLowerCase().includes('overvalued'))
 
-if (!hasBuySignal && valuationRejection && !ARGS._rescreened) {
-  log('RE-SCREEN: zero BUY signals + valuation rejection — re-running screener for beaten-down adjacent names')
-  phase('ReScreen')
-  const rescreenScope = (themeCycle && themeCycle.extended && themeCycle.adjusted_scope)
-    ? themeCycle.adjusted_scope
-    : `${plan.screen_scope} — focus on names that have NOT participated in the recent re-rating; look one tier down the supply chain or in adjacent sub-sectors`
-  const rescreenCriteria = (themeCycle && themeCycle.extended && themeCycle.adjusted_criteria)
-    ? themeCycle.adjusted_criteria
-    : `${plan.screen_criteria}; prioritize names where the business quality is intact but the stock price has lagged the sector`
-  const rescreened = await agent(
-    `Task: Re-screen for investment candidates. The prior screen returned only expensive names — zero BUY signals, all rejected on valuation.\n\n` +
-    `Sector/universe: "${rescreenScope}"\n` +
-    `What makes a good candidate: "${rescreenCriteria}"\n\n` +
-    `How to screen:\n` +
-    `1. Actively avoid the same names from the prior screen: ${ASSET_LIST}\n` +
-    `2. Look for names that have lagged the broader sector re-rating\n` +
-    `3. Look one tier down the supply chain from the crowded mega-names\n` +
-    `4. Search analyst reports for "undiscovered", "overlooked", "laggard" in this sector\n\n` +
-    `Return 5-10 tickers with thesis, catalyst, valuation_gap, why_not_yet_surged.\n` +
-    `HARD RULES: Real NYSE/NASDAQ tickers only. No ETFs. No names already in: ${ASSET_LIST}`,
-    { label: 'rescreen', phase: 'ReScreen', schema: SCREEN_SCHEMA, model: MODEL }
+// ---------- Reusable per-batch pipeline: Gather -> Consolidate -> Panel (+guardrail) -> Decide ----------
+// ONE function so the first batch and every CIO-driven re-screen iteration run identical logic.
+// `tag`: '' for the first batch (phases/labels read "Gather"); 'rs1' etc for later iterations
+// (phases/labels read "Gather (rs1)", "rs1-<skill>:<asset>") so logs stay distinct.
+async function runPipeline(assets, tag) {
+  const batchList = assets.join(', ')
+  const lbl = (s) => tag ? `${tag}-${s}` : s          // namespaced agent label
+  const ph = (s) => tag ? `${s} (${tag})` : s          // namespaced phase name
+  // Per-asset context builder -- each agent focuses on ONE asset, avoiding giant multi-asset context blowup.
+  const ctxFor = (asset) =>
+    `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nFocus asset: ${asset}\nAll assets in this research: ${batchList}\nDesk focus: ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nNews feeds: ${FEEDS.length ? FEEDS.join(', ') : '(none)'}\nAs-of: ${REPORT_DATE}`
+
+  // ---------- GATHER -- per-asset pipeline (each asset x all gather skills in parallel) ----------
+  // Old: one agent covers ALL assets per skill -> massive context, stalls on large lists.
+  // New: pipeline(assets) so each asset gets dedicated gather agents -> O(1 asset) wall-clock.
+  phase(ph('Gather'))
+  const gatherByAsset = await pipeline(
+    assets,
+    async (asset) => {
+      const seats = await parallel(gatherSkills.map(skill => () =>
+        agent(
+          `Follow ${SKILL}/${skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). Focus on: ${asset} only.\n${ctxFor(asset)}${seedNote}`,
+          { label: `${lbl(skill)}:${asset}`, phase: ph('Gather'), schema: DATA_SCHEMA, model: MODEL }
+        )
+      ))
+      const filled = seats.map((r, i) => (r && r.findings) ? r
+        : { seat: gatherSkills[i], status: 'UNAVAILABLE', findings: [], summary: `[UNAVAILABLE: ${gatherSkills[i]} seat failed]` })
+      const missing = filled.filter(r => r.status === 'UNAVAILABLE').map(r => r.seat)
+      if (missing.length) log(`Gather ${asset}: UNAVAILABLE: ${missing.join(', ')}`)
+      return { asset, seats: filled, complete: missing.length === 0 }
+    }
   )
-  const newTickers = rescreened && Array.isArray(rescreened.candidates)
-    ? rescreened.candidates
+  const gatherComplete = gatherByAsset.filter(Boolean).every(r => r.complete)
+  log(`Gather${tag ? ` (${tag})` : ''}: ${gatherByAsset.filter(Boolean).length}/${assets.length} assets complete`)
+
+  // ---------- CONSOLIDATE -- per-asset desk brief ----------
+  phase(ph('Consolidate'))
+  const briefByAsset = await pipeline(
+    gatherByAsset.filter(Boolean),
+    async ({ asset, seats, complete }) => {
+      const brief = await agent(
+        `Follow ${SKILL}/${deskSkill}/SKILL.md. Focus on: ${asset}.\n${ctxFor(asset)}\nCompleteness: ${complete ? 'All seats returned.' : 'INCOMPLETE -- surface DATA GAPS; do not paper over.'}\nRAW DATA:\n${JSON.stringify(seats, null, 1)}`,
+        { label: `${lbl(deskSkill)}:${asset}`, phase: ph('Consolidate'), model: MODEL }
+      )
+      return { asset, brief: brief || '[UNAVAILABLE: desk returned nothing]' }
+    }
+  )
+  log(`Consolidate${tag ? ` (${tag})` : ''}: ${briefByAsset.filter(Boolean).length}/${assets.length} briefs`)
+
+  // ---------- PANEL -- per-asset lenses (each asset x all panel skills in parallel) ----------
+  phase(ph('Panel'))
+  const panelByAsset = await pipeline(
+    briefByAsset.filter(Boolean),
+    async ({ asset, brief }) => {
+      const votes = await parallel(panelSkills.map(skill => () =>
+        agent(
+          `Apply the lens in ${SKILL}/${skill}/SKILL.md. Focus ONLY on: ${asset}.\n${ctxFor(asset)}\nReturn seat (=${skill}), read, verdict, sizing, flip-condition, confidence.\n=== BRIEF (${asset}) ===\n${brief}`,
+          { label: `${lbl(skill)}:${asset}`, phase: ph('Panel'), schema: PANEL_SCHEMA, model: MODEL }
+        )
+      ))
+      const filled = votes.map((v, i) => v || { seat: panelSkills[i], read: '[UNAVAILABLE: seat failed]', verdict: 'WAIT', confidence: 'low' })
+      return { asset, brief, votes: filled }
+    }
+  )
+  log(`Panel${tag ? ` (${tag})` : ''}: ${panelByAsset.filter(Boolean).length}/${assets.length} assets voted`)
+
+  // Guardrail -- cross-asset (reads all briefs; non-voting process check only).
+  const allBriefs = briefByAsset.filter(Boolean).map(b => `=== ${b.asset} ===\n${b.brief}`).join('\n\n')
+  const guardrail = guardrailSkill ? await agent(
+    `Follow ${SKILL}/${guardrailSkill}/SKILL.md as a NON-VOTING guardrail (no BUY/SELL verdict). Question: ${QUESTION}\nAssets: ${batchList}\nAssess: FOMO-vs-anchoring trap, staged scale-in soundness, sizing survivable to -50%, one guardrail rule per asset.\n${allBriefs}`,
+    { label: lbl(guardrailSkill), phase: ph('Panel'), model: MODEL }) : '(no guardrail skill selected)'
+
+  // Flatten all per-asset votes for report/ledger compatibility.
+  const verdicts = panelByAsset.filter(Boolean)
+    .flatMap(({ asset, votes }) => votes.map(v => ({ ...v, asset })))
+  log(`Panel${tag ? ` (${tag})` : ''}: ${verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length}/${verdicts.length} total votes cast`)
+
+  // ---------- DECIDE -- cross-asset chair ranks all assets in this batch ----------
+  phase(ph('Decide'))
+  const totalVotes = verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length
+  const decision = await agent(
+    `Follow ${SKILL}/${chairSkill}/SKILL.md to chair the committee.\nQuestion: ${QUESTION}\nAssets: ${batchList}\nChair framing: ${FRAMING || 'none'}\nPortfolio: ${PORTFOLIO}\n` +
+    `Populate per_asset[] for EVERY asset (${batchList}): {asset, conviction high|medium|low, prob 0..1 bull thesis by ${REPORT_DATE.slice(0,4)}-12-31, action, invalidation}. Rank by conviction -- do NOT give every asset the same prob.\n` +
+    `For assets near but not yet at their entry zone: use action BUY_ON_TOUCH and set entry_trigger to the specific limit price or condition (e.g. "bid $31 limit", "buy on touch of 200d MA $28.50").\n` +
+    `EXACT VOTING-SEAT COUNT = ${totalVotes}. verdict_tally buckets MUST sum to ${totalVotes}.\n` +
+    `=== PER-ASSET PANEL VERDICTS ===\n${JSON.stringify(panelByAsset.filter(Boolean), null, 1)}\n=== GUARDRAIL (non-voting) ===\n${guardrail}`,
+    { label: tag ? `${tag}-${chairSkill || 'chair-decision'}` : (chairSkill || 'chair-decision'), phase: ph('Decide'), schema: DECISION_SCHEMA, model: MODEL })
+
+  return { assets, gatherByAsset, briefByAsset, panelByAsset, verdicts, guardrail, decision, gatherComplete }
+}
+
+// ---------- CIO-DRIVEN ITERATIVE SEARCH LOOP (max 3 iterations, code-enforced) ----------
+// First batch runs the pipeline; then the CIO repeatedly decides STOP (have a BUY / exhausted) or
+// CONTINUE (screen a DIFFERENT slice and run the pipeline again). Accumulators below carry the same
+// shapes Report/Ledger read. `allScreened` is dedup memory within this run.
+let allScreened = [...ASSETS]
+let agg = await runPipeline(ASSETS, '')
+let gatherByAsset = agg.gatherByAsset
+let briefByAsset = agg.briefByAsset
+let panelByAsset = agg.panelByAsset
+let verdicts = agg.verdicts
+let guardrail = agg.guardrail
+let decision = agg.decision
+let gatherComplete = agg.gatherComplete
+
+// Persist state after the first batch (cross-run memory).
+phase('SaveState'); await saveState()
+
+for (let iter = 1; iter <= 3; iter++) {
+  // Belt-and-suspenders: if we already hold a BUY signal, stop before even asking the CIO.
+  const hasBuy = decision && Array.isArray(decision.per_asset) &&
+    decision.per_asset.some(a => bullActions.includes(String(a.action || '').toUpperCase()))
+  if (hasBuy) { log(`CIO-Review iter ${iter}: STOP — already have a BUY signal`); break }
+
+  const review = await agent(
+    `You are the CIO running an iterative search for a conviction BUY.\n` +
+    `GOAL: find at least ONE high/medium-conviction BUY (action ACCUMULATE / BUY_NOW / ADD / SCALE / DCA / BUY_ON_TOUCH). ` +
+    `SUCCESS: stop as soon as you have one, OR when the universe is genuinely exhausted and further screening is unlikely to help.\n` +
+    `Original mandate: ${QUESTION}\nScreen scope so far: ${plan.screen_scope}\nScreen criteria so far: ${plan.screen_criteria}\n` +
+    `Tickers screened this run already (do NOT re-screen these): ${allScreened.join(', ')}\n` +
+    `Iterations remaining after this one: ${3 - iter}\n` +
+    `PRIOR-RUN STATE: ${priorState}\n` +
+    `=== LATEST CHAIR DECISION (what was tried + why rejected) ===\n${JSON.stringify(decision && decision.per_asset || [], null, 1)}\nDecision narrative: ${decision && decision.decision || ''}\n\n` +
+    `Decide: should we STOP (we have a BUY, or the search is exhausted) or CONTINUE (screen a fresh, different slice)? ` +
+    `If CONTINUE, give next_scope (a DIFFERENT universe/sector/tier than what's been tried — be specific) and next_criteria (what makes a good candidate there). ` +
+    `Reason freely; you own the strategy. Return at minimum: verdict (STOP|CONTINUE), and if CONTINUE also next_scope and next_criteria.`,
+    { label: `cio-review-${iter}`, phase: 'CIO-Review', schema: REVIEW_SCHEMA, model: MODEL })
+
+  const verdict = String(review && review.verdict || 'STOP').toUpperCase()
+  if (verdict !== 'CONTINUE') { log(`CIO-Review iter ${iter}: STOP — ${review && review.rationale || 'no continue'}`); break }
+
+  const nextScope = review.next_scope || plan.screen_scope
+  const nextCriteria = review.next_criteria || plan.screen_criteria
+  phase(`Screen (rs${iter})`)
+  log(`CIO-Review iter ${iter}: CONTINUE — next_scope "${nextScope}"`)
+  const screened2 = await agent(
+    `Task: Re-screen for investment candidates. The CIO directed a fresh slice — prior batches did not yield a conviction BUY.\n\n` +
+    `Sector/universe: "${nextScope}"\n` +
+    `What makes a good candidate: "${nextCriteria}"\n\n` +
+    `How to screen:\n` +
+    `1. EXCLUDE these already-screened tickers: ${allScreened.join(', ')}\n` +
+    `2. Look for names that fit the new scope and have NOT already surged\n` +
+    `3. Look one tier down the supply chain or in adjacent sub-sectors from the crowded names\n` +
+    `4. Search analyst reports for "undiscovered", "overlooked", "laggard" in this universe\n\n` +
+    `Return 5-10 tickers with thesis, catalyst, valuation_gap, why_not_yet_surged.\n` +
+    `HARD RULES: Real NYSE/NASDAQ tickers only. No ETFs. No names already screened: ${allScreened.join(', ')}`,
+    { label: `rescreen-${iter}`, phase: `Screen (rs${iter})`, schema: SCREEN_SCHEMA, model: MODEL }
+  )
+  const newTickers = screened2 && Array.isArray(screened2.candidates)
+    ? screened2.candidates
         .map(c => String(c.ticker || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))
         .filter(t => /^[A-Z][A-Z0-9]{1,5}$/.test(t))
-        .filter(t => !ASSETS.includes(t))
+        .filter(t => !allScreened.includes(t))
     : []
-  if (newTickers.length) {
-    log(`ReScreen: ${newTickers.length} new candidates — running full pipeline: ${newTickers.join(', ')}`)
-    const rsAssetList = newTickers.join(', ')
-    const rsCtxFor = (asset) =>
-      `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nFocus asset: ${asset}\nAll assets in this re-screen batch: ${rsAssetList}\nDesk focus: ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nAs-of: ${REPORT_DATE}`
+  if (!newTickers.length) { log(`CIO-Review iter ${iter}: screener returned no new names — stopping`); break }
+  allScreened.push(...newTickers)
+  log(`Screen (rs${iter}): ${newTickers.length} new candidates — running full pipeline: ${newTickers.join(', ')}`)
 
-    // Gather
-    phase('ReScreen-Gather')
-    const rsGatherByAsset = await pipeline(
-      newTickers,
-      async (asset) => {
-        const seats = await parallel(gatherSkills.map(skill => () =>
-          agent(
-            `Follow ${SKILL}/${skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). Focus on: ${asset} only.\n${rsCtxFor(asset)}${seedNote}`,
-            { label: `rs-${skill}:${asset}`, phase: 'ReScreen-Gather', schema: DATA_SCHEMA, model: MODEL }
-          )
-        ))
-        const filled = seats.map((r, i) => (r && r.findings) ? r
-          : { seat: gatherSkills[i], status: 'UNAVAILABLE', findings: [], summary: `[UNAVAILABLE: ${gatherSkills[i]} seat failed]` })
-        return { asset, seats: filled, complete: filled.every(r => r.status !== 'UNAVAILABLE') }
-      }
-    )
+  const priorList = ASSETS.join(', ')          // names already analyzed BEFORE this iteration's batch
+  const batchListStr = newTickers.join(', ')
+  const batch = await runPipeline(newTickers, `rs${iter}`)
 
-    // Consolidate
-    phase('ReScreen-Consolidate')
-    const rsBriefByAsset = await pipeline(
-      rsGatherByAsset.filter(Boolean),
-      async ({ asset, seats, complete }) => {
-        const brief = await agent(
-          `Follow ${SKILL}/${deskSkill}/SKILL.md. Focus on: ${asset}.\n${rsCtxFor(asset)}\nCompleteness: ${complete ? 'All seats returned.' : 'INCOMPLETE — surface DATA GAPS.'}\nRAW DATA:\n${JSON.stringify(seats, null, 1)}`,
-          { label: `rs-${deskSkill}:${asset}`, phase: 'ReScreen-Consolidate', model: MODEL }
-        )
-        return { asset, brief: brief || '[UNAVAILABLE: desk returned nothing]' }
-      }
-    )
+  // Merge this batch into the accumulators (same merge logic as the old re-screen block).
+  ASSETS.push(...newTickers)
+  verdicts.push(...batch.verdicts)
+  panelByAsset.push(...batch.panelByAsset.filter(Boolean))
+  briefByAsset.push(...batch.briefByAsset.filter(Boolean))
+  gatherByAsset.push(...batch.gatherByAsset.filter(Boolean))
+  gatherComplete = gatherComplete && batch.gatherComplete
 
-    // Panel
-    phase('ReScreen-Panel')
-    const rsPanelByAsset = await pipeline(
-      rsBriefByAsset.filter(Boolean),
-      async ({ asset, brief }) => {
-        const votes = await parallel(panelSkills.map(skill => () =>
-          agent(
-            `Apply the lens in ${SKILL}/${skill}/SKILL.md. Focus ONLY on: ${asset}.\n${rsCtxFor(asset)}\nReturn seat, read, verdict, sizing, flip-condition, confidence.\n=== BRIEF (${asset}) ===\n${brief}`,
-            { label: `rs-${skill}:${asset}`, phase: 'ReScreen-Panel', schema: PANEL_SCHEMA, model: MODEL }
-          )
-        ))
-        const filled = votes.map((v, i) => v || { seat: panelSkills[i], read: '[UNAVAILABLE]', verdict: 'WAIT', confidence: 'low' })
-        return { asset, brief, votes: filled }
-      }
-    )
-    const rsVerdicts = rsPanelByAsset.filter(Boolean)
-      .flatMap(({ asset, votes }) => votes.map(v => ({ ...v, asset })))
-    log(`ReScreen-Panel: ${rsVerdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length} votes cast`)
-
-    // Decide
-    phase('ReScreen-Decide')
-    const rsTotalVotes = rsVerdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length
-    const rsDecision = await agent(
-      `Follow ${SKILL}/${chairSkill}/SKILL.md to chair the committee.\nQuestion: ${QUESTION}\nAssets: ${rsAssetList}\nPortfolio: ${PORTFOLIO}\n` +
-      `This is a RE-SCREEN batch — prior batch (${ASSET_LIST}) had zero BUY signals on valuation. These names were selected as adjacent laggards.\n` +
-      `Populate per_asset[] for EVERY asset: {asset, conviction, prob 0..1, action, invalidation, entry_trigger}.\n` +
-      `For assets near entry zone: use BUY_ON_TOUCH + entry_trigger.\n` +
-      `EXACT VOTING-SEAT COUNT = ${rsTotalVotes}. verdict_tally MUST sum to ${rsTotalVotes}.\n` +
-      `=== PER-ASSET PANEL VERDICTS ===\n${JSON.stringify(rsPanelByAsset.filter(Boolean), null, 1)}`,
-      { label: `rs-${chairSkill}`, phase: 'ReScreen-Decide', schema: DECISION_SCHEMA, model: MODEL })
-
-    // Merge re-screen results into main decision/report vars so the Report phase includes them
-    if (rsDecision) {
-      // Append re-screen assets to ASSETS list and merge verdicts for the report
-      ASSETS.push(...newTickers)
-      verdicts.push(...rsVerdicts)
-      panelByAsset.push(...rsPanelByAsset.filter(Boolean))
-      briefByAsset.push(...rsBriefByAsset.filter(Boolean))
-      // Overwrite decision with re-screen decision if it has BUY signals; otherwise keep original
-      const rsHasBuy = Array.isArray(rsDecision.per_asset) &&
-        rsDecision.per_asset.some(a => bullActions.includes(String(a.action || '').toUpperCase()))
-      if (rsHasBuy) {
-        log(`ReScreen-Decide: BUY signals found in re-screen batch — using re-screen decision`)
-        // Merge: combine agreement/disagreement, use re-screen answer/decision
-        decision.answer = `[RE-SCREEN BATCH] ${rsDecision.answer}`
-        decision.decision = `PRIOR BATCH (${ASSET_LIST}): zero buys — all extended.\n\nRE-SCREEN BATCH (${rsAssetList}): ${rsDecision.decision}`
-        decision.buy_side = rsDecision.buy_side
-        decision.tranche_plan = rsDecision.tranche_plan
-        decision.per_asset = [...(decision.per_asset || []), ...(rsDecision.per_asset || [])]
-        decision.agreement = [...(decision.agreement || []), ...(rsDecision.agreement || [])]
-        decision.disagreement = [...(decision.disagreement || []), ...(rsDecision.disagreement || [])]
-        decision.key_risks = [...(decision.key_risks || []), ...(rsDecision.key_risks || [])]
-      } else {
-        log(`ReScreen-Decide: re-screen batch also zero BUYs — both batches exhausted, reporting all`)
-        decision.decision = `BATCH 1 (${ASSET_LIST}): zero buys.\nBATCH 2 re-screen (${rsAssetList}): zero buys.\n${rsDecision.decision}`
-        decision.per_asset = [...(decision.per_asset || []), ...(rsDecision.per_asset || [])]
-      }
+  if (batch.decision) {
+    const batchHasBuy = Array.isArray(batch.decision.per_asset) &&
+      batch.decision.per_asset.some(a => bullActions.includes(String(a.action || '').toUpperCase()))
+    if (batchHasBuy) {
+      log(`Decide (rs${iter}): BUY signals found in re-screen batch — adopting its buy-side`)
+      decision.answer = `[RE-SCREEN BATCH] ${batch.decision.answer}`
+      decision.decision = `PRIOR BATCHES (${priorList}): zero buys — all extended.\n\nRE-SCREEN BATCH (${batchListStr}): ${batch.decision.decision}`
+      decision.buy_side = batch.decision.buy_side
+      decision.tranche_plan = batch.decision.tranche_plan
+      decision.per_asset = [...(decision.per_asset || []), ...(batch.decision.per_asset || [])]
+      decision.agreement = [...(decision.agreement || []), ...(batch.decision.agreement || [])]
+      decision.disagreement = [...(decision.disagreement || []), ...(batch.decision.disagreement || [])]
+      decision.key_risks = [...(decision.key_risks || []), ...(batch.decision.key_risks || [])]
+    } else {
+      log(`Decide (rs${iter}): re-screen batch also zero BUYs — concatenating narratives`)
+      decision.decision = `${decision.decision}\n\nRE-SCREEN BATCH (${batchListStr}): ${batch.decision.decision}`
+      decision.per_asset = [...(decision.per_asset || []), ...(batch.decision.per_asset || [])]
     }
-  } else {
-    log('ReScreen: screener returned no new valid tickers — reporting original batch')
   }
+
+  phase('SaveState'); await saveState()
+}
+
+// ---------- SaveState helper (cross-run memory; called after first batch + each loop iteration) ----------
+// Hoisted: `function` declarations are visible above their definition, so the calls earlier work.
+async function saveState() {
+  const stateObj = { date: REPORT_DATE, query: QUESTION, screened: allScreened,
+    per_asset: (decision && decision.per_asset || []).map(a => ({ asset: a.asset, action: a.action, conviction: a.conviction, prob: a.prob })) }
+  const json = JSON.stringify(stateObj, null, 2)
+  await agent(`Use Bash to create the dir and write this file EXACTLY. Run:\nmkdir -p /Users/engineer/workspace/backtest/research/.state\ncat > /Users/engineer/workspace/backtest/research/.state/research-market.json <<'EOF_STATE'\n${json}\nEOF_STATE\nThen reply OK.`, { label: 'save-state', phase: 'SaveState', model: MODEL })
 }
 
 // ---------- Phase 6: WRITE REPORT ----------
 phase('Report')
+// Recompute the asset list from the FINAL ASSETS (the loop may have appended re-screen names; the
+// initial ASSET_LIST const was captured before the loop and is now stale).
+const FINAL_ASSET_LIST = ASSETS.join(', ')
 const reportPath = `/Users/engineer/workspace/backtest/research/research.${ASSET_CLASS}.${REPORT_DATE}.md`
 // Per-asset vote table: one row per asset x lens combination.
 const seatRows = panelByAsset.filter(Boolean).flatMap(({ asset, votes }) =>
@@ -493,7 +499,7 @@ const seatDetail = panelByAsset.filter(Boolean).map(({ asset, votes }) =>
     `**${v.seat}** -- ${v.verdict} (${v.confidence}): ${v.read}\n- Sizing: ${v.sizing || 'n/a'} * Flips if: ${v.flip || 'n/a'}`
   ).join('\n\n')
 ).join('\n\n---\n\n')
-const reportMd = `# Research -- ${ASSET_LIST} (${ASSET_CLASS}) -- ${REPORT_DATE}
+const reportMd = `# Research -- ${FINAL_ASSET_LIST} (${ASSET_CLASS}) -- ${REPORT_DATE}
 
 > Question: ${QUESTION}
 > Portfolio: ${PORTFOLIO}
