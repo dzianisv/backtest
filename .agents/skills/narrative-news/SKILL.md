@@ -16,8 +16,8 @@ category (PRD FR1.8). It produces **EVENTS, not articles, not opinions** — the
 only reports what happened, deduped and state-aware.
 
 **Depends on:** [[feed-decrypt]] · [[feed-cointelegraph]] · [[feed-coindesk]] · [[feed-theblock]] ·
-[[feed-bitcoinmagazine]] · [[feed-ft]] · [[feed-wsj]] · [[feed-bloomberg]] (input adapters) →
-[[crypto-news-store]] (dedup + cross-run state).
+[[feed-bitcoinmagazine]] · [[feed-coinbase]] (first-party blog/Bytes/institutional) · [[feed-ft]] · [[feed-wsj]] ·
+[[feed-bloomberg]] (input adapters) → [[crypto-news-store]] (dedup + cross-run state).
 
 ## Hard rules
 

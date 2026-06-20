@@ -55,10 +55,14 @@ signal"), or the question is pure spot fundamentals/valuation.
 ## Data recipe
 
 **Crypto**
-- **Coinglass** — aggregated funding, OI, liquidation heatmap, long/short ratio (free, start here).
-- **Deribit API** `https://www.deribit.com/api/v2` — options + DVOL: `/public/get_book_summary_by_currency?currency=BTC&kind=option`, `/public/get_index_price`. Dominant BTC/ETH options venue.
-- **Binance/Bybit** `fapi` for perp funding/OI; **geo-blocked? fall back to OKX / Deribit / Coinglass.**
-- **CME** BTC/ETH futures for institutional basis.
+- **Coinglass** `https://www.coinglass.com` — aggregated funding, OI, liquidation heatmap, long/short ratio (free, start here; may 403 from sandbox — fall through to next).
+- **Kraken Futures** `https://futures.kraken.com/derivatives/api/v3/tickers` — no key, 200 OK from sandbox; returns `fundingRate`, `lastTime`, `openInterest` per perp (`PI_XBTUSD`, `PI_ETHUSD`, `PI_SOLUSD`). **Primary fallback for funding when Binance/Bybit blocked.**
+- **Hyperliquid** `POST https://api.hyperliquid.xyz/info` body `{"type":"metaAndAssetCtxs"}` — no key, 200 OK; `ctx.funding` and `ctx.openInterest` for all listed assets including SOL perps. Second primary fallback.
+- **Deribit API** `https://www.deribit.com/api/v2` — options + DVOL + **25Δ skew**: `/public/get_book_summary_by_currency?currency=BTC&kind=option` (get all option summaries, find near-term 25Δ puts vs calls for skew); `/public/get_volatility_index_data?currency=BTC` for DVOL timeseries; `/public/get_index_price?index_name=btc_usd`. Dominant BTC/ETH options venue, all no-key.
+- **CFTC Disaggregated COT (Socrata)** `https://publicreporting.cftc.gov/resource/gpe5-46if.json?$where=market_and_exchange_names%20LIKE%20'%25BITCOIN%25'&$limit=5&$order=report_date_as_yyyy_mm_dd%20DESC` — no key, returns leveraged-fund + asset-manager positions in BTC futures. **Institutional sentiment anchor; updated weekly (Fri ~15:30 ET).**
+- **OKX** `https://www.okx.com/api/v5/public/funding-rate?instId=BTC-USD-SWAP` — fallback for funding; may 451 geo-block.
+- **Binance/Bybit** `fapi` — **BLOCKED** (HTTP 451 / 403 from sandbox); do not attempt.
+- **CME** BTC/ETH futures for institutional basis (via Yahoo Finance `BTC=F` or CME data).
 
 **Equities / indices**
 - **CBOE** — equity & index put/call ratios, **VIX**, **SKEW** index; **VIX term** via vixcentral.

@@ -22,6 +22,7 @@ The user's question + current holdings/exposure, the consolidated brief, the vot
    - **Concentration.** Flag any single position that is a large share of the book (e.g. ≥25–30%) and whether the proposed action raises or lowers concentration/correlation.
    - **Both sides.** Recommend what to **add** (e.g. initiate direct BTC) AND what to **trim/sell/hold** (e.g. trim COIN to fund BTC and cut single-name + regulatory risk), with the rationale for each. Diversifying COIN→BTC lowers idiosyncratic/regulatory risk while keeping crypto beta — name that trade-off.
 3. **Verdict tally** across voting seats; **preserve disagreement** (name the bear dissent vs the accumulation camp — never average it away).
+   - **Counting rule (no arithmetic errors).** State the exact number of voting seats = the count of entries in the VOTING VERDICTS input. The per-bucket counts (ADD/DCA/HOLD/WAIT/AVOID/…) **MUST sum to that number**, and the seats you name **must not exceed it**. The non-voting Housel guardrail is NOT a voting seat — never include it in the count. If a seat returned `[UNAVAILABLE]`, count it as a non-vote and say so. Re-add before writing the tally.
 4. **Tranche plan** — sizes as % of the intended crypto sleeve + exact price/level/time triggers.
 5. **Key risks** + **invalidation** (the condition that halts deployment).
 
@@ -30,6 +31,7 @@ The user's question + current holdings/exposure, the consolidated brief, the vot
 - Honor the Housel guardrail as a binding check on **process + sizing** (it can veto un-survivable sizing) but not as a buy/sell vote.
 - Buy the fear/cheapness or the confirmation — never chase a bounce. If the question is "did I miss it after a +X% move," address the FOMO/anchoring trap directly.
 - No fabricated numbers; if the brief flags DATA GAPS, state how they limit confidence.
+- **Use the brief's canonical numbers.** Any threshold a verdict or invalidation hangs on (realized price, MVRV, a revenue/fee floor, a 200-week MA) MUST quote the §10 `DESK CANONICAL` value — state ONE number, the same one, everywhere it appears. Do not introduce a figure not in the brief and do not cite the same metric two different ways across your answer; a load-bearing invalidation level resting on an inconsistent number is a defect.
 
 ## Done when
 The question is answered directly; both a buy-side and a sell/trim-side recommendation are given with portfolio rationale; tranche plan + invalidation present; disagreement preserved; sizing inside the risk-capital boundary.

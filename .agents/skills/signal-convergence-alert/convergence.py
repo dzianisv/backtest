@@ -9,6 +9,7 @@ Reads (any subset that exists):
   ~/.openclaw/workspace/investor/pools/narrative.jsonl        {"ticker": "...", ...}   source=journalism (≤5d)
   <13F ledger>.jsonl          {"ticker": "...", ...}            source=13f       (last 14d)
   <congress ledger>.jsonl     {"ticker": "...", ...}            source=congress  (last 14d)
+  <13D ledger>.jsonl          {"ticker": "...", ...}            source=13d       (last 14d)
 
 Educational only — not advice. No fabrication: only reports what is actually in the pools.
 
@@ -50,6 +51,7 @@ POOLS = [
     ("journalism", _resolve_path("NARRATIVE_POOL", os.path.join(_POOLS_DIR, "narrative.jsonl"), "pools/narrative.jsonl"), 5),
     ("13f", _resolve_path("THIRTEENF_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/13f/recommended.jsonl"), ".agents/skills/13f-watch/13f/recommended.jsonl"), 14),
     ("congress", _resolve_path("CONGRESS_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/congress/recommended.jsonl"), "congress/recommended.jsonl"), 14),
+    ("13d", _resolve_path("THIRTEEND_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/13d/recommended.jsonl"), ".agents/skills/13d-watch/13d/recommended.jsonl"), 14),
 ]
 
 

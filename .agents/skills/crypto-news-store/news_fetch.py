@@ -29,6 +29,9 @@ CRYPTO_FEEDS = {
     "coindesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "theblock": "https://www.theblock.co/rss.xml",
     "bitcoinmagazine": "https://bitcoinmagazine.com/feed",
+    # Coinbase blog + institutional research ("Coinbase Bytes" newsletter content is published on the blog).
+    # Direct coinbase.com/blog RSS is Cloudflare-gated (403); fetched via Google News proxy like wsj above.
+    "coinbase": "https://news.google.com/rss/search?q=(site%3Acoinbase.com%2Fblog+OR+site%3Acoinbase.com%2Finstitutional)+when%3A14d&hl=en-US&gl=US&ceid=US%3Aen",
 }
 # Macro paywalled — FT/WSJ have RSS descriptions/teasers; Bloomberg is best-effort (podcast feed, often 403):
 MACRO_FEEDS = {
