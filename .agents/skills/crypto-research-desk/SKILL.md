@@ -20,6 +20,7 @@ Merge the raw data seats into ONE dense, factual brief on the asset/portfolio in
 - Every number keeps its `as-of` + `source`. Quote, don't paraphrase, priced probabilities.
 - **Completeness contract:** if a required category is `[UNAVAILABLE]`, write `[UNAVAILABLE — <category> seat failed to return]` in its section AND list it in §11 DATA GAPS at the top. Never paper over a gap.
 - Surface conflicts (e.g. liquidity expanding vs contracting) in §10; do not average them away.
+- **Canonical-number rule (one metric → one value).** When two seats report the SAME metric with different numbers (e.g. HYPE annualized revenue $880M vs $792M, SOL realized price, MVRV, 200-week MA, BTC realized price), §10 MUST resolve each into a single **canonical value** the rest of the brief uses everywhere: pick the most-authoritative/most-recent source (or, for an irreducible spread, an explicit point estimate like the midpoint) and write `→ DESK CANONICAL: <value> (chose <source>; range <a>–<b>)`. Every other section, and especially any threshold a verdict/invalidation could hang on, must then quote that ONE canonical number — never a second value. A metric appearing with two different numbers in two sections is a defect, not honesty.
 - Be dense and neutral. No verdicts, no sizing, no "should."
 
 ## Done when

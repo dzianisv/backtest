@@ -44,6 +44,248 @@ Two tiers run on any backend. FAST catches same-day setups; SLOW produces a week
 
 ---
 
+## research-market pipeline
+
+> Source: [`.agents/workflows/research-market.workflow.js`](.agents/workflows/research-market.workflow.js)
+
+Six-phase dynamic workflow. **`research-manager`** (intake/triage desk head) reads available skills live at runtime and selects every component — no roster is hardcoded in the script.
+
+<svg viewBox="0 0 820 960" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif" font-size="12">
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#aaa"/>
+  </marker>
+</defs>
+
+<!-- Lane backgrounds -->
+<rect x="90" y="44"  width="716" height="72"  rx="6" fill="#f5f5f5"/>
+<rect x="90" y="126" width="716" height="228" rx="6" fill="#eeeeee"/>
+<rect x="90" y="364" width="716" height="116" rx="6" fill="#f5f5f5"/>
+<rect x="90" y="490" width="716" height="316" rx="6" fill="#eeeeee"/>
+<rect x="90" y="816" width="716" height="68"  rx="6" fill="#f5f5f5"/>
+<rect x="90" y="894" width="716" height="50"  rx="6" fill="#f5f5f5"/>
+
+<!-- Lane labels -->
+<text x="14" y="82"  fill="#bbb" font-size="8" font-weight="700" letter-spacing="1">INTAKE</text>
+<text x="14" y="242" fill="#bbb" font-size="8" font-weight="700" letter-spacing="1">GATHER</text>
+<text x="14" y="422" fill="#bbb" font-size="8" font-weight="700" letter-spacing="1">CONSOLIDATE</text>
+<text x="14" y="648" fill="#bbb" font-size="8" font-weight="700" letter-spacing="1">PANEL</text>
+<text x="14" y="850" fill="#bbb" font-size="8" font-weight="700" letter-spacing="1">DECIDE</text>
+<text x="14" y="919" fill="#bbb" font-size="8" font-weight="700" letter-spacing="1">LEDGER</text>
+
+<!-- ═══ INTAKE ═══ -->
+<rect x="280" y="50" width="260" height="60" rx="8" fill="#6366f1"/>
+<text x="410" y="72"  text-anchor="middle" fill="white" font-weight="700" font-size="14">research-manager</text>
+<text x="410" y="89"  text-anchor="middle" fill="white" font-size="10" opacity=".85">intake / triage desk head</text>
+<text x="410" y="104" text-anchor="middle" fill="white" font-size="8.5" opacity=".65">discovers skills live → builds routing plan</text>
+<line x1="410" y1="110" x2="410" y2="124" stroke="#bbb" stroke-width="1.2" marker-end="url(#arr)"/>
+
+<!-- ═══ GATHER row A: regulatory / macro / odds ═══ -->
+<text x="410" y="140" text-anchor="middle" fill="#bbb" font-size="8.5" font-style="italic">— regulatory / macro / odds —</text>
+
+<rect x="98"  y="146" width="114" height="44" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="155" y="163" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">13f-watch</text>
+<text x="155" y="177" text-anchor="middle" fill="#888" font-size="9">fund filings (EDGAR)</text>
+<text x="155" y="189" text-anchor="middle" fill="#bbb" font-size="7.5">13F quarterly</text>
+
+<rect x="222" y="146" width="108" height="44" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="276" y="163" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">13d-watch</text>
+<text x="276" y="177" text-anchor="middle" fill="#888" font-size="9">activist filings</text>
+
+<rect x="340" y="146" width="154" height="44" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="417" y="163" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace" font-weight="600">congressman-stock-watch</text>
+<text x="417" y="178" text-anchor="middle" fill="#888" font-size="9">trades disclosures</text>
+
+<rect x="504" y="146" width="112" height="44" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="560" y="163" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">fomc-monitor</text>
+<text x="560" y="178" text-anchor="middle" fill="#888" font-size="9">Fed rates / statements</text>
+
+<rect x="626" y="146" width="144" height="44" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="698" y="163" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace" font-weight="600">prediction-market-odds</text>
+<text x="698" y="178" text-anchor="middle" fill="#888" font-size="9">Polymarket / Kalshi</text>
+
+<!-- ═══ GATHER row B: news feeds ═══ -->
+<text x="410" y="204" text-anchor="middle" fill="#bbb" font-size="8.5" font-style="italic">— news feeds —</text>
+
+<rect x="98"  y="208" width="102" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="149" y="224" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">feed-wsj</text>
+<text x="149" y="240" text-anchor="middle" fill="#888" font-size="9">Wall Street Journal</text>
+
+<rect x="210" y="208" width="92"  height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="256" y="224" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">feed-ft</text>
+<text x="256" y="240" text-anchor="middle" fill="#888" font-size="9">Financial Times</text>
+
+<rect x="312" y="208" width="136" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="380" y="224" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace" font-weight="600">feed-cointelegraph</text>
+<text x="380" y="240" text-anchor="middle" fill="#888" font-size="9">CoinTelegraph</text>
+
+<rect x="458" y="208" width="116" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="516" y="224" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">feed-coindesk</text>
+<text x="516" y="240" text-anchor="middle" fill="#888" font-size="9">CoinDesk</text>
+
+<rect x="584" y="208" width="108" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="638" y="224" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">feed-decrypt</text>
+<text x="638" y="240" text-anchor="middle" fill="#888" font-size="9">Decrypt.co</text>
+
+<text x="700" y="204" text-anchor="end" fill="#888" font-size="7.5" font-style="italic">+ feed-coinbase · feed-theblock · feed-bitcoinmagazine · feed-bloomberg</text>
+
+<!-- ═══ GATHER row C: onchain / quant ═══ -->
+<text x="410" y="264" text-anchor="middle" fill="#bbb" font-size="8.5" font-style="italic">— onchain / quant data —</text>
+
+<rect x="112" y="270" width="150" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="187" y="286" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace" font-weight="600">crypto-onchain-data</text>
+<text x="187" y="302" text-anchor="middle" fill="#888" font-size="9">MVRV-Z, NUPL</text>
+
+<rect x="272" y="270" width="150" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="347" y="286" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace" font-weight="600">crypto-liquidity-data</text>
+<text x="347" y="302" text-anchor="middle" fill="#888" font-size="9">ETF flows / CEX depth</text>
+
+<rect x="432" y="270" width="180" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="522" y="286" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace" font-weight="600">derivatives-positioning-data</text>
+<text x="522" y="302" text-anchor="middle" fill="#888" font-size="9">funding, OI, options</text>
+
+<rect x="622" y="270" width="104" height="40" rx="5" fill="white" stroke="#ddd" stroke-width="1.2"/>
+<text x="674" y="286" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">dip-scanner</text>
+<text x="674" y="302" text-anchor="middle" fill="#888" font-size="9">−30% from 52w high</text>
+
+<!-- Gather → Consolidate -->
+<line x1="410" y1="317" x2="410" y2="358" stroke="#bbb" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+<text x="452" y="340" fill="#bbb" font-size="8.5">all seats parallel</text>
+
+<!-- ═══ CONSOLIDATE ═══ -->
+<rect x="282" y="370" width="256" height="48" rx="8" fill="white" stroke="#6366f1" stroke-width="2"/>
+<text x="410" y="391"  text-anchor="middle" fill="#111" font-weight="700" font-size="13">Research Report</text>
+<text x="410" y="409" text-anchor="middle" fill="#555" font-size="10">desk skill merges all seat findings</text>
+
+<line x1="410" y1="418" x2="410" y2="434" stroke="#bbb" stroke-width="1.2" marker-end="url(#arr)"/>
+
+<rect x="312" y="436" width="196" height="36" rx="6" fill="#f0f0f0" stroke="#ddd" stroke-width="1.2"/>
+<text x="410" y="452" text-anchor="middle" fill="#555" font-size="8" font-family="monospace" font-weight="600">crypto-research-desk</text>
+<text x="410" y="466" text-anchor="middle" fill="#888" font-size="8">/ stock-research-desk</text>
+
+<line x1="410" y1="472" x2="410" y2="488" stroke="#bbb" stroke-width="1.2" marker-end="url(#arr)"/>
+
+<!-- ═══ PANEL ═══ -->
+<text x="410" y="502" text-anchor="middle" fill="#bbb" font-size="8.5" font-style="italic">multi-lens quorum — parallel — all reason over consolidated brief</text>
+
+<!--
+  Person icon: (cx, top)
+    head  circle: cx, top+13, r=11
+    body  rect:   cx-12, top+24, w=24 h=18 rx=6
+    name text:    cx, top+57  (600 weight, 11px)
+    skill text:   cx, top+69  (monospace, 7.5px)
+    desc  text:   cx, top+80  (9px)
+  cols cx: 185, 410, 635   row tops: 510, 614, 718
+-->
+
+<!-- ROW 1 (top=510) -->
+<!-- analytics-lyn-alden -->
+<circle cx="185" cy="523" r="11" fill="#6366f1"/>
+<rect x="173" y="534" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="185" y="567" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Lyn Alden</text>
+<text x="185" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-lyn-alden</text>
+<text x="185" y="590" text-anchor="middle" fill="#888" font-size="9">macro-monetary</text>
+
+<!-- analytics-ray-dalio -->
+<circle cx="410" cy="523" r="11" fill="#6366f1"/>
+<rect x="398" y="534" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="410" y="567" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Ray Dalio</text>
+<text x="410" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-ray-dalio</text>
+<text x="410" y="590" text-anchor="middle" fill="#888" font-size="9">debt cycle</text>
+
+<!-- analytics-stanley-druckenmiller -->
+<circle cx="635" cy="523" r="11" fill="#6366f1"/>
+<rect x="623" y="534" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="635" y="567" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Druckenmiller</text>
+<text x="635" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-stanley-druckenmiller</text>
+<text x="635" y="590" text-anchor="middle" fill="#888" font-size="9">momentum / risk</text>
+
+<!-- ROW 2 (top=614) -->
+<!-- analytics-lacy-hunt -->
+<circle cx="185" cy="627" r="11" fill="#6366f1"/>
+<rect x="173" y="638" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="185" y="671" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Lacy Hunt</text>
+<text x="185" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-lacy-hunt</text>
+<text x="185" y="694" text-anchor="middle" fill="#888" font-size="9">deflation dissent</text>
+
+<!-- analytics-warren-buffett -->
+<circle cx="410" cy="627" r="11" fill="#6366f1"/>
+<rect x="398" y="638" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="410" y="671" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Buffett / Graham</text>
+<text x="410" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-warren-buffett</text>
+<text x="410" y="694" text-anchor="middle" fill="#888" font-size="9">value + margin of safety</text>
+
+<!-- analytics-michael-pettis -->
+<circle cx="635" cy="627" r="11" fill="#6366f1"/>
+<rect x="623" y="638" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="635" y="671" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Pettis</text>
+<text x="635" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-michael-pettis</text>
+<text x="635" y="694" text-anchor="middle" fill="#888" font-size="9">global imbalances</text>
+
+<!-- ROW 3 (top=718) -->
+<!-- analytics-russell-napier -->
+<circle cx="185" cy="731" r="11" fill="#6366f1"/>
+<rect x="173" y="742" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="185" y="775" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Russell Napier</text>
+<text x="185" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-russell-napier</text>
+<text x="185" y="798" text-anchor="middle" fill="#888" font-size="9">financial repression</text>
+
+<!-- analytics-morgan-housel — NON-VOTING, slate gray -->
+<circle cx="410" cy="731" r="11" fill="#94a3b8"/>
+<rect x="398" y="742" width="24" height="18" rx="6" fill="#94a3b8"/>
+<text x="410" y="775" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Morgan Housel</text>
+<text x="410" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-morgan-housel</text>
+<text x="410" y="798" text-anchor="middle" fill="#888" font-size="9">behavioral guard · non-voting</text>
+
+<!-- superforecasting -->
+<circle cx="635" cy="731" r="11" fill="#6366f1"/>
+<rect x="623" y="742" width="24" height="18" rx="6" fill="#6366f1"/>
+<text x="635" y="775" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Superforecaster</text>
+<text x="635" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">superforecasting</text>
+<text x="635" y="798" text-anchor="middle" fill="#888" font-size="9">calibrated probabilities</text>
+
+<!-- Panel → Decide -->
+<line x1="410" y1="805" x2="410" y2="814" stroke="#bbb" stroke-width="1.2" marker-end="url(#arr)"/>
+
+<!-- ═══ DECIDE ═══ -->
+<rect x="282" y="820" width="256" height="58" rx="8" fill="#6366f1"/>
+<text x="410" y="841"  text-anchor="middle" fill="white" font-weight="700" font-size="13">Chair Decision</text>
+<text x="410" y="858"  text-anchor="middle" fill="white" font-size="9.5" opacity=".85">crypto-chair · stock-chair</text>
+<text x="410" y="872"  text-anchor="middle" fill="white" font-size="8.5" opacity=".65">BUY · HOLD · TRIM · AVOID + tranche plan</text>
+
+<line x1="410" y1="878" x2="410" y2="892" stroke="#bbb" stroke-width="1.2" marker-end="url(#arr)"/>
+
+<!-- ═══ LEDGER ═══ -->
+<rect x="296" y="896" width="228" height="40" rx="8" fill="white" stroke="#bbb" stroke-width="1.4" stroke-dasharray="6 3"/>
+<text x="410" y="913" text-anchor="middle" fill="#333" font-weight="600">forecast-ledger</text>
+<text x="410" y="929" text-anchor="middle" fill="#888" font-size="9">ledger.py · dated row · Brier-score tracked</text>
+
+<!-- Legend -->
+<rect x="666" y="820" width="140" height="116" rx="6" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+<text x="736" y="838" text-anchor="middle" fill="#888" font-size="9" font-weight="600">LEGEND</text>
+<rect x="676" y="846" width="14" height="12" rx="3" fill="#6366f1"/>
+<text x="696" y="857" fill="#333" font-size="9">Manager / Chair</text>
+<rect x="676" y="864" width="14" height="12" rx="3" fill="white" stroke="#ccc" stroke-width="1"/>
+<text x="696" y="875" fill="#333" font-size="9">Data seat (skill name)</text>
+<circle cx="683" cy="891" r="6" fill="#6366f1"/>
+<text x="696" y="895" fill="#333" font-size="9">Voting analyst</text>
+<circle cx="683" cy="909" r="6" fill="#94a3b8"/>
+<text x="696" y="913" fill="#333" font-size="9">Non-voting guardrail</text>
+<rect x="676" y="921" width="14" height="10" rx="2" fill="none" stroke="#bbb" stroke-width="1.4" stroke-dasharray="4 2"/>
+<text x="696" y="930" fill="#333" font-size="9">Logged output</text>
+</svg>
+
+| Phase | What happens |
+|---|---|
+| **Intake** | `research-manager` lists `/.agents/skills/` live, reads each `SKILL.md`, returns a typed routing plan (gather seats, feeds, panel lenses, desk, chair) |
+| **Gather** | All selected seats run in parallel — regulatory (13F/13D/Congress), macro (FOMC/CPI), news feeds, onchain, liquidity, derivatives, dip-screener, Polymarket odds |
+| **Consolidate** | Manager-selected desk skill (`crypto-research-desk` or `stock-research-desk`) merges raw seat findings into one sourced brief |
+| **Panel** | All analyst lenses debate the brief in parallel; Morgan Housel seat is non-voting behavioral guardrail |
+| **Decide** | Chair skill (`crypto-chair` / `stock-chair`) synthesizes verdicts + guardrail → portfolio-aware buy/hold/trim/avoid + tranche plan |
+| **Ledger** | `ledger.py` appends one dated row per asset with implied bull probability for Brier-score tracking |
+
+---
+
 ## Installation
 
 ### Prerequisites
@@ -329,6 +571,7 @@ Full spec: [`crypto/`](crypto/) — `crypto.goal.md` · `crypto.prd.md` · `cryp
 | Skill | Description |
 |---|---|
 | `feed-bitcoinmagazine` | Bitcoin Magazine RSS/API adapter |
+| `feed-coinbase` | Coinbase blog + institutional research / "Coinbase Bytes" first-party adapter (via Google News proxy) |
 | `feed-coindesk` | CoinDesk RSS/API adapter |
 | `feed-cointelegraph` | CoinTelegraph RSS/API adapter |
 | `feed-decrypt` | Decrypt RSS/API adapter |

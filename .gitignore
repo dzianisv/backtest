@@ -58,3 +58,6 @@ logs/
 # opencode / supervisor runtime state
 .opencode/
 .supervisor/
+
+# SQLite dbs from news feeds (runtime, not tracked)
+*.db
