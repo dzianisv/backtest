@@ -49,9 +49,31 @@ const PLAN_SCHEMA = {
     chair_framing: { type: 'string' },
     focus: { type: 'string' },
     notes: { type: 'string' },
+    // Discovery mode: set true when the query asks to FIND/DISCOVER stocks, not analyze specific ones.
+    // "like NVDA, INTC" = sector hint, not the stock list. Discovery phase will find real candidates.
+    discovery_mode: { type: 'boolean' },
+    discovery_hint: { type: 'string' },  // e.g. "AI supply chain semiconductors, smaller/overlooked names"
+    known_surged: { type: 'array', items: { type: 'string' } },  // stocks already surged to EXCLUDE
   },
   required: ['asset_class', 'assets', 'side', 'portfolio_provided', 'portfolio_summary',
     'gather_skills', 'panel_skills', 'desk_skill', 'chair_skill'],
+}
+
+const CANDIDATE_SCHEMA = {
+  type: 'object',
+  properties: {
+    candidates: { type: 'array', items: { type: 'object', properties: {
+      ticker: { type: 'string' },
+      name: { type: 'string' },
+      thesis: { type: 'string' },
+      catalyst: { type: 'string' },
+      valuation_gap: { type: 'string' },
+      why_not_yet_surged: { type: 'string' },
+    }, required: ['ticker', 'thesis'] } },
+    excluded: { type: 'array', items: { type: 'string' } },
+    screen_notes: { type: 'string' },
+  },
+  required: ['candidates'],
 }
 
 const DATA_SCHEMA = {
@@ -111,7 +133,15 @@ const plan = await agent(
   `Follow ${SKILL}/research-manager/SKILL.md as the intake/triage desk head. FIRST discover the available skills ` +
   `live (list ${SKILL}/ and read each SKILL.md description — do NOT rely on memory), THEN return the research plan ` +
   `naming every component by its real discovered directory name.\n` +
-  `RAW QUERY: ${QUESTION}\nPORTFOLIO PASSED BY CALLER: ${RAW_PORTFOLIO || '(none — caller gave no holdings; do NOT invent any)'}\nAs-of: ${REPORT_DATE}`,
+  `RAW QUERY: ${QUESTION}\nPORTFOLIO PASSED BY CALLER: ${RAW_PORTFOLIO || '(none — caller gave no holdings; do NOT invent any)'}\nAs-of: ${REPORT_DATE}\n\n` +
+  `DISCOVERY MODE RULES (critical — read carefully):\n` +
+  `- If the query asks to FIND, DISCOVER, or IDENTIFY which stocks WILL surge/run/outperform (forward-looking screening), ` +
+  `set discovery_mode=true. These are queries like "which stocks will surge soon", "find the next big runner", "what's undiscovered in X sector".\n` +
+  `- When the user writes "like NVDA, INTC, QCOM..." those are CATEGORY EXAMPLES (sector hints), NOT the asset list. ` +
+  `They are already-known/already-surged names. Set known_surged[] to those tickers, set discovery_hint to the sector description, ` +
+  `and set assets to ["DISCOVERY-PENDING"] — the discovery phase will find real candidates.\n` +
+  `- Only put specific tickers in assets[] when the user explicitly asks to analyze THOSE SPECIFIC stocks (e.g. "should I buy NVDA", "analyze my AAPL position").\n` +
+  `- In discovery mode, discovery_hint should describe the sector concisely: e.g. "AI supply chain semiconductors — hardware, memory, EDA, advanced packaging, smaller/overlooked names".`,
   { label: 'manager-intake', phase: 'Intake', schema: PLAN_SCHEMA, model: MODEL })
 
 if (!plan) { log('FATAL: manager returned no plan; aborting.'); return { error: 'no plan from manager' } }
@@ -121,8 +151,9 @@ if (!plan) { log('FATAL: manager returned no plan; aborting.'); return { error: 
 const CALLER_CLASS = ARGS.asset_class || ''
 const CALLER_ASSETS = (Array.isArray(ARGS.assets) && ARGS.assets.length) ? ARGS.assets : []
 const ASSET_CLASS = CALLER_CLASS || plan.asset_class || 'equities'
-const ASSETS = (CALLER_ASSETS.length ? CALLER_ASSETS : (Array.isArray(plan.assets) && plan.assets.length) ? plan.assets : ['UNKNOWN']).map(a => String(a).toUpperCase())
-const ASSET_LIST = ASSETS.join(', ')
+// ASSETS is `let` because the discovery phase may replace it with screened candidates.
+let ASSETS = (CALLER_ASSETS.length ? CALLER_ASSETS : (Array.isArray(plan.assets) && plan.assets.length) ? plan.assets : ['UNKNOWN']).map(a => String(a).toUpperCase())
+// ASSET_LIST computed after discovery (see below). ctxFor() calls ASSETS.join() so it always reflects current state.
 const portfolioProvided = !!(plan.portfolio_provided && RAW_PORTFOLIO)
 const PORTFOLIO = portfolioProvided ? (plan.portfolio_summary || RAW_PORTFOLIO)
   : 'NO PORTFOLIO PROVIDED by the user. Do NOT assume, invent, or carry over any holdings. Answer at the market/asset level with general sizing/risk discipline only.'
@@ -141,13 +172,62 @@ const guardrailSkill = plan.guardrail_skill || ''
 const deskSkill = plan.desk_skill || ''
 const chairSkill = plan.chair_skill || ''
 
-log(`INTAKE — class: ${ASSET_CLASS} | assets: ${ASSET_LIST} | side: ${plan.side || '?'} | portfolio: ${portfolioProvided ? 'provided' : 'NONE (market-level)'} | gather: ${gatherSkills.length} | feeds: ${FEEDS.length} | panel: ${panelSkills.length} | desk: ${deskSkill || '?'} | chair: ${chairSkill || '?'}`)
+log(`INTAKE — class: ${ASSET_CLASS} | assets: ${ASSETS.join(', ')} | discovery: ${plan.discovery_mode ? 'YES' : 'no'} | side: ${plan.side || '?'} | portfolio: ${portfolioProvided ? 'provided' : 'NONE (market-level)'} | gather: ${gatherSkills.length} | feeds: ${FEEDS.length} | panel: ${panelSkills.length} | desk: ${deskSkill || '?'} | chair: ${chairSkill || '?'}`)
 if (FOCUS) log(`INTAKE focus: ${FOCUS}`)
 if (plan.notes) log(`INTAKE notes: ${plan.notes}`)
 if (QUESTION === '(no question provided)') log('WARNING: no question passed — running with empty question.')
 if (!gatherSkills.length) log('WARNING: manager selected no gather seats — brief will be empty.')
 if (!panelSkills.length) log('WARNING: manager selected no panel lenses — no votes will be cast.')
 if (!deskSkill || !chairSkill) log('WARNING: manager did not name a desk and/or chair skill.')
+
+// ---------- Phase 0.5: DISCOVERY — find pre-surge candidates (only when discovery_mode) ----------
+// Triggered when query is about FINDING new stocks, not analyzing specific known ones.
+// Replaces the manager's placeholder ASSETS with screened tickers.
+if (plan.discovery_mode) {
+  phase('Discovery')
+  const knownSurged = [
+    ...(Array.isArray(plan.known_surged) ? plan.known_surged : []),
+    ...CALLER_ASSETS,
+  ].map(a => String(a).toUpperCase()).filter((v, i, arr) => arr.indexOf(v) === i)
+  const hint = plan.discovery_hint || QUESTION
+  log(`Discovery: screening sector "${hint}" | excluding already-surged: ${knownSurged.join(', ') || '(none)'}`)
+  const discovered = await agent(
+    `Task: Screen for UNDERVALUED or PRE-SURGE stocks in this sector: "${hint}"\n\n` +
+    `These names are ALREADY WELL-KNOWN / ALREADY SURGED — EXCLUDE THEM entirely: ${knownSurged.join(', ') || '(none)'}\n\n` +
+    `Find 5-8 overlooked or undervalued stocks in the same sector that show:\n` +
+    `- Valuation discount vs sector peers (P/E, P/S, EV/EBITDA below median)\n` +
+    `- Upcoming catalysts not yet priced in (earnings, product launch, design wins, supply contracts, analyst upgrades)\n` +
+    `- Supply/demand inflection: capacity ramp, shortage relief, new end-market entering\n` +
+    `- Low retail/media awareness relative to their fundamental positioning\n` +
+    `- Institutional accumulation signals or insider buying\n\n` +
+    `How to screen:\n` +
+    `1. Search for sector ETF holdings (e.g. SOXX, SMH, XSD, FTXL for AI semis) — look at mid/small cap names\n` +
+    `2. Search for analyst screener reports, "undiscovered AI plays", "semiconductor value", "AI supply chain small cap"\n` +
+    `3. Check recent earnings call transcripts for AI demand signals from lesser-known vendors\n` +
+    `4. Look for stocks with >15% revenue growth but <20x P/E (the "cheap growth" bucket)\n\n` +
+    `Return candidates[] with: ticker (exchange symbol), name, thesis, catalyst, valuation_gap, why_not_yet_surged.\n` +
+    `HARD RULES: Real tickers only (NYSE/NASDAQ). No ETFs, no indexes. Exclude: ${knownSurged.join(', ') || '(none)'}.\n` +
+    `Aim for 6-8 diverse names — across the supply chain (memory, EDA, packaging, test equipment, networking, power mgmt).`,
+    { label: 'sector-discovery', phase: 'Discovery', schema: CANDIDATE_SCHEMA, model: MODEL }
+  )
+  if (discovered && Array.isArray(discovered.candidates) && discovered.candidates.length) {
+    const newTickers = discovered.candidates
+      .map(c => String(c.ticker || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))
+      .filter(t => /^[A-Z][A-Z0-9]{1,5}$/.test(t) && knownSurged.indexOf(t) === -1)
+    if (newTickers.length) {
+      ASSETS = newTickers
+      log(`Discovery: ${newTickers.length} candidates found: ${newTickers.join(', ')}`)
+      if (discovered.screen_notes) log(`Discovery notes: ${discovered.screen_notes}`)
+    } else {
+      log('Discovery: no valid tickers returned — keeping manager assets (fallback)')
+    }
+  } else {
+    log('Discovery: agent returned nothing — keeping manager assets (fallback)')
+  }
+}
+
+// ASSET_LIST computed here, AFTER discovery may have replaced ASSETS.
+const ASSET_LIST = ASSETS.join(', ')
 
 // Per-asset context builder — each agent focuses on ONE asset, avoiding giant multi-asset context blowup.
 const ctxFor = (asset) =>
