@@ -143,64 +143,104 @@ if (!gatherSkills.length) log('WARNING: manager selected no gather seats — bri
 if (!panelSkills.length) log('WARNING: manager selected no panel lenses — no votes will be cast.')
 if (!deskSkill || !chairSkill) log('WARNING: manager did not name a desk and/or chair skill.')
 
-const ctx = `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nAssets in scope: ${ASSET_LIST} — cover EVERY one. If a data source supports only some assets, fetch what it can and mark the others [UNAVAILABLE] for that metric; NEVER silently drop an asset.\nDesk focus (from manager): ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nNews feeds in scope: ${FEEDS.length ? FEEDS.join(', ') : '(none specified)'}\nAs-of: ${REPORT_DATE}`
+// Per-asset context builder — each agent focuses on ONE asset, avoiding giant multi-asset context blowup.
+const ctxFor = (asset) =>
+  `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nFocus asset: ${asset}\nAll assets in this research: ${ASSET_LIST}\nDesk focus: ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nNews feeds: ${FEEDS.length ? FEEDS.join(', ') : '(none)'}\nAs-of: ${REPORT_DATE}`
 const seedNote = ANCHOR ? `\nSeed (verify+extend): ${ANCHOR}` : `\nNo seed — fetch LIVE; never fabricate, mark UNAVAILABLE if gated.`
 
-// ---------- Phase 1: GATHER (data only; seat set chosen by the manager) ----------
+// ---------- Phase 1: GATHER — per-asset pipeline (each asset × all gather skills in parallel) ----------
+// Old: one agent covers ALL assets per skill → massive context, stalls on large lists.
+// New: pipeline(assets) so each asset gets dedicated gather agents → O(1 asset) wall-clock.
 phase('Gather')
-const gatherResults = await parallel(gatherSkills.map(skill => () =>
-  agent(`Follow ${SKILL}/${skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). ${ctx}${seedNote}`,
-    { label: skill, phase: 'Gather', schema: DATA_SCHEMA, model: MODEL })
-))
-// Completeness contract: a failed seat is never silently dropped — made LOUD.
-const rawData = gatherResults.map((r, i) => (r && r.findings) ? r
-  : { seat: gatherSkills[i], status: 'UNAVAILABLE', findings: [], summary: `[UNAVAILABLE: ${gatherSkills[i]} seat failed to return]` })
-const missingSeats = rawData.filter(r => r.status === 'UNAVAILABLE').map(r => r.seat)
-const gatherComplete = missingSeats.length === 0
-if (!gatherComplete) log(`WARNING: INCOMPLETE GATHER — UNAVAILABLE: ${missingSeats.join(', ')} (run not aborted; gap surfaced).`)
-log(`Gather: ${rawData.length - missingSeats.length}/${gatherSkills.length} seats returned`)
+const gatherByAsset = await pipeline(
+  ASSETS,
+  async (asset) => {
+    const seats = await parallel(gatherSkills.map(skill => () =>
+      agent(
+        `Follow ${SKILL}/${skill}/SKILL.md as a DATA-ONLY gather seat (no buy/sell opinion). Focus on: ${asset} only.\n${ctxFor(asset)}${seedNote}`,
+        { label: `${skill}:${asset}`, phase: 'Gather', schema: DATA_SCHEMA, model: MODEL }
+      )
+    ))
+    const filled = seats.map((r, i) => (r && r.findings) ? r
+      : { seat: gatherSkills[i], status: 'UNAVAILABLE', findings: [], summary: `[UNAVAILABLE: ${gatherSkills[i]} seat failed]` })
+    const missing = filled.filter(r => r.status === 'UNAVAILABLE').map(r => r.seat)
+    if (missing.length) log(`Gather ${asset}: UNAVAILABLE: ${missing.join(', ')}`)
+    return { asset, seats: filled, complete: missing.length === 0 }
+  }
+)
+const gatherComplete = gatherByAsset.filter(Boolean).every(r => r.complete)
+log(`Gather: ${gatherByAsset.filter(Boolean).length}/${ASSETS.length} assets complete`)
 
-// ---------- Phase 2: CONSOLIDATE (manager-selected desk skill) ----------
+// ---------- Phase 2: CONSOLIDATE — per-asset desk brief ----------
 phase('Consolidate')
-const completeNote = gatherComplete ? 'All selected seats returned.' : `INCOMPLETE — [UNAVAILABLE]: ${missingSeats.join(', ')}. Surface as DATA GAPS; do not paper over.`
-const brief = await agent(
-  `Follow ${SKILL}/${deskSkill}/SKILL.md. ${ctx}\nCompleteness: ${completeNote}\nRAW DATA:\n${JSON.stringify(rawData, null, 1)}`,
-  { label: deskSkill || 'consolidate', phase: 'Consolidate', model: MODEL })
+const briefByAsset = await pipeline(
+  gatherByAsset.filter(Boolean),
+  async ({ asset, seats, complete }) => {
+    const brief = await agent(
+      `Follow ${SKILL}/${deskSkill}/SKILL.md. Focus on: ${asset}.\n${ctxFor(asset)}\nCompleteness: ${complete ? 'All seats returned.' : 'INCOMPLETE — surface DATA GAPS; do not paper over.'}\nRAW DATA:\n${JSON.stringify(seats, null, 1)}`,
+      { label: `${deskSkill}:${asset}`, phase: 'Consolidate', model: MODEL }
+    )
+    return { asset, brief: brief || '[UNAVAILABLE: desk returned nothing]' }
+  }
+)
+log(`Consolidate: ${briefByAsset.filter(Boolean).length}/${ASSETS.length} briefs`)
 
-// ---------- Phase 3: PANEL (manager-selected lenses reason over the brief) ----------
+// ---------- Phase 3: PANEL — per-asset lenses (each asset × all panel skills in parallel) ----------
 phase('Panel')
-const verdicts = (await parallel(panelSkills.map(skill => () =>
-  agent(`Apply the lens in ${SKILL}/${skill}/SKILL.md to answer the question, reasoning ONLY over the brief (don't re-fetch). ${ctx}\nReturn seat (=${skill}), read, verdict, sizing, flip-condition, confidence.\n=== BRIEF ===\n${brief}`,
-    { label: skill, phase: 'Panel', schema: PANEL_SCHEMA, model: MODEL })
-))).map((r, i) => r || { seat: panelSkills[i], read: '[UNAVAILABLE: seat failed]', verdict: 'WAIT', confidence: 'low' })
-log(`Panel: ${verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length}/${panelSkills.length} lenses voted`)
+const panelByAsset = await pipeline(
+  briefByAsset.filter(Boolean),
+  async ({ asset, brief }) => {
+    const votes = await parallel(panelSkills.map(skill => () =>
+      agent(
+        `Apply the lens in ${SKILL}/${skill}/SKILL.md. Focus ONLY on: ${asset}.\n${ctxFor(asset)}\nReturn seat (=${skill}), read, verdict, sizing, flip-condition, confidence.\n=== BRIEF (${asset}) ===\n${brief}`,
+        { label: `${skill}:${asset}`, phase: 'Panel', schema: PANEL_SCHEMA, model: MODEL }
+      )
+    ))
+    const filled = votes.map((v, i) => v || { seat: panelSkills[i], read: '[UNAVAILABLE: seat failed]', verdict: 'WAIT', confidence: 'low' })
+    return { asset, brief, votes: filled }
+  }
+)
+log(`Panel: ${panelByAsset.filter(Boolean).length}/${ASSETS.length} assets voted`)
 
-// Non-voting behavioral guardrail (manager-selected; process + sizing only).
+// Guardrail — cross-asset (reads all briefs; non-voting process check only).
+const allBriefs = briefByAsset.filter(Boolean).map(b => `=== ${b.asset} ===\n${b.brief}`).join('\n\n')
 const guardrail = guardrailSkill ? await agent(
-  `Follow ${SKILL}/${guardrailSkill}/SKILL.md as a NON-VOTING guardrail (no BUY/SELL verdict). ${ctx}\nAssess: FOMO-vs-anchoring trap, is a staged scale-in sound, is sizing survivable to -50%, one guardrail rule. Reason over the brief.\n=== BRIEF ===\n${brief}`,
+  `Follow ${SKILL}/${guardrailSkill}/SKILL.md as a NON-VOTING guardrail (no BUY/SELL verdict). Question: ${QUESTION}\nAssets: ${ASSET_LIST}\nAssess: FOMO-vs-anchoring trap, staged scale-in soundness, sizing survivable to -50%, one guardrail rule per asset.\n${allBriefs}`,
   { label: guardrailSkill, phase: 'Panel', model: MODEL }) : '(no guardrail skill selected)'
 
-// ---------- Phase 4: DECIDE (manager-selected chair) ----------
+// Flatten all per-asset votes for report/ledger compatibility.
+const verdicts = panelByAsset.filter(Boolean)
+  .flatMap(({ asset, votes }) => votes.map(v => ({ ...v, asset })))
+log(`Panel: ${verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length}/${verdicts.length} total votes cast`)
+
+// ---------- Phase 4: DECIDE — cross-asset chair ranks all assets ----------
 phase('Decide')
+const totalVotes = verdicts.filter(v => v.read.indexOf('[UNAVAILABLE') === -1).length
 const decision = await agent(
-  `Follow ${SKILL}/${chairSkill}/SKILL.md to chair the committee and answer the question for THIS portfolio. ${ctx}\n` +
-  `Chair framing (from manager): ${FRAMING || 'none'}\n` +
-  `Also populate per_asset[] with one entry per NAMED TRADEABLE asset (${ASSET_LIST}) giving {asset, conviction high|medium|low, prob (0..1 the bull thesis plays out by ${REPORT_DATE.slice(0,4)}-12-31), action, invalidation}. Differentiate — do NOT give every asset the same prob; reflect the real conviction spread.\n` +
-  `EXACT VOTING-SEAT COUNT = ${verdicts.length} (these are the ONLY voting seats; the Housel guardrail is non-voting and excluded). Your verdict_tally buckets MUST sum to exactly ${verdicts.length}, and you must not name more than ${verdicts.length} voting seats. Re-add before writing the tally.\n` +
-  `=== BRIEF ===\n${brief}\n=== VOTING VERDICTS (${verdicts.length} seats) ===\n${JSON.stringify(verdicts, null, 1)}\n=== GUARDRAIL (non-voting) ===\n${guardrail}`,
+  `Follow ${SKILL}/${chairSkill}/SKILL.md to chair the committee.\nQuestion: ${QUESTION}\nAssets: ${ASSET_LIST}\nChair framing: ${FRAMING || 'none'}\nPortfolio: ${PORTFOLIO}\n` +
+  `Populate per_asset[] for EVERY asset (${ASSET_LIST}): {asset, conviction high|medium|low, prob 0..1 bull thesis by ${REPORT_DATE.slice(0,4)}-12-31, action, invalidation}. Rank by conviction — do NOT give every asset the same prob.\n` +
+  `EXACT VOTING-SEAT COUNT = ${totalVotes}. verdict_tally buckets MUST sum to ${totalVotes}.\n` +
+  `=== PER-ASSET PANEL VERDICTS ===\n${JSON.stringify(panelByAsset.filter(Boolean), null, 1)}\n=== GUARDRAIL (non-voting) ===\n${guardrail}`,
   { label: chairSkill || 'chair-decision', phase: 'Decide', schema: DECISION_SCHEMA, model: MODEL })
 
 // ---------- Phase 5: WRITE REPORT ----------
 const reportPath = `/Users/engineer/workspace/backtest/research/research.${ASSET_CLASS}.${REPORT_DATE}.md`
-const seatRows = verdicts.map(v => `| ${v.seat} | **${v.verdict}** | ${v.confidence} |`).join('\n')
-const seatDetail = verdicts.map(v => `### ${v.seat} — ${v.verdict} (${v.confidence})\n${v.read}\n\n- **Sizing:** ${v.sizing || 'n/a'}\n- **Flips if:** ${v.flip || 'n/a'}`).join('\n\n')
+// Per-asset vote table: one row per asset × lens combination.
+const seatRows = panelByAsset.filter(Boolean).flatMap(({ asset, votes }) =>
+  votes.map(v => `| ${asset} | ${v.seat} | **${v.verdict}** | ${v.confidence} |`)
+).join('\n')
+const seatDetail = panelByAsset.filter(Boolean).map(({ asset, votes }) =>
+  `### ${asset}\n` + votes.map(v =>
+    `**${v.seat}** — ${v.verdict} (${v.confidence}): ${v.read}\n- Sizing: ${v.sizing || 'n/a'} · Flips if: ${v.flip || 'n/a'}`
+  ).join('\n\n')
+).join('\n\n---\n\n')
 const reportMd = `# Research — ${ASSET_LIST} (${ASSET_CLASS}) — ${REPORT_DATE}
 
 > Question: ${QUESTION}
 > Portfolio: ${PORTFOLIO}
 > Desk assembled by \`research-manager\`: gather [${gatherSkills.join(', ')}] · panel [${panelSkills.join(', ')}] · desk ${deskSkill} · chair ${chairSkill}.
 > Generated by \`research-market\`. Educational, not advice; re-pull before acting.
-${gatherComplete ? '' : `\n> **⚠ INCOMPLETE DATA:** UNAVAILABLE seats: ${missingSeats.join(', ')}. Treat with caution.\n`}
+${gatherComplete ? '' : `\n> **⚠ INCOMPLETE DATA:** Some gather seats unavailable. Treat with caution.\n`}
 ## Answer
 **${decision.answer || decision.decision}**
 
@@ -221,8 +261,8 @@ ${(decision.disagreement || []).map(d => `- ${d}`).join('\n')}
 ${(decision.key_risks || []).map(r => `- ${r}`).join('\n')}
 
 ## Panel votes
-| Seat | Verdict | Confidence |
-|---|---|---|
+| Asset | Seat | Verdict | Confidence |
+|---|---|---|---|
 ${seatRows}
 
 ## Seat detail
@@ -251,11 +291,18 @@ for (let attempt = 1; attempt <= 2 && !reportOk; attempt++) {
 // ---------- Phase 6: LEDGER (one row per REAL asset; pseudo-screen tokens excluded) ----------
 phase('Ledger')
 const bull = ['BUY_NOW', 'ADD', 'SCALE', 'DCA']
+// Per-asset implied prob: use only that asset's panel votes (not the full cross-asset pool).
+const horizon = REPORT_DATE.slice(0, 4) + '-12-31'
+const votingLenses = panelSkills.join(', ') || 'panel'
+const impliedProbFor = (asset) => {
+  const assetVotes = verdicts.filter(v => v.asset === asset && v.verdict && v.read.indexOf('[UNAVAILABLE') === -1)
+  const bullVotes = assetVotes.filter(v => bull.indexOf(v.verdict) !== -1).length
+  return assetVotes.length ? (bullVotes / assetVotes.length) : 0.5
+}
+// Fallback for ledger tally log
 const votes = verdicts.filter(v => v && v.verdict && v.read.indexOf('[UNAVAILABLE') === -1)
 const bullCount = votes.filter(v => bull.indexOf(v.verdict) !== -1).length
 const impliedProb = votes.length ? (bullCount / votes.length) : 0.5
-const horizon = REPORT_DATE.slice(0, 4) + '-12-31'
-const votingLenses = votes.map(v => v.seat).join(', ') || 'panel'
 // Only log CLEAN TICKERS. The manager sometimes adds a pseudo-asset (e.g. "ALTS-OPEN-SCREEN") to trigger a
 // screen; that is a directive, not a tradeable forecast, and must NEVER become a dated ledger row.
 const LEDGER_ASSETS = ASSETS.filter(a => /^[A-Z0-9]{2,6}$/.test(a))
@@ -272,7 +319,7 @@ const perAsset = Array.isArray(decision.per_asset) ? decision.per_asset : []
 const probFor = (asset) => {
   const hit = perAsset.find(e => e && String(e.asset || '').toUpperCase() === asset)
   const p = hit && Number(hit.prob)
-  return (typeof p === 'number' && p > 0 && p <= 1) ? p : impliedProb
+  return (typeof p === 'number' && p > 0 && p <= 1) ? p : impliedProbFor(asset)
 }
 const flipFor = (asset) => {
   const hit = perAsset.find(e => e && String(e.asset || '').toUpperCase() === asset)
@@ -284,12 +331,12 @@ const ledgerLogs = await parallel(LEDGER_ASSETS.map(asset => () =>
     `python3 ${LEDGER_PY} add --asset ${asset} --q ${JSON.stringify('panel chair call (' + asset + '): ' + ledgerQ)} ` +
     `--p ${probFor(asset).toFixed(2)} --by ${JSON.stringify(horizon)} --lens ${JSON.stringify(votingLenses)} ` +
     `--source research-market --flip ${JSON.stringify(flipFor(asset))} --created ${JSON.stringify(REPORT_DATE)}\n\n` +
-    `--p is the chair's per-asset conviction (fallback = panel tally ${bullCount}/${votes.length}) — do not change it. If "id exists", re-run once with --id ${asset.toLowerCase()}-${REPORT_DATE}-panel. Reply with the CLI's stdout line.`,
+    `--p is the chair's per-asset conviction (fallback = per-asset panel tally) — do not change it. If "id exists", re-run once with --id ${asset.toLowerCase()}-${REPORT_DATE}-panel. Reply with the CLI's stdout line.`,
     { label: `ledger-${asset}`, phase: 'Ledger', model: MODEL }))
 )
 const ledgerLog = LEDGER_ASSETS.map((a, i) => `${a}: ${ledgerLogs[i]}`).join(' | ')
 log(`Ledger: ${ledgerLog}`)
 
-return { reportPath, reportPersisted: reportOk, asset_class: ASSET_CLASS, assets: ASSETS, plan, decision, verdicts, guardrail, brief,
-  complete: gatherComplete, missing: missingSeats,
+return { reportPath, reportPersisted: reportOk, asset_class: ASSET_CLASS, assets: ASSETS, plan, decision, verdicts,
+  panelByAsset, briefByAsset, guardrail, complete: gatherComplete,
   ledger: { impliedProb, horizon, lenses: votingLenses, logged: LEDGER_ASSETS, skipped: skippedLedger, result: ledgerLog } }
