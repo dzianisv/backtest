@@ -24,11 +24,13 @@ failure → `[UNAVAILABLE]`. Return **≥1 headline record or a clean `[UNAVAILA
 
 ## Retrieval recipe
 
-- **Endpoint:** `https://www.ft.com/rss/home` (FT home RSS — headlines + links + pubDate; bodies paywalled).
-  Also useful: `https://www.ft.com/rss/markets`.
-- **Note (verify at runtime):** FT aggressively bot-blocks; the RSS may return `403`/be unfetchable from
-  some hosts/agents (e.g. `web_fetch` returned "unable to fetch" at build time). That is the paywall path,
-  not a bug — **degrade to `[UNAVAILABLE]`, never fabricate**. If the RSS resolves, parse `channel > item`.
+- **Primary endpoint (verified working 2026-06-20):** Google News RSS filtered to FT:
+  `https://news.google.com/rss/search?q=site%3Aft.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`
+  Returns ~100 articles/7 days. Use topic-specific variants for targeted research:
+  `https://news.google.com/rss/search?q=site%3Aft.com+AI+semiconductors+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`
+  URLs are opaque Google News redirects (work in browsers, not directly resolvable to FT bodies).
+- **DEPRECATED:** `https://www.ft.com/rss/home` — FT aggressively bot-blocks from agent/datacenter IPs;
+  returns `403` or a login-redirect stub (~7KB of HTML, not real articles). Do NOT use as primary.
 - Parse: `title`→title, `link`→url (canonicalize, strip `utm_*`), `pubDate`(RFC-822)→`published_at` (ISO-8601 UTC). **`summary` = `"[UNAVAILABLE - paywall]"`** (do NOT scrape or guess the body). `lang: en`, `source: ft`.
 - The RSS `description`, if present, is FT's own short teaser — you MAY keep it verbatim as `summary` (it is
   publisher-provided, not fabricated). If empty/absent → `[UNAVAILABLE - paywall]`.
