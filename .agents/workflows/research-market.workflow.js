@@ -11,8 +11,8 @@ export const meta = {
   ],
 }
 
-// Explicit model — OpenCode's default model picker can fail when copilot model-list fetch is flaky.
-const MODEL = 'claude-sonnet-4'
+// Explicit model — use 'sonnet' (resolves in Claude Code runtime) not 'claude-sonnet-4' (doesn't resolve).
+const MODEL = 'sonnet'
 
 const SKILL = '/Users/engineer/workspace/backtest/.agents/skills'
 const LEDGER_PY = `${SKILL}/forecast-ledger/ledger.py`
