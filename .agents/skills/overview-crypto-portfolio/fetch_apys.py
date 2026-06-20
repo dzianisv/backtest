@@ -10,7 +10,6 @@ No API key required. Sources:
 
 import json
 import urllib.request
-import urllib.error
 
 def fetch(url, method="GET", data=None, headers=None):
     req = urllib.request.Request(url, method=method)
@@ -39,11 +38,11 @@ def morpho_apys():
     if "error" in result or "data" not in result:
         return {"error": result.get("error", "unknown")}
 
-    # Known vault name → canonical key mapping
+    # ExtraFi XLend is NOT a MetaMorpho vault — sourced from DeFiLlama instead.
+    # Only pure MetaMorpho vaults go here.
     name_map = {
         "seamless usdc vault": "morpho_seamless_usdc_base",
         "universal usdc": "morpho_universal_usdc_base",
-        "extrafi xlend usdc": "morpho_extrafi_usdc_base",
         "morpho eusd": "morpho_eusd_base",
         "gauntlet eusd core": "morpho_eusd_eth",
     }
@@ -51,42 +50,15 @@ def morpho_apys():
     for v in result["data"]["vaults"]["items"]:
         name_lower = v["name"].lower().strip()
         state = v.get("state") or {}
-        apy = state.get("netApy") or 0
+        raw_apy = state.get("netApy")  # None = missing data; 0.0 = genuinely idle
         for pattern, key in name_map.items():
             if pattern in name_lower:
-                out[key] = round(apy * 100, 2)
+                out[key] = None if raw_apy is None else round(raw_apy * 100, 2)
                 break
     return out
 
-def maple_apys():
-    """Fetch Maple Syrup pool APYs from DeFiLlama yields."""
-    result = fetch("https://yields.llama.fi/pools")
-    if "error" in result or "data" not in result:
-        return {"error": result.get("error", "unknown")}
-    out = {}
-    for p in result["data"]:
-        proj = p.get("project", "").lower()
-        sym = p.get("symbol", "").lower()
-        meta = (p.get("poolMeta") or "").lower()
-        if "maple" not in proj:
-            continue
-        if "usdc" in sym and "syrup" in meta:
-            out["maple_syrup_usdc"] = round(p.get("apy", 0), 2)
-        elif "usdt" in sym and "syrup" in meta:
-            out["maple_syrup_usdt"] = round(p.get("apy", 0), 2)
-    return out
-
-def ethena_apy():
-    """Fetch Ethena sUSDe staking yield."""
-    result = fetch("https://ethena.fi/api/yields/protocol-and-staking-yield")
-    if "error" in result or "stakingYield" not in result:
-        return {"error": result.get("error", "fetch failed")}
-    return {
-        "ethena_susde": round(result["stakingYield"]["value"], 2)
-    }
-
 def defi_llama_apys():
-    """Fetch LIDO, ExtraFi XLend, and Avantis APYs from DeFiLlama yields."""
+    """Single DeFiLlama fetch for Maple Syrup, LIDO, ExtraFi XLend, Avantis."""
     result = fetch("https://yields.llama.fi/pools")
     if "error" in result or "data" not in result:
         return {"error": result.get("error", "fetch failed")}
@@ -95,21 +67,33 @@ def defi_llama_apys():
         proj = (p.get("project") or "").lower()
         sym = (p.get("symbol") or "").lower()
         chain = (p.get("chain") or "").lower()
-        apy = round(p.get("apy", 0), 2)
+        meta = (p.get("poolMeta") or "").lower()
+        apy = round(p.get("apy") or 0, 2)
+        # Maple Syrup USDC / USDT
+        if "maple" in proj and "usdc" in sym and "syrup" in meta:
+            out["maple_syrup_usdc"] = apy
+        elif "maple" in proj and "usdt" in sym and "syrup" in meta:
+            out["maple_syrup_usdt"] = apy
         # LIDO stETH on Ethereum
-        if "lido" in proj and "steth" in sym and chain == "ethereum":
+        elif "lido" in proj and "steth" in sym and chain == "ethereum":
             out["lido_steth"] = apy
-        # ExtraFi XLend USDC on Base (project=extra-finance-xlend, not leverage-farming)
-        if proj == "extra-finance-xlend" and "usdc" in sym and chain == "base":
+        # ExtraFi XLend USDC on Base (lending supply side, not leverage-farming)
+        elif proj == "extra-finance-xlend" and "usdc" in sym and chain == "base":
             out["extrafi_xlend_usdc_base"] = apy
         # Avantis USDC vault on Base
-        if "avantis" in proj and "usdc" in sym and chain == "base":
+        elif "avantis" in proj and "usdc" in sym and chain == "base":
             out["avantis_junior_usdc"] = apy
     return out
 
+def ethena_apy():
+    """Fetch Ethena sUSDe staking yield."""
+    result = fetch("https://ethena.fi/api/yields/protocol-and-staking-yield")
+    if "error" in result or "stakingYield" not in result:
+        return {"error": result.get("error", "fetch failed")}
+    return {"ethena_susde": round(result["stakingYield"]["value"], 2)}
+
 def hyperliquid_vault_apr(user_addr, vault_addr=None):
     """Fetch Hyperliquid HLP vault APR for a given user address."""
-    # Step 1: get vault address from user's positions
     equities = fetch(
         "https://api.hyperliquid.xyz/info",
         method="POST",
@@ -119,12 +103,10 @@ def hyperliquid_vault_apr(user_addr, vault_addr=None):
     if "error" in equities or not isinstance(equities, list) or not equities:
         return {"error": f"no vault equities for {user_addr}"}
 
-    # Use first vault (or provided address)
     target = vault_addr or equities[0].get("vaultAddress")
     if not target:
         return {"error": "no vaultAddress in equities"}
 
-    # Step 2: get vault APR
     details = fetch(
         "https://api.hyperliquid.xyz/info",
         method="POST",
@@ -148,13 +130,13 @@ def main():
         results.update(morpho)
         results["sources"]["morpho"] = "blue-api.morpho.org/graphql"
 
-    print("Fetching Maple Syrup (DeFiLlama)...", flush=True)
-    maple = maple_apys()
-    if "error" in maple:
-        results["sources"]["maple"] = f"[UNAVAILABLE: {maple['error']}]"
+    print("Fetching DeFiLlama (Maple/LIDO/ExtraFi/Avantis)...", flush=True)
+    llama = defi_llama_apys()
+    if "error" in llama:
+        results["sources"]["defi_llama"] = f"[UNAVAILABLE: {llama['error']}]"
     else:
-        results.update(maple)
-        results["sources"]["maple"] = "yields.llama.fi/pools"
+        results.update(llama)
+        results["sources"]["defi_llama"] = "yields.llama.fi/pools"
 
     print("Fetching Ethena sUSDe...", flush=True)
     ethena = ethena_apy()
@@ -163,14 +145,6 @@ def main():
     else:
         results.update(ethena)
         results["sources"]["ethena"] = "ethena.fi/api/yields"
-
-    print("Fetching LIDO / ExtraFi XLend / Avantis (DeFiLlama)...", flush=True)
-    llama = defi_llama_apys()
-    if "error" in llama:
-        results["sources"]["defi_llama"] = f"[UNAVAILABLE: {llama['error']}]"
-    else:
-        results.update(llama)
-        results["sources"]["defi_llama"] = "yields.llama.fi/pools"
 
     print("Fetching Hyperliquid HLP vault (L3)...", flush=True)
     hlp = hyperliquid_vault_apr("0x5d039ece117073323ade5057a516864f4c40e653")
@@ -182,18 +156,19 @@ def main():
         results["_hyperliquid_vault_name"] = hlp.get("_vault_name", "")
         results["sources"]["hyperliquid"] = f"api.hyperliquid.xyz ({hlp.get('_vault_name','')})"
 
-    # Flag vaults returning 0% from Morpho API — confirmed idle/uninvested
-    for key in ["morpho_universal_usdc_base", "morpho_extrafi_usdc_base"]:
-        if results.get(key) == 0:
-            results[key] = 0.0  # keep as number but flag in output
-
     print("\n--- LIVE APYs ---")
     for k, v in results.items():
         if k == "sources" or k.startswith("_"):
             continue
         label = k.replace("_", " ").title()
-        suffix = "% ⚠️ IDLE — verify on morpho.org" if v == 0.0 and "morpho" in k else "%"
-        print(f"  {label}: {v}{suffix}")
+        if v is None:
+            print(f"  {label}: [UNAVAILABLE — API returned no data]")
+        elif isinstance(v, str):
+            print(f"  {label}: {v}")
+        elif v == 0.0 and "morpho" in k:
+            print(f"  {label}: 0% ⚠️ IDLE — verify on morpho.org")
+        else:
+            print(f"  {label}: {v}%")
 
     print("\n--- SOURCES ---")
     for k, v in results["sources"].items():
