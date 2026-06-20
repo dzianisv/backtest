@@ -8,6 +8,7 @@ export const meta = {
     { title: 'SaveState', detail: 'persist screened tickers + per-asset verdicts for the next run' },
     { title: 'ThemeCycle', detail: 'assess whether the theme/sector is already extended; if so, widen to adjacent laggards' },
     { title: 'Screen', detail: 'research team autonomously finds 5-10 candidates via web search + screener logic' },
+    { title: 'NewsFetch', detail: 'pre-fetch WSJ + FT + Bloomberg headlines into local article cache; gather agents query BM25 instead of hitting live URLs' },
     { title: 'Gather', detail: 'parallel data seats (manager-selected), each following its own skill' },
     { title: 'Consolidate', detail: 'manager-selected desk skill merges seats into one brief' },
     { title: 'Panel', detail: 'manager-selected lenses debate + non-voting behavioral guardrail' },
@@ -275,6 +276,36 @@ if (abovePT.length) log(`Screen: ${abovePT.length} candidates above consensus PT
 const seedNote = ANCHOR ? `\nSeed (verify+extend): ${ANCHOR}` : `\nNo seed -- fetch LIVE; never fabricate, mark UNAVAILABLE if gated.`
 const bullActions = ['BUY_NOW', 'ADD', 'SCALE', 'DCA', 'BUY_ON_TOUCH']
 
+// ---------- NewsFetch: pre-populate article cache so gather agents query BM25 ----------
+// Runs once after screen; all gather agents then call fetch_article.py --search instead of
+// hitting live URLs. Cache stored at ~/.agents/cache/articles.db.
+const FETCH_SCRIPT = `${SKILL}/../scripts/feeds/fetch_article.py`
+const tickerList = ASSETS.join(' OR ')
+if (FEEDS.length) {
+  phase('NewsFetch')
+  const feedTopics = [
+    tickerList,
+    plan.screen_scope || '',
+  ].filter(Boolean).join(' ')
+  await parallel(FEEDS.map(feedName => () =>
+    agent(
+      `Pre-fetch news headlines into the article cache for the gather phase.\n` +
+      `Feed: ${feedName} (follow ${SKILL}/${feedName}/SKILL.md)\n` +
+      `Topics to search: "${feedTopics}"\n` +
+      `Steps:\n` +
+      `1. Fetch headlines from the feed using the Google News RSS method documented in the skill (NOT direct site RSS).\n` +
+      `2. For each headline relevant to [${ASSETS.join(', ')}] or the research theme, ingest it into the article cache:\n` +
+      `   python3 ${FETCH_SCRIPT} --ingest --url "<article-url>" --title "<headline>" --body "<teaser or [UNAVAILABLE - paywall]>" --source "${feedName}"\n` +
+      `3. For WSJ articles specifically: attempt Wayback body fetch first (documented in feed-wsj SKILL.md) before marking body as [UNAVAILABLE - paywall].\n` +
+      `4. For FT articles: body will be [UNAVAILABLE - paywall] unless bypass-paywalls-clean extension is installed in Chrome.\n` +
+      `5. Return count of articles ingested and any errors.\n` +
+      `HARD RULE: never fabricate body text. Teaser from RSS = OK. Invented prose = defect.`,
+      { label: `newsfetch:${feedName}`, phase: 'NewsFetch', model: MODEL }
+    )
+  ))
+  log(`NewsFetch: articles cached for gather agents (query via: python3 ${FETCH_SCRIPT} --search "<ticker>")`)
+}
+
 // ---------- Reusable per-batch pipeline: Gather -> Consolidate -> Panel (+guardrail) -> Decide ----------
 // ONE function so the first batch and every CIO-driven re-screen iteration run identical logic.
 // `tag`: '' for the first batch (phases/labels read "Gather"); 'rs1' etc for later iterations
@@ -285,7 +316,7 @@ async function runPipeline(assets, tag) {
   const ph = (s) => tag ? `${s} (${tag})` : s          // namespaced phase name
   // Per-asset context builder -- each agent focuses on ONE asset, avoiding giant multi-asset context blowup.
   const ctxFor = (asset) =>
-    `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nFocus asset: ${asset}\nAll assets in this research: ${batchList}\nDesk focus: ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nNews feeds: ${FEEDS.length ? FEEDS.join(', ') : '(none)'}\nAs-of: ${REPORT_DATE}`
+    `Question: ${QUESTION}\nAsset class: ${ASSET_CLASS}\nFocus asset: ${asset}\nAll assets in this research: ${batchList}\nDesk focus: ${FOCUS || 'none'}\nPortfolio: ${PORTFOLIO}\nNews feeds: ${FEEDS.length ? FEEDS.join(', ') : '(none)'}\nArticle cache: python3 ${FETCH_SCRIPT} --search "${asset}" --limit 5  (pre-fetched WSJ/FT/Bloomberg headlines; query before hitting live URLs)\nAs-of: ${REPORT_DATE}`
 
   // ---------- GATHER -- per-asset pipeline (each asset x all gather skills in parallel) ----------
   // Old: one agent covers ALL assets per skill -> massive context, stalls on large lists.
