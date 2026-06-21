@@ -40,7 +40,7 @@ failure → `[UNAVAILABLE]`. Return **≥1 headline record or a clean `[UNAVAILA
 For the full article body, use the script — **no extension required**:
 
 ```bash
-/Users/engineer/workspace/backtest/.agents/scripts/feeds/read_article.sh "<ft-url>"
+/Users/engineer/workspace/backtest/.agents/scripts/feeds/read_article.ts "<ft-url>"
 ```
 
 **Method:** `archive.ph/newest/<url>` via Chrome (chrome-use). FT hard paywall means content is NOT in
@@ -74,7 +74,7 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 
 ## Full-body fallback
 
-See [[bypass-paywalls]] skill for CAPTCHA instructions and manual usage. Call `read_article.sh`
+See [[bypass-paywalls]] skill for CAPTCHA instructions and manual usage. Call `read_article.ts`
 directly from agent bash for ad-hoc reads; this skill handles automated daily RSS ingestion only.
 
 > Educational, not advice. Headlines only; never fabricate a paywalled body.

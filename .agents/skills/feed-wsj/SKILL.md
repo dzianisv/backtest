@@ -35,7 +35,7 @@ failure → `[UNAVAILABLE]`. Return **≥1 headline record or a clean `[UNAVAILA
 For the full article body, use the script — **no extension required**:
 
 ```bash
-/Users/engineer/workspace/backtest/.agents/scripts/feeds/read_article.sh "<wsj-url>"
+/Users/engineer/workspace/backtest/.agents/scripts/feeds/read_article.ts "<wsj-url>"
 ```
 
 **Method:** `curl -sL "https://web.archive.org/web/2/<url>"` (Wayback Machine). Unlike FT, WSJ does NOT
@@ -65,7 +65,7 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 
 ## Full-body fallback
 
-See [[bypass-paywalls]] skill for CAPTCHA instructions and manual usage. Call `read_article.sh`
+See [[bypass-paywalls]] skill for CAPTCHA instructions and manual usage. Call `read_article.ts`
 directly from agent bash for ad-hoc reads; this skill handles automated daily RSS ingestion only.
 
 > Educational, not advice. Headlines only; never fabricate a paywalled body.
