@@ -177,6 +177,25 @@ Always pass `model: 'sonnet'` to every `agent()` call. Claude Code ignores it; O
 
 Grep existing skills first — 43+ exist. A new skill must name the gap no existing skill fills (one line) or don't build it.
 
+## Scripting convention
+
+**Use Bun + TypeScript for all new scripts** — not shell scripts (`.sh`) or standalone Python scripts.
+
+```bash
+# Run a script
+bun .agents/scripts/feeds/read_article.ts <url>
+
+# New script template
+#!/usr/bin/env bun
+import { $ } from "bun";
+// Use $`cmd` for subprocesses, fetch() for HTTP, Bun.file() for file I/O
+```
+
+- Shell scripts are brittle (quoting, portability, no types). TypeScript with Bun gives typed args, async/await, and native fetch.
+- Existing `.py` backtests stay as Python (data science ecosystem: pandas, yfinance, matplotlib). Don't rewrite those.
+- New agent utilities (feed adapters, cache scripts, CLI tools) → `bun *.ts`.
+- Scripts go in `.agents/scripts/` organized by function (e.g. `feeds/`, `cache/`).
+
 ## Backtest conventions
 
 - Self-contained: download data → run → print → save chart to `report/img/`.
