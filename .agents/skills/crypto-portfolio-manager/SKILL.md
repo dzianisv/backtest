@@ -259,6 +259,38 @@ Self-check before printing:
 - A TradingView screenshot is attached for every token
 - **No source may be cited that was not actually fetched this run** — verify by mentally checking: "did I call web_fetch on this URL?" If no, remove it
 
+## Step 4 — Citation validation (post-hook)
+
+After printing Block 3, run the `reference-validator` post-hook to verify every source cited in the narrative seats is real.
+
+**4a. Assemble the citations JSON** — collect every `[T1]`, `[T2]`, `[T3]` entry from Block 3 that has a real `https://` URL (skip `[FETCH FAILED]` entries — those are already flagged):
+
+```json
+[
+  {"token":"BTC","tier":"T1","url":"https://api.alternative.me/fng/?limit=1","quote":"value: 18, value_classification: Extreme Fear"},
+  {"token":"BTC","tier":"T2","url":"https://www.coindesk.com/search?q=bitcoin+ETF+2026","quote":"Bitcoin ETF products saw $218M outflow"},
+  ...
+]
+```
+
+**4b. Spawn `reference-validator` as a subagent** — pass the full JSON array. The validator re-fetches every URL and checks if the quoted text is actually present in the page. It can use `web_fetch` (subagents have that tool; only `tradingview-*` tools are orchestrator-only).
+
+```
+Invoke the reference-validator skill with this citations JSON:
+[...paste array here...]
+```
+
+**4c. Print the validation report** returned by the subagent verbatim — do not edit it.
+
+**4d. Act on failures:**
+- Any token with ≥1 `NOT_FOUND` source → append `⚠️ CITATION_FAILED` to that token's signal in Block 1 and note it in Block 2.
+- Any token with only `FETCH_FAILED` sources → append `ℹ️ UNVERIFIED` to that token's signal.
+- If ALL sources for ALL tokens are `VERIFIED` or `PARTIAL` → print `✅ All citations verified`.
+
+> **Why this step exists:** LLM agents fabricate plausible-sounding URLs and headlines. The validator re-fetches every URL cold (subagent has no memory of the original fetch) and does a literal string match. A hallucinated quote will fail even if the URL resolves — the text won't be there.
+
+---
+
 ## Running continuously
 
 ```
