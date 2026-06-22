@@ -120,28 +120,49 @@ Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. H
 
 **1d. Run the 5-seat quorum on the package.** Either reason through the 5 seats inline, or spawn the five `analysis-*` seat subagents **in parallel** (on-chain, sentiment, macro, order-flow, narrative) with the package **injected** — seats per token may be parallel because they share nothing; only the *data pull* must be serial. Each seat returns: zone, posture (BULLISH|NEUTRAL|BEARISH), confidence, 1-line bull, 1-line bear, invalidation.
 
-**Narrative seat — mandatory sourcing protocol.** The narrative seat MUST web-fetch at least 3 recent articles/sources before forming its posture. For every source used:
-1. **Fetch it** (web-fetch the URL or the feed).
-2. **Quote the specific sentence or data point** that informed the verdict.
-3. **Rank sources by signal quality** using this rubric:
-   - **Tier 1 — Primary signal** (ranks first): on-chain data with timestamps, exchange/ETF flow reports with actual numbers, regulatory filings, protocol announcements. Weight: 3×.
-   - **Tier 2 — Credible context** (ranks second): Seeking Alpha deep-dives, Bloomberg/Reuters/FT/WSJ analysis with named sources, CoinDesk/TheBlock with on-chain citations. Weight: 2×.
-   - **Tier 3 — Noise / sentiment gauge** (ranks last): social media, unnamed "analysts say", vague macro opinions, recycled press releases. Weight: 0.5×. These inform sentiment only, never the posture verdict.
-4. **Show the reasoning** for each rank: one sentence explaining why this source is Tier 1/2/3 for this token at this moment (e.g. "T1: Glassnode shows 14-day ETF outflow of $3.8B — hard number, directly moves price").
-5. **State what would have changed the verdict** if the evidence were reversed (invalidation anchor).
+**Narrative seat — mandatory sourcing protocol.**
+
+**⛔ HARD RULE: You MUST call `web_fetch` on a real URL before you can cite it as a source. If you did not call `web_fetch(url)` on it, it is NOT a source — do not write it down. A fabricated headline with no URL is a hallucination and invalidates the entire narrative verdict.**
+
+**Step-by-step (do this in order, do not skip):**
+
+1. **Call `web_fetch` on at least 3 of these starting URLs** for the token. Pick the most relevant:
+   - Fear & Greed: `https://api.alternative.me/fng/?limit=1` (JSON — T1 primary data)
+   - CoinDesk search: `https://www.coindesk.com/search?q={TOKEN}+2026` (T2)
+   - CoinDesk tag for BTC ETF flows: `https://www.coindesk.com/tag/bitcoin-etf` (T1 if ETF relevant)
+   - Decrypt: `https://decrypt.co/tag/{token}` (T2)
+   - DeFiLlama protocol page (for DeFi tokens): `https://defillama.com/protocol/{token-slug}` (T1)
+   - CryptoPanic: `https://cryptopanic.com/news/{token-symbol}/` (T2/T3)
+   - Token Terminal: `https://tokenterminal.com/terminal/projects/{token-slug}` (T1 for revenue tokens)
+
+2. **Read what actually came back.** If the fetch returns an error or no relevant content, write `[FETCH FAILED: <url>]` — do NOT count it toward the 3-source minimum, do NOT invent what it "would have said."
+
+3. **Quote verbatim** — copy an exact sentence or number from the page. Do not paraphrase from memory.
+
+4. **Rank sources by signal quality:**
+   - **Tier 1 — Primary signal**: on-chain/flow data with timestamps and hard numbers (ETF flow $, protocol revenue $, F&G index value). Weight: 3×. Drives posture.
+   - **Tier 2 — Credible context**: Bloomberg/Reuters/FT/WSJ/CoinDesk/TheBlock with named sources and specific claims. Weight: 2×. Supports posture.
+   - **Tier 3 — Noise/sentiment gauge**: social media, "analysts say", recycled press releases. Weight: 0.5×. Informs sentiment only, never drives posture verdict.
+
+5. **Show the ranking reason** for each: one sentence (e.g. "T1: F&G returned value=18 with timestamp — hard data point directly measuring market fear").
+
+6. **State the invalidation anchor**: what would reverse this verdict if the evidence were opposite.
 
 Narrative seat output format (inline, per token):
 ```
 NARRATIVE — {TOKEN}
 Posture: BULLISH | NEUTRAL | BEARISH
-Sources used (ranked):
-  [T1] <title or URL> — "<exact quote>" → why T1: <one sentence>
-  [T2] <title or URL> — "<exact quote>" → why T2: <one sentence>
-  [T3] <title or URL> — "<exact quote>" → why T3: <one sentence>
+Sources fetched (ranked):
+  [T1] https://<actual-url-you-called-web_fetch-on> — "<verbatim quote from page>" → T1 because: <one sentence>
+  [T2] https://<actual-url-you-called-web_fetch-on> — "<verbatim quote from page>" → T2 because: <one sentence>
+  [T3] https://<actual-url-you-called-web_fetch-on> — "<verbatim quote from page>" → T3 because: <one sentence>
+  [FETCH FAILED: https://...] — not counted
 Bull: <1-line>
 Bear: <1-line>
 Invalidation: <what reverses this verdict>
 ```
+
+**If you have fewer than 2 successfully fetched sources after trying all applicable URLs above, set posture = NEUTRAL and note "INSUFFICIENT DATA" — do not guess.**
 
 **1e. Aggregate into the compact verdict and persist:**
 ```json
@@ -218,22 +239,25 @@ summary of what it said and why it was ranked T1/T2/T3.
 
 ```
 --- NEWS SOURCES ---
+(Only URLs you actually called web_fetch on appear here. No URL = no entry.)
 
 BTC narrative (posture: BEARISH)
-  [T1] https://... — "..." — ETF outflows: hard flow numbers that directly
-       move price. Ranked T1 because it is a primary data source with
-       specific dollar figures.
-  [T2] https://... — "..." — Bloomberg analysis of Fed rate path. Ranked T2:
-       credible named-source journalism giving macro context.
-  [T3] https://... — "..." — Twitter thread on BTC dominance. Ranked T3:
-       social/opinion, used only to gauge retail sentiment, not to drive verdict.
+  [T1] https://api.alternative.me/fng/?limit=1 — "value: 18, value_classification: Extreme Fear" → T1: hard numeric index with timestamp, directly measures crowd fear
+  [T2] https://www.coindesk.com/search?q=bitcoin+ETF+2026 — "Bitcoin ETF products saw $218M outflow on June 21" → T2: named-source journalism with specific dollar figure
+  [FETCH FAILED: https://decrypt.co/tag/bitcoin] — not counted
 
-ETH narrative (posture: BEARISH)
-  [T1] https://...
-  ...
+ETH narrative (posture: BULLISH)
+  [T1] https://defillama.com/protocol/lido — "Total Value Locked: $28.4B as of 2026-06-22" → T1: primary on-chain data with date
+  [T2] https://www.coindesk.com/search?q=ethereum+2026 — "SharpLink Gaming adds ETH to treasury" → T2: credible source, specific catalyst
+  [T3] https://cryptopanic.com/news/eth/ — "Community bullish on ETH merge anniversary" → T3: aggregated social sentiment, no hard data
 ```
 
-Self-check before printing: every token has `status='done'` in `token_analysis`, `seats_bull + seats_bear <= 5` for each, every narrative source block has ≥3 URLs with actual links (not placeholders), and a TradingView screenshot is attached for every token.
+Self-check before printing:
+- Every token has `status='done'` in `token_analysis`
+- `seats_bull + seats_bear <= 5` for each token
+- Every narrative source entry starts with `https://` (a real URL you called `web_fetch` on) — if any entry has only a title or is labelled [FETCH FAILED], that token's narrative is marked "INSUFFICIENT DATA" not a posture
+- A TradingView screenshot is attached for every token
+- **No source may be cited that was not actually fetched this run** — verify by mentally checking: "did I call web_fetch on this URL?" If no, remove it
 
 ## Running continuously
 
