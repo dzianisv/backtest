@@ -57,17 +57,23 @@ CREATE TABLE IF NOT EXISTS token_analysis (
 Pick the next `pending` todo and `UPDATE todos SET status='in_progress'`. Then, for that token:
 
 **1a. Pull TradingView data (MCP, in this session):**
+
+First, call `tradingview-chart_get_state` and inspect the `studies` list.  
+**Only add an indicator if its name is NOT already present** — adding a duplicate pushes a second identical series onto the chart, inflates context, and produces duplicate rows in `data_get_study_values`. Use `chart_manage_indicator action=remove` on the extra entity_id if duplicates already exist.
+
+Required studies (add only if absent): **Relative Strength Index**, **Bollinger Bands**, **MACD**. Do NOT add length-N EMAs — the length input is ignored (constraint 3). Volume is always present.
+
 ```
+tradingview-chart_get_state                                → inspect studies list; deduplicate before proceeding
 tradingview-chart_set_symbol     symbol="BINANCE:{TOKEN}USDT"
 tradingview-chart_set_timeframe  timeframe="D"
 tradingview-data_get_ohlcv       count=365 summary=true   → 52w high/low + avg volume
 tradingview-data_get_ohlcv       count=210 summary=false  → >=200 daily closes (for SMA200)
-tradingview-data_get_study_values                          → RSI(14), BB(20,2), MACD, Volume (defaults are correct)
+tradingview-data_get_study_values                          → RSI(14), BB(20,2), MACD, Volume (one of each)
 tradingview-chart_set_timeframe  timeframe="W"
 tradingview-data_get_ohlcv       count=210 summary=false  → weekly closes (for 200-week MA)
 tradingview-chart_set_timeframe  timeframe="D"             → reset
 ```
-Add the RSI / Bollinger Bands / MACD studies once at the start via `chart_manage_indicator action=add`. Do NOT add length-N EMAs — the length input is ignored (constraint 3).
 
 **1b. Read the indicators from TradingView; compute only the moving averages.** From `data_get_study_values` take RSI(14), Bollinger(20,2), MACD line/signal/hist, Volume — verbatim, no recompute. From the daily `summary=true` pull take 52w high/low + avg volume. Then fill the MA gap (computed MAs match TradingView's own values):
 ```bash
