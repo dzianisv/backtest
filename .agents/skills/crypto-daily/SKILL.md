@@ -19,16 +19,17 @@ Publish today's crypto portfolio analysis to Notion, Telegram, and X.com.
 
 ## Prerequisites (one-time setup)
 
-| Credential | Where it lives | Used for |
+| Credential / Skill | Where it lives | Used for |
 |---|---|---|
 | `NOTION_TOKEN` | `~/.env.d/notion.env` | Creating Notion pages |
 | `NOTION_PARENT_PAGE_ID` | `~/.env.d/notion.env` (or prompt user) | Where to create the page |
-| Telegram session | `~/.config/telethon/session.dat.session` | Posting to channel |
-| Chrome running | Real Chrome with DevTools allowed | Tweeting on X.com |
+| **telegram-cli skill** | `~/.agents/skills/telegram-cli/` | Posting to Telegram channel |
+| **chrome-use skill** | `~/.agents/skills/chrome-use/` | Tweeting on X.com |
+| Chrome running + logged into X.com | Real Chrome with DevTools allowed | chrome-use requires live Chrome session |
 
 Load Notion creds: `source ~/.env.d/notion.env`  
-Telegram-cli: `~/.agents/skills/telegram-cli/telegram-cli.py`  
-Chrome-use: `~/.agents/skills/chrome-use/scripts/chrome-use`  
+Telegram-cli script: `~/.agents/skills/telegram-cli/telegram-cli.py`  
+Chrome-use binary: `~/.agents/skills/chrome-use/scripts/chrome-use`
 
 ---
 
@@ -117,85 +118,117 @@ $CHROME snapshot -i
 
 ---
 
-## Step 3 — Post to Telegram channel
+## Step 3 — Post to Telegram channel via telegram-cli skill
 
-Send the Telegram recap to @CryptoAiInvestor.
+**Invoke the `telegram-cli` skill**, then send the daily recap to @CryptoAiInvestor.
 
+**3a. Extract the recap from the report:**
 ```bash
-TELEGRAM=~/.agents/skills/telegram-cli/telegram-cli.py
+RECAP=$(python3 - << 'PY'
+import re, sys
+content = open("research/crypto-portfolio-$(date +%F).md").read()
+# Extract the block between the telegram recap backtick fences
+m = re.search(r'```\n(📊 Daily Crypto Brief.*?)```', content, re.DOTALL)
+print(m.group(1).strip() if m else "")
+PY
+)
 
-# Extract the recap block from the report (starts with "📊 Daily Crypto Brief")
-RECAP=$(python3 -c "
-import sys
-content = open('$REPORT').read()
-start = content.find('📊 Daily Crypto Brief')
-# Find the recap inside the triple backtick block
-import re
-m = re.search(r'\`\`\`\n(📊 Daily Crypto Brief.*?)\`\`\`', content, re.DOTALL)
-print(m.group(1) if m else content[start:start+2000])
-")
-
-python3 "$TELEGRAM" send @CryptoAiInvestor "$RECAP"
+# Telegram hard limit is 4096 chars — trim if needed
+RECAP=$(echo "$RECAP" | head -c 4000)
 ```
 
-**On success:** prints the message ID.  
-**If `session not authenticated`:** run `python3 "$TELEGRAM" login` first.  
-**If permission error** (not admin of channel): add the account as admin of @CryptoAiInvestor, then retry.
+**3b. Send via telegram-cli:**
+```bash
+TELEGRAM_CLI=~/.agents/skills/telegram-cli/telegram-cli.py
 
-> ⚠️ The telegram-cli uses your personal Telegram account. The account must be an **admin** of @CryptoAiInvestor to post. Channel admins can be managed in Telegram → channel info → Administrators.
+python3 "$TELEGRAM_CLI" send @CryptoAiInvestor "$RECAP"
+```
+
+**3c. Verify delivery:**
+```bash
+# Read the last message to confirm it arrived
+python3 "$TELEGRAM_CLI" read @CryptoAiInvestor --limit 1
+```
+
+Expected output: the sent message appears as the most recent message.
+
+**Error handling:**
+| Error | Fix |
+|---|---|
+| `session not authenticated` | `python3 "$TELEGRAM_CLI" login` |
+| `ChatWriteForbiddenError` | Account must be admin of @CryptoAiInvestor — add via Telegram app → channel info → Administrators |
+| `UsernameNotOccupiedError` | Channel username changed — confirm the correct handle |
+| Recap empty | Check report file exists and contains `📊 Daily Crypto Brief` block |
+
+> ⚠️ telegram-cli uses your **personal** Telegram account (Telethon session at `~/.config/telethon/`). The account must be a channel admin to post. Check admin status first if the send fails.
 
 ---
 
-## Step 4 — Post tweet on X.com
+## Step 4 — Post tweet on X.com via chrome-use skill
 
-Use `chrome-use` to compose and post a short tweet (≤ 280 chars) summarising today's top finding.
+**Invoke the `chrome-use` skill**, then compose and post a ≤ 280 char tweet.
 
-**4a. Build the tweet text** — one paragraph, ≤ 280 chars:
+**4a. Build the tweet (≤ 280 chars):**
 
+Template:
 ```
-🔮 Crypto signals {DATE} (Extreme Fear, F&G {value}):
-{Top 2-3 BUY(small) tokens} in DEEP_VALUE zone.
-{1-line dominant catalyst from Block 2, with short URL if available.}
-DYOR. Not advice.
-#Bitcoin #DeFi #CryptoTrading
+🔮 Crypto {DATE} | F&G {value} Extreme Fear
+BUY(small): {top 2-3 tokens} {price + 1-word catalyst each}
+{dominant macro driver in 1 line}
+DYOR. Not advice. #Bitcoin #DeFi #Crypto
 ```
 
-Example (must fit 280 chars):
+Example:
 ```
 🔮 Crypto 2026-06-23 | F&G 23 Extreme Fear
-BUY(small): AAVE $71 (mGLOBAL on Aave Horizon), LINK $7.6 (RSI 23), BTC $62k
-Tech selloff = dip. Trend still bearish — tranches only.
+BUY(small): AAVE $71 (RWA catalyst), LINK $7.6 (RSI 23), BTC $62k
+AI/tech selloff = dip. Trend bearish — tranches only.
 DYOR. Not advice. #Bitcoin #DeFi
 ```
 
-**4b. Post via chrome-use:**
+**Always verify ≤ 280 chars before proceeding:**
+```bash
+echo -n "$TWEET" | wc -c   # must be ≤ 280
+```
+
+**4b. Post via chrome-use — step by step:**
 
 ```bash
 CHROME=~/.agents/skills/chrome-use/scripts/chrome-use
-TWEET="<tweet text built in 4a>"
 
-# Navigate to X.com compose
+# 1. Open the X.com compose URL (requires Chrome to be running + logged in)
 $CHROME open "https://x.com/compose/tweet"
+sleep 3
+
+# 2. Snapshot interactive elements to get @eN refs
+$CHROME snapshot -i
+# Look for: [textbox] "What is happening?!" or similar compose input → assign it @e_compose
+
+# 3. Type the tweet (use `type` not `fill` — X.com watches keystrokes)
+$CHROME type @e_compose "$TWEET"
+sleep 1
+
+# 4. Re-snapshot to get fresh refs after typing
+$CHROME snapshot -i
+# Look for: [button] "Post" or [button] "Tweet" → assign it @e_post
+
+# 5. Click Post
+$CHROME click @e_post
 sleep 2
 
-# Snapshot to find the compose textbox
-$CHROME snapshot -i
-
-# Fill the tweet text (use type for inputs that watch keystrokes)
-$CHROME type @e1 "$TWEET"   # @e1 = the tweet compose textbox ref from snapshot
-
-# Find and click the "Post" button
-$CHROME snapshot -i   # re-snapshot after typing to get fresh refs
-# Click the Post / Tweet button (label varies: "Post", "Tweet")
-$CHROME click @e_POST   # use the actual ref from snapshot
-
-# Screenshot proof
-$CHROME screenshot /tmp/tweet_proof_${TODAY}.png
+# 6. Screenshot proof of the posted tweet
+$CHROME screenshot /tmp/tweet_proof_$(date +%F).png
 ```
 
-> The exact `@eN` refs depend on the live page snapshot. Always re-snapshot after navigation or typing. If x.com redirects to login, the Chrome session is not authenticated — log in manually in Chrome first.
+> **@eN refs are dynamic** — the actual ref numbers from `snapshot -i` will differ each run. Read the snapshot output, find the compose textbox and Post button by their label, and use those refs. Never hardcode `@e1` or `@e_compose` — those are placeholders showing the pattern.
 
-**On success:** screenshot `/tmp/tweet_proof_{date}.png` is attached to the reply.
+> **If x.com redirects to login:** open `https://x.com` in Chrome manually, log in, then retry.
+
+**4c. Embed the screenshot inline:**
+```
+view /tmp/tweet_proof_{date}.png
+```
+(Call the `view` tool on the file path to embed the image in your reply.)
 
 ---
 
