@@ -63,3 +63,5 @@ logs/
 *.db
 !.claude/hooks/
 !.claude/settings.json
+!.opencode/
+!.opencode/plugins/
