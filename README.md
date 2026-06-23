@@ -653,6 +653,56 @@ Full spec: [`crypto/`](crypto/) — `crypto.goal.md` · `crypto.prd.md` · `cryp
 
 ---
 
+## Citation Validation Harness
+
+Every `web_fetch` call during narrative analysis is logged and verified after each agent turn. Hallucinated sources (cited but never fetched) are caught **outside the LLM loop** — the agent cannot self-validate past this gate.
+
+### How it works
+
+```
+Agent turn
+  └─ postToolUse(web_fetch) ──► log-web-fetch.ts
+                                  writes {url, success, ts} to /tmp/cc-fetches-{session}.jsonl
+
+Agent finishes turn
+  └─ agentStop / Stop ──────► validate-citations.ts
+                                  regex-scans last response for [T1]/[T2]/[T3] https:// URLs
+                                  diffs against fetch log
+                                  cited but not fetched → HALLUCINATED_CITATION
+                                  appends to logs/citation-errors.log
+                                  warns in UI if failures found
+```
+
+### Runtime coverage
+
+| Runtime | Hook config | Events |
+|---|---|---|
+| **Claude Code** | `.claude/settings.json` | `PostToolUse(web_fetch)` + `Stop` |
+| **Copilot CLI** | `.github/hooks/citation-validator.json` | `postToolUse(matcher=web.?fetch)` + `agentStop` |
+| **OpenCode** | `.opencode/plugins/citation-validator.ts` | `tool.execute.after` + `session.idle` |
+
+All three runtimes share the same TypeScript scripts in `.claude/hooks/` — payload format is normalized across runtimes (`tool_input.url` for Claude Code, `toolArgs` JSON for Copilot CLI).
+
+### Audit log
+
+Failures append to `logs/citation-errors.log`:
+```
+2026-06-22T17:30:00Z   session-abc   HALLUCINATED_CITATION   https://coindesk.com/fake-article
+```
+
+### Testing
+
+```bash
+# Verify hooks are wired (Claude Code)
+# Open Claude Code in this repo → /hooks → should show PostToolUse + Stop entries
+
+# Trigger a test turn with a bad citation
+# Ask the agent to cite a URL, then check:
+tail -f logs/citation-errors.log
+```
+
+---
+
 ## Deployment targets
 
 Same skills install onto any of:
