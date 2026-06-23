@@ -1,23 +1,11 @@
 {
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "web_fetch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun /Users/engineer/workspace/backtest/.claude/hooks/log-web-fetch.ts",
-            "statusMessage": "Logging fetch..."
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/engineer/workspace/backtest/.claude/hooks/validate-citations.ts",
+            "command": "bun /Users/engineer/workspace/backtest/.claude/hooks/citation-validator.ts",
             "statusMessage": "Validating citations..."
           }
         ]
