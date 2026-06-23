@@ -219,29 +219,35 @@ SOL   | BUY (small) | DEEP_VALUE | SPLIT  | 3 / 1
 ### Block 2 — Plain-English verdict per token
 For every token write 3–5 sentences a non-expert can understand. Cover:
 - **Why this signal**: what 1–2 facts drove the decision (price vs 200w MA, RSI, death cross, on-chain zone).
+- **News catalyst** (if any): state the headline fact **and** append `[source: https://exact-article-url]` inline — no URL = do not mention the fact.
 - **Main risk**: the single biggest thing that could make this call wrong.
 - **What to watch**: the one trigger that would change the signal (e.g. "close above SMA50" → HOLD flips to BUY).
+
+**⛔ HARD RULE for Block 2:** Every claim that comes from a fetched article, data feed, or external source MUST have an inline `[source: https://...]` immediately after it. Technical indicators (RSI, MACD, death cross) computed from price data do NOT need a source. Narrative facts (headlines, protocol TVL, fund flows, institutional events) DO. A claim with no `[source:]` tag is treated as unverified and must be removed.
 
 Example:
 ```
 BTC — HOLD
-BTC is down 42% from its all-time high and is sitting right on the 200-week
-moving average (~$62k), the historical long-term floor. The RSI has recovered
-to neutral (42.6) and the MACD is starting to turn up — early signs the
-selling pressure is fading. However a death cross is active (50-day below
-200-day), macro is hostile (Fed holding rates, strong dollar), and ETF flows
-are still negative. Not cheap enough on-chain to force a buy, not broken
-enough to sell. Watch for a daily close above the 50-day SMA ($71.9k) to
-upgrade to BUY, or a weekly close below $60k to reassess.
+BTC is down 42% from its all-time high and sits on the 200-week moving average
+(~$62k), the historical long-term floor. RSI has recovered to neutral (42.6)
+and MACD is turning up. However a death cross is active (50-day below 200-day),
+macro is hostile (Fed holding rates, strong dollar), and ETF flows are still
+negative [source: https://www.coindesk.com/markets/2026/06/21/btc-etf-outflows].
+Not cheap enough on-chain to force a buy, not broken enough to sell.
+Watch for a daily close above SMA50 ($71.9k) to upgrade to BUY,
+or a weekly close below $60k to reassess.
 
 ETH — BUY (small)
 ETH has crashed 63% from its 52-week high and is now 30% below its 200-week
-moving average — a level historically associated with cycle bottoms. One panel
-seat is bullish (on-chain deep value), two are bearish (macro headwinds and
-compressed fee revenue from L2 competition). The split verdict with extreme
-undervaluation triggers the "small position" rule: start a toe-hold, don't
-go large. Key risk: ETH could continue losing ground vs BTC if L2 fee erosion
-persists. Upgrade to BUY if price reclaims the 200-week MA (~$2,472).
+moving average — a level historically associated with cycle bottoms. The
+Ethereum Foundation cut 20% of its workforce today as part of a restructuring
+[source: https://www.theblock.co/post/405809/ethereum-foundation-cuts-20-of-its-workforce-as-new-5-cluster-structure-takes-shape],
+adding organizational risk on top of the macro headwinds. One panel seat is
+bullish (on-chain deep value), two are bearish (macro + EF uncertainty).
+The split verdict with extreme undervaluation triggers the "small position"
+rule: start a toe-hold, don't go large.
+Key risk: ETH/BTC continues compressing if L2 fee erosion persists.
+Upgrade to BUY if price reclaims the 200-week MA (~$2,472).
 ```
 
 ### Block 3 — News & sources used by the Narrative seat
@@ -282,6 +288,7 @@ Self-check before printing:
 - `seats_bull + seats_bear <= 5` for each token
 - Every narrative source entry starts with `https://` followed by the **specific article URL** (not a listing/search page) — if any entry has only a source name or no URL, remove it and mark INSUFFICIENT DATA
 - **Two-step verified**: news citations point to the article URL you fetched (step 2), not the listing page (step 1)
+- **Block 2 inline links**: every news-based claim in Block 2 has `[source: https://...]` — scan each verdict and confirm; remove any fact that has no source tag
 - A TradingView screenshot is embedded inline (via `view` tool on the `file_path`) for every token — not just captured, but visible
 - **No source may be cited that was not actually fetched this run** — verify: "did I call web_fetch on this exact URL?" If no, remove it
 
@@ -314,6 +321,49 @@ Invoke the reference-validator skill with this citations JSON:
 - If ALL sources for ALL tokens are `VERIFIED` or `PARTIAL` → print `✅ All citations verified`.
 
 > **Why this step exists:** LLM agents fabricate plausible-sounding URLs and headlines. The validator re-fetches every URL cold (subagent has no memory of the original fetch) and does a literal string match. A hallucinated quote will fail even if the URL resolves — the text won't be there.
+
+---
+
+## Step 5 — Telegram daily recap (append after citation validation)
+
+After Block 3 and citation validation, print a compact Telegram-formatted message for the daily crypto insights channel.
+
+**Format rules:**
+- One line per token: emoji + ticker + price + RSI + signal
+- 1–2 sentence narrative catalyst **with the source URL inline** — no URL = omit the fact
+- End with a `📎 Sources` section listing every article URL used in the recap (not just Block 3 — every URL that drove a narrative claim in the recap itself)
+
+```
+📊 Daily Crypto Brief — {DATE}
+
+🌡️ Mood: {F&G value} — {classification} ({N}th day)
+
+📉 Macro: {1–2 sentences on dominant narrative driver. Link the article.}
+[source: https://exact-article-url]
+
+─────────────────────────────
+💼 PORTFOLIO SIGNALS
+
+{EMOJI} {TOKEN} ${price} | RSI {rsi} | {pct_from_ath}% ATH
+{SIGNAL_EMOJI} {SIGNAL} • {1-line catalyst with [source: URL] if news-driven}
+📌 {action note}
+
+... (repeat per token)
+
+─────────────────────────────
+⚠️ {Risk reminder. Keep 60–70% dry powder if trend is broadly bearish.}
+
+📅 Watch: {next 2–3 macro catalysts with dates}
+
+📎 Sources used in this recap:
+• https://... — {outlet, date, one-line description}
+• https://... — ...
+(List every URL that appears in a [source:] tag above. No URL used in the body = no entry here.)
+
+Educational only. Not financial advice. DYOR.
+```
+
+**⛔ If a narrative claim has no fetched URL, either drop the claim or replace it with "no specific catalyst" — do NOT state a news fact without a source link.**
 
 ---
 
