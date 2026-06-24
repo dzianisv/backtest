@@ -51,8 +51,16 @@ Educational, not financial advice.
 
 ## Token universe
 
-| Token | Rationale | TradingView symbol |
-|-------|-----------|-------------------|
+**⛔ STALENESS RULE — applies to every row in this table:**
+> Any claim about token mechanics (fee switch, buyback, burn, staking yield, revenue accrual, governance status) is a **live fact that can change via governance vote at any time**. It MUST be verified by a live `web_fetch` before being used as evidence in a quorum verdict or a removal/addition decision. Never write or rely on a tokenomics claim from memory alone — the UNI error (fee switch described as "perpetually failed" when it had passed 6 months earlier) is the canonical example of why.
+>
+> **Verify protocol mechanics before using them:**
+> 1. `web_fetch https://defillama.com/protocol/{slug}` → check Protocol Revenue row (non-zero = fee capture exists)
+> 2. `web_fetch https://www.theblock.co/search?query={token}+fee+switch` → check for recent governance votes
+> 3. If DeFiLlama shows revenue AND you recall "no fee accrual" → you are stale. Fetch the governance forum before concluding.
+
+| Token | Rationale (verified 2026-06-23) | TradingView symbol |
+|-------|--------------------------------|-------------------|
 | BTC   | Foundational monetary layer; largest market cap | `BINANCE:BTCUSDT` |
 | ETH   | Smart-contract platform; stablecoin infra (53% of $300B market) | `BINANCE:ETHUSDT` |
 | SOL   | High-performance L1; Solana DeFi base layer | `BINANCE:SOLUSDT` |
@@ -60,7 +68,7 @@ Educational, not financial advice.
 | HYPE  | Hyperliquid perp DEX; 97% revenue auto-buyback hardcoded; real cashflow token | `OKX:HYPEUSDT` |
 | AAVE  | Leading DeFi lending protocol; real yield from spreads + GHO fees; >$1T cumulative loans | `BINANCE:AAVEUSDT` |
 | JUP   | Jupiter — Solana DeFi super-app (perps, lending, launchpad, DCA, staking); 15+ fee streams | `BINANCE:JUPUSDT` |
-| UNI   | Uniswap — fee switch activated Dec 2025 (UNIfication); trading fees → burn UNI via Firepit; 100M burned at launch; $1B+/yr fee base; expanding to all v3 + 8 chains | `BINANCE:UNIUSDT` |
+| UNI   | Uniswap — fee switch activated Dec 2025 (UNIfication, 99.9% vote); trading fees → burn UNI via Firepit; 100M burned at launch; $1B+/yr fee base; expanding to all v3 + 8 chains [verified: theblock.co/post/383742] | `BINANCE:UNIUSDT` |
 | AERO  | Aerodrome Finance — Base chain DEX; real trading fees; ve(3,3) tokenomics with revenue accrual | `BINANCE:AEROUSDT` |
 | PUMP  | Pump.fun — Solana meme launchpad; reflexive fees; track for cycle timing signal | `OKX:PUMPUSDT` |
 | LINK  | Oracle network; backbone of RWA tokenization (Swift, Euroclear, JPMorgan, UBS) | `BINANCE:LINKUSDT` |
@@ -138,6 +146,24 @@ Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. H
 **1c. Assemble the data package** by merging the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the helper's moving-average block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it.
 
 **1d. Run the 5-seat quorum on the package.** Either reason through the 5 seats inline, or spawn the five `analysis-*` seat subagents **in parallel** (on-chain, sentiment, macro, order-flow, narrative) with the package **injected** — seats per token may be parallel because they share nothing; only the *data pull* must be serial. Each seat returns: zone, posture (BULLISH|NEUTRAL|BEARISH), confidence, 1-line bull, 1-line bear, invalidation.
+
+**On-chain seat — mandatory tokenomics live check for DeFi tokens.**
+
+For any non-L1 token (not BTC/ETH/SOL/TON), you MUST verify protocol mechanics via live fetch before the on-chain verdict. This is the **UNI rule** — named after the error where "no fee accrual" was stated confidently from stale memory when the fee switch had already passed 6 months earlier.
+
+**⛔ NEVER state a tokenomics claim (fee switch, buyback, burn, staking yield, revenue accrual) from memory.** Governance votes can change protocol economics at any time. A claim that was true 3 months ago may be false today.
+
+**Steps (do these before writing the on-chain verdict for any DeFi token):**
+
+1. `web_fetch https://defillama.com/protocol/{slug}` (e.g. `uniswap`, `aave`, `aerodrome`)
+   - Look for: **Protocol Revenue** row. Non-zero = fee capture mechanism exists somewhere — investigate further even if you "know" the token has none.
+   - Look for: **Token burns**, **buybacks**, **revenue distribution** in the description.
+
+2. If DeFiLlama shows non-zero revenue AND your recalled knowledge says "no accrual" → **you are stale**. Do not use the recalled knowledge. Fetch the governance forum:
+   - `web_fetch https://www.theblock.co/search?query={TOKEN}+fee+switch`
+   - `web_fetch https://gov.uniswap.org` (or equivalent protocol forum)
+
+3. Only after the live fetch can you characterize the token mechanics in the verdict. Quote the fetched source verbatim; cite the URL.
 
 **Narrative seat — mandatory sourcing protocol.**
 
