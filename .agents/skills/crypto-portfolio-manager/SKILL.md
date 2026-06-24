@@ -1,6 +1,6 @@
 ---
 name: crypto-portfolio-manager
-description: "Manages the crypto portfolio — runs analysis on every token in the universe (BTC/ETH/SOL/TON/HYPE/AAVE/JUP/AERO/PUMP/LINK) and outputs a BUY/SELL/HOLD decision per token. Run on demand or via /loop. Educational, not advice."
+description: "Manages the crypto portfolio — runs analysis on every token in the universe (BTC/ETH/SOL/TON/HYPE/AAVE/JUP/UNI/AERO/PUMP/LINK) and outputs a BUY/SELL/HOLD decision per token. Run on demand or via /loop. Educational, not advice."
 license: MIT
 compatibility: opencode
 metadata:
@@ -60,6 +60,7 @@ Educational, not financial advice.
 | HYPE  | Hyperliquid perp DEX; 97% revenue auto-buyback hardcoded; real cashflow token | `OKX:HYPEUSDT` |
 | AAVE  | Leading DeFi lending protocol; real yield from spreads + GHO fees; >$1T cumulative loans | `BINANCE:AAVEUSDT` |
 | JUP   | Jupiter — Solana DeFi super-app (perps, lending, launchpad, DCA, staking); 15+ fee streams | `BINANCE:JUPUSDT` |
+| UNI   | Uniswap — fee switch activated Dec 2025 (UNIfication); trading fees → burn UNI via Firepit; 100M burned at launch; $1B+/yr fee base; expanding to all v3 + 8 chains | `BINANCE:UNIUSDT` |
 | AERO  | Aerodrome Finance — Base chain DEX; real trading fees; ve(3,3) tokenomics with revenue accrual | `BINANCE:AEROUSDT` |
 | PUMP  | Pump.fun — Solana meme launchpad; reflexive fees; track for cycle timing signal | `OKX:PUMPUSDT` |
 | LINK  | Oracle network; backbone of RWA tokenization (Swift, Euroclear, JPMorgan, UBS) | `BINANCE:LINKUSDT` |
@@ -87,6 +88,7 @@ INSERT INTO todos (id, title, description) VALUES
  ('tok-HYPE','Analyzing HYPE', 'idem — use OKX:HYPEUSDT'),
  ('tok-AAVE','Analyzing AAVE', 'idem'),
  ('tok-JUP', 'Analyzing JUP',  'idem — Jupiter Solana DeFi super-app'),
+ ('tok-UNI', 'Analyzing UNI',  'idem — fee switch live Dec 2025; burns via Firepit; $1B+/yr fee base'),
  ('tok-AERO','Analyzing AERO', 'idem — Aerodrome Finance Base DEX, try BINANCE:AEROUSDT'),
  ('tok-PUMP','Analyzing PUMP', 'idem — pump.fun token, try OKX:PUMPUSDT'),
  ('tok-LINK','Analyzing LINK', 'idem');
