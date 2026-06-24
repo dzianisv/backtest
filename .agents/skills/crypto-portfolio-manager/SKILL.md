@@ -337,11 +337,76 @@ Self-check before printing:
 - A TradingView screenshot is embedded inline (via `view` tool on the `file_path`) for every token — not just captured, but visible
 - **No source may be cited that was not actually fetched this run** — verify: "did I call web_fetch on this exact URL?" If no, remove it
 
-## Step 4 — Citation validation (post-hook)
+---
+
+## Step 4 — Verdict Critic (post-hook: substance check)
+
+**Run this before printing Block 1.** For every token, a fresh subagent — with no memory of the quorum analysis — reads today's news and challenges the verdict. This catches the class of error where a verdict is technically consistent with the data package but contradicts something happening in the real world right now.
+
+> **Why this step exists:** The UNI error. The quorum produced "no fee accrual" with confidence because the data package didn't contradict it. A fresh agent reading TheBlock for 60 seconds would have seen "UNIfication passes 99.9% — fee switch activated". No further reasoning required. The error was not in the quorum logic — it was in the absence of a live news check before accepting the verdict.
+
+**4a. For each token, spawn a verdict-critic subagent in parallel.** Pass it:
+- Token symbol and the full quorum verdict text (signal, zone, quorum, all 5 seat postures, key claims)
+- The following instructions:
+
+```
+You are a devil's advocate critic. Your job is to find problems with this verdict, not confirm it.
+You have NO prior knowledge of this analysis run — start fresh.
+
+Token: {TOKEN}
+Verdict to critique:
+{paste full quorum verdict block}
+
+Your task:
+1. Fetch these two URLs and read what comes back:
+   a. web_fetch https://www.theblock.co/search?query={TOKEN}+crypto (recent news listing)
+   b. web_fetch the most relevant article URL from (a) — pick the one most likely to challenge the verdict
+   c. web_fetch https://defillama.com/protocol/{slug} (protocol metrics and revenue)
+
+2. Challenge the verdict with these four questions. Answer each one:
+   Q1 DIRECTION: Does today's news point in the OPPOSITE direction from the signal?
+      (e.g. verdict=BEARISH but news says "protocol launches major feature, TVL up 40%")
+   Q2 STALE MECHANICS: Does the verdict make any categorical claim about protocol mechanics
+      (fee switch, buyback, burn, revenue accrual, governance status) that the news or DeFiLlama contradicts?
+      Red-flag phrases: "no fee accrual", "governance only", "no buyback", "fees go to LPs only",
+      "fee switch pending", "never passed". Any of these = verify against live data.
+   Q3 MISSING CATALYST: Is there a major event in the news (governance vote passed, exploit,
+      institutional adoption, regulatory decision, partnership) that the verdict completely ignores?
+   Q4 OVERCONFIDENCE: Does the verdict use absolute language ("permanently", "structurally",
+      "will never", "always has been") about something that governance or market conditions could change?
+
+3. Return this exact format:
+
+CRITIC — {TOKEN}
+News fetched:
+  [1] https://<url-you-fetched> — "<verbatim quote from page>"
+  [2] https://<url-you-fetched> — "<verbatim quote from page>"
+  [3] https://<defillama-url> — "<protocol revenue or description quote>"
+
+Q1 DIRECTION:   PASS | FLAG — <one sentence>
+Q2 STALE MECH:  PASS | FLAG — <one sentence, cite the specific claim and the contradicting evidence>
+Q3 MISSING:     PASS | FLAG — <one sentence, cite the missing event and its URL>
+Q4 OVERCONF:    PASS | FLAG — <quote the overconfident phrase>
+
+OVERALL: PASS | FLAG
+If FLAG: "<specific verdict text that must be corrected> → correct to: <corrected claim with source URL>"
+```
+
+**4b. Print all critic reports** for all tokens in sequence.
+
+**4c. Act on FLAGs before printing Block 1:**
+- `OVERALL: FLAG` on any token → **revise that token's quorum verdict** to address the specific critique, re-run the signal decision for that token, and mark it `⚠️ REVISED` in Block 1.
+- `OVERALL: PASS` on all tokens → print `✅ Verdict Critic: all {N} tokens passed`.
+
+> The critic cannot access TradingView tools — only `web_fetch`. That is intentional: it reads the world, not the chart. Technical signals are the quorum's job; the critic's only job is "does today's news contradict this?"
+
+---
+
+## Step 5 — Citation validation (post-hook: format check)
 
 After printing Block 3, run the `reference-validator` post-hook to verify every source cited in the narrative seats is real.
 
-**4a. Assemble the citations JSON** — collect every `[T1]`, `[T2]`, `[T3]` entry from Block 3 that has a real `https://` URL (skip `[FETCH FAILED]` entries — those are already flagged):
+**5a. Assemble the citations JSON** — collect every `[T1]`, `[T2]`, `[T3]` entry from Block 3 that has a real `https://` URL (skip `[FETCH FAILED]` entries — those are already flagged):
 
 ```json
 [
@@ -351,16 +416,16 @@ After printing Block 3, run the `reference-validator` post-hook to verify every 
 ]
 ```
 
-**4b. Spawn `reference-validator` as a subagent** — pass the full JSON array. The validator re-fetches every URL and checks if the quoted text is actually present in the page. It can use `web_fetch` (subagents have that tool; only `tradingview-*` tools are orchestrator-only).
+**5b. Spawn `reference-validator` as a subagent** — pass the full JSON array. The validator re-fetches every URL and checks if the quoted text is actually present in the page. It can use `web_fetch` (subagents have that tool; only `tradingview-*` tools are orchestrator-only).
 
 ```
 Invoke the reference-validator skill with this citations JSON:
 [...paste array here...]
 ```
 
-**4c. Print the validation report** returned by the subagent verbatim — do not edit it.
+**5c. Print the validation report** returned by the subagent verbatim — do not edit it.
 
-**4d. Act on failures:**
+**5d. Act on failures:**
 - Any token with ≥1 `NOT_FOUND` source → append `⚠️ CITATION_FAILED` to that token's signal in Block 1 and note it in Block 2.
 - Any token with only `FETCH_FAILED` sources → append `ℹ️ UNVERIFIED` to that token's signal.
 - If ALL sources for ALL tokens are `VERIFIED` or `PARTIAL` → print `✅ All citations verified`.
@@ -369,7 +434,7 @@ Invoke the reference-validator skill with this citations JSON:
 
 ---
 
-## Step 5 — Telegram daily recap (append after citation validation)
+## Step 6 — Telegram daily recap (append after both post-hooks)
 
 After Block 3 and citation validation, print a compact Telegram-formatted message for the daily crypto insights channel.
 
