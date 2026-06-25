@@ -33,15 +33,30 @@ CRYPTO_FEEDS = {
     # Direct coinbase.com/blog RSS is Cloudflare-gated (403); fetched via Google News proxy like wsj above.
     "coinbase": "https://news.google.com/rss/search?q=(site%3Acoinbase.com%2Fblog+OR+site%3Acoinbase.com%2Finstitutional)+when%3A14d&hl=en-US&gl=US&ceid=US%3Aen",
 }
-# Macro paywalled — FT/WSJ have RSS descriptions/teasers; Bloomberg is best-effort (podcast feed, often 403):
+# Macro paywalled — bodies stay behind the paywall; we ingest headline + real article URL (+ teaser
+# where the publisher provides one). Endpoints verified 2026-06-25:
+#  - FT: native section RSS `ft.com/<section>?format=rss` returns real ft.com/content/<uuid> URLs
+#    plus a 1-sentence <description> teaser (CDATA-wrapped). The old ft.com/rss/home is dead (301 →
+#    stale ~1-item stub). Bodies stay paywalled — for full text use read_article.ts (logged-in Chrome).
+#  - WSJ: Dow Jones migrated public RSS to feeds.content.dowjones.io (the old feeds.a.dj.com froze
+#    2025-01-27). The new feeds carry real www.wsj.com URLs + a 1-sentence publisher teaser — far better
+#    than the previous Google News proxy, whose links were opaque redirects with no body.
 MACRO_FEEDS = {
-    "ft": "https://www.ft.com/rss/home",
-    "ft-markets": "https://www.ft.com/rss/markets",
-    "wsj": "https://news.google.com/rss/search?q=site%3Awsj.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen",
+    "ft-markets": "https://www.ft.com/markets?format=rss",
+    "ft-companies": "https://www.ft.com/companies?format=rss",
+    "ft-global-economy": "https://www.ft.com/global-economy?format=rss",
+    "ft-world": "https://www.ft.com/world?format=rss",
+    "wsj-markets": "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain",
+    "wsj-world": "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
+    "wsj-business": "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness",
+    "wsj-tech": "https://feeds.content.dowjones.io/public/rss/RSSWSJD",
     "bloomberg": "https://www.bloomberg.com/feed/podcast/etf-report.xml",  # podcast feed, not news — often 403
 }
 
 FEEDS = {**CRYPTO_FEEDS, **MACRO_FEEDS}
+# Sources whose bodies are paywalled — an empty RSS teaser is marked [UNAVAILABLE - paywall],
+# never fabricated, per the feed-ft / feed-wsj skill contract.
+PAYWALLED = set(MACRO_FEEDS)
 UA = "Mozilla/5.0 (news-research; +https://example.invalid)"
 TAG = re.compile(r"<[^>]+>")
 
@@ -80,12 +95,15 @@ def _parse(source, xml_bytes):
             iso = parsedate_to_datetime(pub).astimezone().isoformat() if pub else ""
         except Exception:
             iso = ""
+        summary = _clean(g("description"))[:600]
+        if not summary and source in PAYWALLED:
+            summary = "[UNAVAILABLE - paywall]"
         out.append({
             "source": source,
             "url": (g("link") or "").strip(),
             "title": title,
             "published_at": iso or pub,
-            "summary": _clean(g("description"))[:600],
+            "summary": summary,
             "lang": "en",
             "tags": [],
         })
