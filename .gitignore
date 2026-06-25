@@ -31,7 +31,7 @@ forecasts/
 /skills/
 
 # claude code session artifacts
-session.txt
+*.session.txt
 .claude/*
 # ...but DO ship the dynamic workflow scripts so `git clone` exposes them as /commands
 !.claude/workflows/
@@ -47,6 +47,10 @@ crypto/news/
 bundle.session.txt
 records.json
 .telegraph_path_v2
+
+# agent session ledgers / handoff scratch (runtime, not committed)
+thoughts/
+HANDOFF.md
 
 # run error log (durable, not committed)
 logs/
