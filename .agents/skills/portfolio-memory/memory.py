@@ -239,6 +239,83 @@ def format_context(
     return "\n".join(lines)
 
 # ---------------------------------------------------------------------------
+# Last-run report — the primary memory anchor
+# ---------------------------------------------------------------------------
+
+def last_run(
+    con: sqlite3.Connection,
+    desk: str | None = None,
+) -> tuple[str | None, list[dict]]:
+    """Return (run_id, verdicts) for the most recent completed run.
+
+    This is the primary memory surface for portfolio agents: show yesterday's
+    full signal table at the start of every new run so the agent knows where
+    things stood — without selective filtering or BM25 framing.
+    """
+    row = con.execute(
+        "SELECT run_id FROM memory"
+        + (" WHERE desk = ?" if desk else "")
+        + " ORDER BY created_at DESC LIMIT 1",
+        ((desk,) if desk else ()),
+    ).fetchone()
+    if not row:
+        return None, []
+    run_id = row["run_id"]
+    verdicts = [
+        dict(r)
+        for r in con.execute(
+            "SELECT ticker, verdict, meta, body, created_at FROM memory"
+            " WHERE run_id = ?" + (" AND desk = ?" if desk else "") +
+            " ORDER BY ticker",
+            ((run_id, desk) if desk else (run_id,)),
+        ).fetchall()
+    ]
+    return run_id, verdicts
+
+
+def format_last_run(
+    run_id: str | None,
+    verdicts: list[dict],
+    prefs: list[dict],
+) -> str:
+    """Format the previous run into a compact signal-table block for the agent."""
+    if not run_id:
+        return "PREVIOUS RUN: none — first run."
+
+    lines = [f"PREVIOUS RUN: {run_id}"]
+    lines.append("═" * 60)
+
+    if verdicts:
+        lines.append(f"{'TICKER':<8} {'VERDICT':<7} {'CONV':<5}  NOTES")
+        lines.append("─" * 60)
+        for v in verdicts:
+            ticker  = (v.get("ticker") or "—")[:8]
+            verdict = (v.get("verdict") or "?")[:7]
+            try:
+                meta = json.loads(v.get("meta") or "{}")
+            except Exception:
+                meta = {}
+            conv  = f"{meta.get('conviction', '?')}/5"
+            theme = meta.get("theme", "")
+            # Pull first 60 chars of body as the note
+            note  = (v.get("body") or "")[:60].split("—", 1)[-1].strip()
+            lines.append(f"{ticker:<8} {verdict:<7} {conv:<5}  {note}  [{theme}]")
+    else:
+        lines.append("  (no verdicts recorded for this run)")
+
+    lines.append("═" * 60)
+
+    if prefs:
+        pref_texts = " | ".join(p["text"][:50] for p in prefs)
+        lines.append(f"Prefs: {pref_texts}")
+
+    lines.append(
+        "\nUse this as a baseline — do fresh analysis, note what changed vs prior run."
+    )
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # Stats
 # ---------------------------------------------------------------------------
 
@@ -283,6 +360,9 @@ def _cli() -> None:
     pl = sub.add_parser("pref-list")
     pl.add_argument("--desk")
 
+    lr = sub.add_parser("last-run")
+    lr.add_argument("--desk")
+
     sub.add_parser("stats")
 
     args = parser.parse_args()
@@ -310,6 +390,11 @@ def _cli() -> None:
 
     elif args.cmd == "pref-list":
         print(json.dumps(load_preferences(con, desk=args.desk), indent=2))
+
+    elif args.cmd == "last-run":
+        run_id, verdicts = last_run(con, desk=args.desk)
+        prefs = load_preferences(con, desk=args.desk)
+        print(format_last_run(run_id, verdicts, prefs))
 
     elif args.cmd == "stats":
         print(json.dumps(stats(con), indent=2))
