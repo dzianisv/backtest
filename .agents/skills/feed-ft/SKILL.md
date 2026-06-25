@@ -24,16 +24,22 @@ failure → `[UNAVAILABLE]`. Return **≥1 headline record or a clean `[UNAVAILA
 
 ## Retrieval recipe
 
-- **Primary endpoint (verified working 2026-06-20):** Google News RSS filtered to FT:
-  `https://news.google.com/rss/search?q=site%3Aft.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`
-  Returns ~100 articles/7 days. Use topic-specific variants for targeted research:
-  `https://news.google.com/rss/search?q=site%3Aft.com+AI+semiconductors+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`
-  URLs are opaque Google News redirects (work in browsers, not directly resolvable to FT bodies).
-- **DEPRECATED:** `https://www.ft.com/rss/home` — FT aggressively bot-blocks from agent/datacenter IPs;
-  returns `403` or a login-redirect stub (~7KB of HTML, not real articles). Do NOT use as primary.
-- Parse: `title`→title, `link`→url (canonicalize, strip `utm_*`), `pubDate`(RFC-822)→`published_at` (ISO-8601 UTC). **`summary` = `"[UNAVAILABLE - paywall]"`** (do NOT scrape or guess the body). `lang: en`, `source: ft`.
-- The RSS `description`, if present, is FT's own short teaser — you MAY keep it verbatim as `summary` (it is
-  publisher-provided, not fabricated). If empty/absent → `[UNAVAILABLE - paywall]`.
+- **Primary endpoint (verified working 2026-06-25):** FT native section RSS — `https://www.ft.com/<section>?format=rss`.
+  Returns real `ft.com/content/<uuid>` article URLs **plus a short publisher teaser** (~25 items/section).
+  Use these sections for macro/markets coverage:
+  `markets` · `companies` · `global-economy` · `world` · `technology` · `lex` · `unhedged`
+  Example: `https://www.ft.com/markets?format=rss`
+- **DEPRECATED (dead):** `https://www.ft.com/rss/home` and `…/rss/markets` — the `/rss/*` paths 301-redirect to
+  a stale stub (`/rss/home/international`) and return ~0 usable items. Do NOT use.
+- **Optional topical fallback (opaque URLs):** Google News RSS filtered to FT —
+  `https://news.google.com/rss/search?q=site%3Aft.com+<terms>+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`.
+  Use ONLY for targeted topic search; its links are opaque Google redirects (not real ft.com paths).
+- Parse: `title`→title, `link`→url (real ft.com/content URL; canonicalize, strip `utm_*`/tracking),
+  `pubDate`(RFC-822)→`published_at` (ISO-8601 UTC), `description`→`summary` (FT's own teaser — keep
+  **verbatim**, never scrape or fabricate the body). If a teaser is absent → `summary = "[UNAVAILABLE - paywall]"`.
+  `lang: en`, `source: ft`.
+- **Pipeline:** the automated ingest is `crypto-news-store/news_fetch.py` (Python, drives narrative-news)
+  and `trend-stock-research/scripts/feeds/feed_ft.ts` (TS) — both already point at these endpoints.
 
 ## Reading the BODY
 
@@ -67,8 +73,11 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 ## Normalized output record
 
 ```json
-{"source":"ft","url":"https://www.ft.com/content/<id>","title":"...","published_at":"2026-06-15T...Z","summary":"[UNAVAILABLE - paywall]","lang":"en","tags":["macro"]}
+{"source":"ft","url":"https://www.ft.com/content/<id>","title":"EasyJet in talks with Castlelake after rejecting £4.9bn takeover offer","published_at":"2026-06-24T...Z","summary":"Budget airline turned down offer that US private credit firm valued the carrier at...","lang":"en","tags":["companies"]}
 ```
+
+The `summary` is FT's own RSS teaser (1 sentence). Body text is NOT in the feed — for full body use the
+logged-in-Chrome `read_article.ts` above. If a teaser is missing → `summary:"[UNAVAILABLE - paywall]"`.
 
 ## Failure mode
 

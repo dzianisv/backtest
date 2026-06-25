@@ -1,46 +1,43 @@
 /**
  * Feed: Wall Street Journal (WSJ)
- * PAYWALLED — headline + teaser only.
- * Source: Google News RSS filtered to site:wsj.com (official DJ feeds dead since Jan 2025).
- * Google News URLs are opaque redirects (CBM-encoded protobuf); we store them as-is.
- * Dedup key: <guid> (stable per article). Wayback enrichment uses the <source url> when available.
+ * PAYWALLED — RSS gives headline + url + publisher teaser only (no body).
+ * Source: Dow Jones official PUBLIC RSS on feeds.content.dowjones.io.
+ *   Dow Jones migrated off feeds.a.dj.com (frozen Jan 27 2025) to this host; the new feeds carry
+ *   fresh items with REAL www.wsj.com article URLs + 1-sentence teasers (verified 2026-06-25).
+ *   This replaces the old Google News fallback, whose URLs were opaque redirects with no body.
  * Usage: bun .agents/scripts/feeds/feed_wsj.ts [--db path] [--days n] [--no-enrich]
  */
 
 import { Database } from "bun:sqlite";
-import type { Article, FeedResult, RSSItem } from "./types";
+import type { Article, FeedResult } from "./types";
 import {
   parseRSS,
   stripHtml,
   toISO,
   isWithinDays,
   parseArgs,
+  normalizeUrl,
 } from "./types";
 import { openDb, upsertArticle, hasArticle } from "./news_db";
 
-// Google News RSS: fresh WSJ articles (last 7d). Official feeds.a.dj.com frozen Jan 2025.
+// Dow Jones official public RSS (new host). Markets + world + US business + tech/WSJD.
+// Each returns 40-100 items with real www.wsj.com URLs and publisher teasers.
 const FEED_URLS = [
-  "https://news.google.com/rss/search?q=site%3Awsj.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen",
+  "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain",
+  "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
+  "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness",
+  "https://feeds.content.dowjones.io/public/rss/RSSWSJD",
 ];
 
-/** Strip common suffixes Google News appends to titles */
+/** Strip common suffixes WSJ/aggregators append to titles */
 function cleanTitle(raw: string): string {
   return raw.replace(/\s*[-–—]\s*(The Wall Street Journal|WSJ)\s*$/i, "").trim();
-}
-
-/**
- * Google News <source url="..."> is the PUBLISHER homepage (e.g. "https://www.wsj.com"),
- * NOT the article URL. Use item.link (Google News redirect) as the canonical URL.
- * For Wayback enrichment, we can't resolve the real wsj.com article path from here.
- */
-function articleUrl(item: RSSItem): string {
-  return item.link;
 }
 
 export async function fetchWSJ(
   db: Database,
   days: number,
-  noEnrich = false,
+  _noEnrich = false,
 ): Promise<FeedResult> {
   const result: FeedResult = { source: "wsj", fetched: 0, inserted: 0, enriched: 0, withinWindow: 0, errors: [] };
 
@@ -64,31 +61,24 @@ export async function fetchWSJ(
         if (!isWithinDays(publishedAt, days)) continue;
         result.withinWindow++;
 
-        const url = articleUrl(item);
-
-        // Dedup on URL (Google News link or resolved wsj.com link)
+        // Real www.wsj.com URL; normalize to dedup across the 4 feeds (drops ?mod= tracking).
+        const url = normalizeUrl(item.link);
         if (hasArticle(db, url)) continue;
 
-        let body: string | null = null;
-        // Wayback enrichment disabled — Google News URLs are opaque redirects,
-        // not resolvable to real wsj.com paths without a headless browser.
-        // TODO: If needed, resolve via puppeteer/playwright in a separate pass.
-
+        // Body stays null — WSJ articles are paywalled. summary = publisher's own RSS teaser.
+        const teaser = stripHtml(item.description);
         const article: Article = {
           source: "wsj",
           url,
           title: cleanTitle(item.title),
-          summary: stripHtml(item.description),
-          body,
+          summary: teaser || "[UNAVAILABLE - paywall]",
+          body: null,
           published_at: publishedAt,
           lang: "en",
           tags: item.categories,
         };
 
-        if (upsertArticle(db, article)) {
-          result.inserted++;
-          if (body) result.enriched++;
-        }
+        if (upsertArticle(db, article)) result.inserted++;
       }
     } catch (e: unknown) {
       result.errors.push(e instanceof Error ? e.message : String(e));
@@ -107,7 +97,7 @@ if (import.meta.main) {
   db.close();
   console.log(`wsj: fetched=${r.fetched} window=${r.withinWindow} inserted=${r.inserted} enriched=${r.enriched} errors=${r.errors.length}`);
   if (r.fetched > 0 && r.withinWindow === 0) {
-    console.warn("⚠ STALE: Google News returned articles but none within date window.");
+    console.warn("⚠ STALE: Dow Jones RSS returned articles but none within date window.");
   }
   if (r.errors.length) console.error("Errors:", r.errors);
   process.exit(r.errors.length ? 1 : 0);

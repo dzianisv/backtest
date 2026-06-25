@@ -140,8 +140,12 @@ export function normalizeUrl(url: string): string {
   try {
     const u = new URL(url);
     u.hostname = u.hostname.toLowerCase();
+    // Drop tracking params: utm_*, and known publisher trackers (WSJ/Dow Jones `mod`/`reflink`,
+    // mailchimp mc_cid/mc_eid). Stripping these makes the same article dedup to one canonical_url
+    // even when it arrives via different feeds with different tracking suffixes.
+    const TRACKING = new Set(["mod", "reflink", "mc_cid", "mc_eid", "ns", "fbclid", "gclid"]);
     for (const k of [...u.searchParams.keys()]) {
-      if (k.startsWith("utm_")) u.searchParams.delete(k);
+      if (k.startsWith("utm_") || TRACKING.has(k)) u.searchParams.delete(k);
     }
     u.hash = "";
     let s = u.toString();

@@ -1,7 +1,10 @@
 /**
  * Feed: Financial Times (FT)
- * PAYWALLED — RSS gives headline + teaser only.
- * Attempts Wayback Machine enrichment for article body.
+ * PAYWALLED — native section RSS gives headline + REAL ft.com/content URL + a 1-sentence teaser
+ * (CDATA <description>); bodies stay paywalled. Endpoints: `ft.com/<section>?format=rss` (verified
+ * 2026-06-25). The old ft.com/rss/home is dead (301 → stale stub). When a teaser is absent the summary
+ * falls back to [UNAVAILABLE - paywall] (never fabricated).
+ * Optional Wayback enrichment for body (usually blocked by FT's subscribe-wall — best-effort only).
  * Usage: bun .agents/scripts/feeds/feed_ft.ts [--db path] [--days n] [--no-enrich]
  */
 
@@ -15,12 +18,16 @@ import {
   parseArgs,
   sleep,
   fetchWaybackBody,
+  normalizeUrl,
 } from "./types";
 import { openDb, upsertArticle, hasArticle } from "./news_db";
 
+// FT native section RSS — real ft.com/content/<uuid> URLs + a 1-sentence publisher teaser.
 const FEED_URLS = [
-  "https://www.ft.com/rss/home",
-  "https://www.ft.com/rss/markets",
+  "https://www.ft.com/markets?format=rss",
+  "https://www.ft.com/companies?format=rss",
+  "https://www.ft.com/global-economy?format=rss",
+  "https://www.ft.com/world?format=rss",
 ];
 
 export async function fetchFT(
@@ -48,22 +55,26 @@ export async function fetchFT(
         if (!item.link) continue;
         const publishedAt = toISO(item.pubDate);
         if (!isWithinDays(publishedAt, days)) continue;
-      result.withinWindow++;
+        result.withinWindow++;
 
+        // Real ft.com/content URL; normalize to dedup across sections (drops tracking params).
+        const url = normalizeUrl(item.link);
         // Skip enrichment + insert for articles already in DB
-        if (hasArticle(db, item.link)) continue;
+        if (hasArticle(db, url)) continue;
 
         let body: string | null = null;
         if (!noEnrich) {
-          body = await fetchWaybackBody(item.link);
+          body = await fetchWaybackBody(url);
           await sleep(1000); // polite delay between Wayback requests
         }
 
+        // FT ships a CDATA teaser; fall back to paywall marker only if it's ever absent.
+        const teaser = stripHtml(item.description);
         const article: Article = {
           source: "ft",
-          url: item.link,
+          url,
           title: item.title,
-          summary: stripHtml(item.description),
+          summary: teaser || "[UNAVAILABLE - paywall]",
           body,
           published_at: publishedAt,
           lang: "en",

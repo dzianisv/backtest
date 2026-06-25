@@ -24,11 +24,22 @@ failure → `[UNAVAILABLE]`. Return **≥1 headline record or a clean `[UNAVAILA
 
 ## Retrieval recipe
 
-- **Primary endpoint (verified working 2026-06-16):** Google News RSS filtered to WSJ:
-  `https://news.google.com/rss/search?q=site%3Awsj.com+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`
-  Returns ~100 articles/7 days. URLs are opaque Google News redirects (work in browsers, not directly resolvable).
-- **DEPRECATED (dead since Jan 2025):** `https://feeds.a.dj.com/rss/RSSMarketsMain.xml` and other DJ feeds — frozen, return stale data.
-- Parse `channel > item`: `title`→title (strip `" - The Wall Street Journal"` suffix), `link`→url (Google News redirect), `pubDate`(RFC-822)→`published_at` (ISO-8601 UTC). The RSS `description` is Google News's snippet — keep verbatim as `summary` if present, else `"[UNAVAILABLE - paywall]"`. **Do NOT scrape the full body.** `category`→`tags`, `lang: en`, `source: wsj`.
+- **Primary endpoint (verified working 2026-06-25):** Dow Jones official public RSS on the **new** host
+  `https://feeds.content.dowjones.io/public/rss/<FEED>`. Returns real `www.wsj.com` article URLs **plus a
+  1-sentence publisher teaser** (40–100 items/feed). Use these feeds:
+  `RSSMarketsMain` (markets) · `RSSWorldNews` (world) · `WSJcomUSBusiness` (US business) · `RSSWSJD` (tech)
+  Example: `https://feeds.content.dowjones.io/public/rss/RSSMarketsMain`
+- **DEPRECATED (frozen 2025-01-27):** `https://feeds.a.dj.com/rss/*` — the OLD Dow Jones host; still 200s
+  but its newest item is dated Jan 27 2025. Dow Jones migrated to `feeds.content.dowjones.io` (above). Do NOT use.
+- **Optional topical fallback (opaque URLs):** Google News RSS filtered to WSJ —
+  `https://news.google.com/rss/search?q=site%3Awsj.com+<terms>+when%3A7d&hl=en-US&gl=US&ceid=US%3Aen`.
+  Use ONLY for targeted topic search; its links are opaque Google redirects, not real wsj.com paths.
+- Parse `channel > item`: `title`→title (strip `" - The Wall Street Journal"` suffix), `link`→url (real
+  www.wsj.com URL; canonicalize, strip `utm_*` and the `?mod=` tracking param), `pubDate`(RFC-822)→
+  `published_at` (ISO-8601 UTC), `description`→`summary` (WSJ's own teaser — keep **verbatim**, never scrape
+  the body). If a teaser is absent → `summary = "[UNAVAILABLE - paywall]"`. `category`→`tags`, `lang: en`, `source: wsj`.
+- **Pipeline:** the automated ingest is `crypto-news-store/news_fetch.py` (Python, drives narrative-news)
+  and `trend-stock-research/scripts/feeds/feed_wsj.ts` (TS) — both already point at these endpoints.
 
 ## Reading the BODY (verified method, June 2026)
 
@@ -59,8 +70,11 @@ Conditional GET (ETag/If-Modified-Since; `304` → nothing-new). Exponential bac
 ## Normalized output record
 
 ```json
-{"source":"wsj","url":"https://www.wsj.com/articles/<slug>","title":"...","published_at":"2026-06-15T...Z","summary":"<publisher teaser or [UNAVAILABLE - paywall]>","lang":"en","tags":["markets"]}
+{"source":"wsj","url":"https://www.wsj.com/finance/<slug>","title":"Micron’s Blockbuster Earnings Quiet the AI Doubters","published_at":"2026-06-24T...Z","summary":"A rally in the memory-chip company’s shares drove Nasdaq futures higher.","lang":"en","tags":["markets"]}
 ```
+
+The `summary` is WSJ's own RSS teaser (1 sentence). Body text is NOT in the feed. If a teaser is missing →
+`summary:"[UNAVAILABLE - paywall]"`.
 
 ## Failure mode
 
