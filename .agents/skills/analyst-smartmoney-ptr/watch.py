@@ -17,7 +17,9 @@ import os
 import sys
 from datetime import date, datetime
 
-LEDGER = os.environ.get("CONGRESS_LEDGER", os.path.join("congress", "recommended.jsonl"))
+_SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.abspath(os.path.join(_SKILL_DIR, "..", "..", ".."))
+LEDGER = os.environ.get("CONGRESS_LEDGER", os.path.join(_REPO_ROOT, ".cache", "PTR", "recommended.jsonl"))
 
 
 def _load() -> list:

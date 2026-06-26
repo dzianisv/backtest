@@ -9,7 +9,7 @@ clusters, checking opportunistic vs routine — are the agent's job via the SKIL
 Dedup scope: ticker + transaction month (YYYY-MM). Same ticker can resurface in a new
 month if fresh insider cluster activity appears.
 
-Storage: JSONL at $FORM4_LEDGER or .agents/skills/analyst-smartmoney-form4/form4/recommended.jsonl
+Storage: JSONL at $FORM4_LEDGER or .cache/Form4/recommended.jsonl
 
 Usage:
   watch.py seen --ticker AAPL --window 2026-06   # exit 0 = SKIP (already recommended this month); exit 1 = NEW
@@ -25,11 +25,11 @@ import sys
 from datetime import date
 from pathlib import Path
 
+_SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.abspath(os.path.join(_SKILL_DIR, "..", "..", ".."))
 LEDGER = os.environ.get(
     "FORM4_LEDGER",
-    os.path.join(
-        os.path.dirname(__file__), "form4", "recommended.jsonl"
-    ),
+    os.path.join(_REPO_ROOT, ".cache", "Form4", "recommended.jsonl"),
 )
 
 
