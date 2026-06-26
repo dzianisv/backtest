@@ -9,6 +9,58 @@ metadata:
   role: portfolio-manager
 ---
 
+```mermaid
+flowchart TD
+    TU["Token Universe\nBTC · ETH · SOL · TON · HYPE\nAAVE · JUP · UNI · AERO · PUMP · LINK"]
+
+    TU -->|one token at a time| DP
+
+    subgraph SERIAL["Data Pull — SERIAL  one token at a time"]
+        DP["chart_set_symbol\nD+W OHLCV · study values\nscripts/indicators.py\nEMA20 / SMA50 / SMA200"]
+    end
+
+    DP -->|assembled data package| OC & SE & MA & OF & NA
+
+    subgraph SEATS["5-Seat Quorum — PARALLEL per token"]
+        OC["On-Chain\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
+        SE["Sentiment\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
+        MA["Macro\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
+        OF["Order-Flow\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
+        NA["Narrative\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
+    end
+
+    NA -->|"calls — NOT web_fetch subagents deprecated"| RN
+
+    subgraph NEWS["News Pipeline  narrative seat only"]
+        RN["read_news.ts\nfetch + ingest + query"]
+        NDB[".db/news.db"]
+        RN --> NDB
+    end
+
+    OC & SE & MA & OF & NA -->|"BULLISH / NEUTRAL / BEARISH"| AGG
+
+    AGG["Aggregation\ncount seats_bull · seats_bear"]
+
+    AGG --> QV{"quorum_verdict\nBULLISH / SPLIT / BEARISH / UNCERTAIN"}
+
+    QV -->|"BULLISH + ≥3 bulls"| BUY[BUY]
+    QV -->|"SPLIT + DEEP_VALUE"| BUYSM["BUY (small)"]
+    QV -->|"BEARISH + ≥4 bears"| SELL[SELL]
+    QV -->|"UNCERTAIN / SPLIT"| HOLD[HOLD]
+
+    BUY & BUYSM & SELL & HOLD --> VD["Token Verdict"]
+
+    VD --> VC
+
+    subgraph POST["Post-Hooks"]
+        VC["Step 4 — Verdict Critic\nparallel critics per token\nre-check verdict vs live news"]
+        CV["Step 5 — Citation Validator\nre-fetch every cited URL cold"]
+        VC --> CV
+    end
+
+    CV --> RPT["Final Report\nSignal Table · Plain-English Verdicts · Ranked News"]
+```
+
 # Crypto Advisor
 
 Analyze every token in the universe **sequentially** → decide BUY/SELL/HOLD per token → print the signal table.
@@ -143,6 +195,13 @@ tradingview-capture_screenshot                             → save screenshot; 
 ```
 Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. Helper output: EMA20, SMA50, SMA200, 200-week MA, and the death cross (classic SMA50/SMA200, exact). Nothing else — it does not recompute RSI/BB/MACD.
 
+**⛔ DATA SUFFICIENCY GATE — run before zone classification:**
+Count the number of weekly closes returned by `tradingview-data_get_ohlcv count=210 timeframe=W`.
+- If `weekly_closes < 200`: set `200wMA = INSUFFICIENT`, `dominant_zone = UNKNOWN`.
+- Zone `UNKNOWN` **blocks** BUY and BUY(small) — signal must be HOLD until sufficient history is available.
+- Rationale: 365 days of daily data ≈ 52 weekly closes; 200-week MA requires ~4 years (~200 weekly closes) to be valid. Reporting a 200wMA from 52 weekly closes is mathematically meaningless and produces fabricated zone signals.
+- If TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
+
 **1c. Assemble the data package** by merging the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the helper's moving-average block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it.
 
 **1d. Run the 5-seat quorum on the package.** Either reason through the 5 seats inline, or spawn the five `analysis-*` seat subagents **in parallel** (on-chain, sentiment, macro, order-flow, narrative) with the package **injected** — seats per token may be parallel because they share nothing; only the *data pull* must be serial. Each seat returns: zone, posture (BULLISH|NEUTRAL|BEARISH), confidence, 1-line bull, 1-line bear, invalidation.
@@ -249,14 +308,32 @@ UPDATE todos SET status='done' WHERE id='tok-{TOKEN}';
 
 ---
 
+## quorum_verdict mapping (deterministic)
+
+Map seat postures to `quorum_verdict` using this truth table — no interpretation, no judgment:
+
+| seats_bull | seats_bear | quorum_verdict |
+|------------|------------|----------------|
+| ≥ 3        | ≤ 1        | BULLISH        |
+| ≥ 3        | ≥ 2        | SPLIT          |
+| 2          | ≤ 1        | SPLIT          |
+| ≤ 1        | ≥ 3        | BEARISH        |
+| everything else       | UNCERTAIN  |
+
+(seats_bull + seats_bear ≤ 5; NEUTRAL seats count toward neither.)
+
+---
+
 ## Step 2 — Decide per token
 
 | Signal | Condition |
 |---|---|
-| **BUY** | `quorum_verdict = BULLISH`, seats_bull ≥ 3 |
+| **BUY** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone ∈ {DEEP_VALUE, FAIR_VALUE}` |
+| **BUY\*** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone = ELEVATED` → downgrade to **HOLD** + note "await pullback" |
+| **BUY\*\*** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone = EXTREME` → downgrade to **HOLD** + note "extended, avoid" |
 | **BUY (small)** | `quorum_verdict = SPLIT`, `dominant_zone = DEEP_VALUE` |
 | **SELL** | `quorum_verdict = BEARISH`, seats_bear ≥ 4 |
-| **HOLD** | everything else |
+| **HOLD** | everything else (including `dominant_zone = UNKNOWN`) |
 
 **WAIT / HOLD with a named buy-zone** (e.g. "not now, but buy AAVE near $73") → register a
 notify-me job carrying your thesis via the **`mkt`** skill, so the user is pinged when the
