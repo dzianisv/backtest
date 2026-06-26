@@ -123,8 +123,11 @@ ORCHESTRATOR (you)
 - `ft.com/rss` directly — bot-blocked, returns 403 from agent IPs
 - `feeds.a.dj.com` (WSJ/DJ) — dead since January 2025, returns stale data
 
-For a deterministic firm-wide feed (not per-ticker), [[read-news]]'s `read_news.ts` now works (live FT/WSJ
-RSS via the canonical fetchers); this screener uses the per-ticker Google News search above by design.
+For a deterministic firm-wide feed (not per-ticker, equity feeds only), use [[read-news]]'s `read_news.ts`:
+```bash
+bun .agents/skills/read-news/scripts/read_news.ts --db .db/news.db --days 7 --query "<ticker or theme>" --source ft,wsj
+```
+This screener uses the per-ticker Google News search above by design; the read-news pipeline is the fallback when you want aggregated + deduped FT/WSJ events without per-ticker scoping.
 
 **Model knowledge is valid in CONVICTION_MODE IF:**
 - You explicitly state the basis ("I know X because [earnings call / business model / market structure]")
@@ -202,7 +205,7 @@ advantage of an agent team reading financial journalism.
 
 ### How to read articles (including paywalled sources)
 
-**Use `web_fetch` directly for per-ticker journalism search. For a deterministic firm-wide feed, [[read-news]]'s `read_news.ts` now works (the old `fetch_all.ts` pipeline was removed).**
+**Use `web_fetch` directly for per-ticker journalism search. For a deterministic firm-wide feed (equity feeds: FT + WSJ), use [[read-news]]'s `read_news.ts`: `bun .agents/skills/read-news/scripts/read_news.ts --db .db/news.db --days 7 --query "<ticker or theme>" --source ft,wsj` — returns `{fetched, feeds_ok, unavailable, events}`.**
 
 1. **FT headlines:** `web_fetch "https://news.google.com/rss/search?q=site:ft.com+<topic>+when:7d&hl=en-US&gl=US&ceid=US:en"`
 2. **WSJ headlines:** `web_fetch "https://news.google.com/rss/search?q=site:wsj.com+<topic>+when:7d&hl=en-US&gl=US&ceid=US:en"`
