@@ -53,7 +53,7 @@ else
 fi
 ```
 
-**0c. If NOT fresh:** invoke `crypto-advisor` first (full run, all 7 tokens), then return here.
+**0c. If NOT fresh:** invoke `crypto-advisor` first (full run, all 11 tokens in the universe), then return here.
 **If fresh:** continue to Step 1 with the existing `$REPORT` file.
 
 ---
@@ -217,6 +217,12 @@ $CHROME snapshot -i
 
 # 6. Click Post ONCE
 $CHROME click @e_post
+sleep 3
+
+# If click fails (button unresponsive after 2s), use keyboard fallback:
+$CHROME left_click @e_compose   # re-focus textbox
+sleep 0.5
+$CHROME key "cmd+Return"       # Cmd+Enter submits on X.com compose
 sleep 3
 
 # 7. Screenshot proof of the posted tweet

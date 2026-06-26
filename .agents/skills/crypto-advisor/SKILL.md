@@ -586,6 +586,13 @@ After Block 3 and citation validation, print a compact Telegram-formatted messag
 Educational only. Not financial advice. DYOR.
 ```
 
+**Telegram length limit is 4096 bytes (hard limit).** If the recap exceeds 4096 chars:
+- Split into parts at token boundaries (never mid-token, never mid-line).
+- Append to the FINAL part only: "Educational only. Not financial advice. DYOR."
+- Send each part separately via `telegram-cli send @CryptoAiInvestor "$PART_N"`.
+
+⛔ Never use `head -c 4000` — it can truncate multibyte emojis and silently cut the disclaimer.
+
 **⛔ If a narrative claim has no fetched URL, either drop the claim or replace it with "no specific catalyst" — do NOT state a news fact without a source link.**
 
 ---
