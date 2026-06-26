@@ -50,22 +50,7 @@ Find stocks in the AI supply chain theme and run the stock panel
 The skill first **discovers the theme's constituents live** (web_fetch — §Theme discovery), then runs the
 full per-stock panel on the discovered names.
 
-### Full prompt (copy-paste for any session)
-```
-Invoke the stocks-advisor skill.
-Tickers for this run: [TICKER1, TICKER2, ...]   (or: "discover via theme: AI supply chain")
-Follow all skill instructions:
-- Per ticker, sequentially: chart_get_state → dedup studies → set_symbol (NASDAQ:/NYSE:) →
-  D OHLCV (365 summary + 250 bars) → study values → W OHLCV → capture_screenshot
-- Run scripts/fundamentals.py per ticker; inject its JSON into the data package
-- Spawn the 5 seats in PARALLEL subagents (fundamental / technical / narrative / sentiment / smart-money),
-  data package injected — subagents NEVER call TradingView or yfinance
-- Narrative seat: read_news.ts (--source ft,wsj) for event discovery + feed scripts for verbatim citation + web_fetch Bloomberg/Reuters, classify theme phase
-- Smart-money seat: web_fetch openinsider/13f.info/EDGAR/capitoltrades per ticker for disclosed flows
-- Apply the verdict decision table → BUY / WATCH / SKIP with entry zone + trigger + stop
-- Print per-stock blocks + the final signal table with the theme map
-Educational, not financial advice.
-```
+**Full per-run loop:** see Step 1.5 (Sequential per-stock loop).
 
 ---
 
@@ -140,7 +125,21 @@ with a theme in the output).
 
 ---
 
-## Step -1 — Load prior memory (before anything else)
+## Step 0 — Classify the request, then route (do this first)
+
+Detect the user's intent from their ask and route BEFORE running any per-name panel. Do not run a full 5-seat panel on a question that is really an allocation/deployment question.
+
+| Intent (detect from the ask) | Route |
+|---|---|
+| "analyze these tickers / find entries / is now a good time to buy X" | This skill — per-name 5-seat panel (the rest of this doc) |
+| "review my portfolio" + holdings sheet | This skill per-name on the triaged subset → then hand to `stock-chair` for sizing/concentration |
+| "deploy $X / what ETFs should I buy / which big-caps to avoid / sleeve allocation" | This is an ALLOCATION question. Route to `tradfi-portfolio-manager` for the ETF/sleeve plan FIRST; use this skill only for the single-name satellite slice. Do NOT front-load a per-name panel. |
+
+Resolve routing up front. A portfolio review that asks "what to buy/sell" is BOTH: triage the book here, but the cash-deployment / ETF-allocation answer belongs in `tradfi-portfolio-manager` — say so and route, rather than improvising sleeve allocation inside this skill.
+
+---
+
+## Step 0.3 — Load prior memory
 
 Before seeding the todo list, pull prior verdicts and user preferences for this run's tickers:
 
@@ -156,9 +155,11 @@ This is how the agent remembers: COIN=HOLD (crypto bullish), prior entry zones, 
 classifications, user preferences like "RSP over VOO". If there is no prior memory the script prints
 `[no prior memory for this run]` — continue normally. See `portfolio-memory` skill for the model.
 
+Inspect the printed `source=` attribute. If `source="grep-fallback"` (the structured portfolio-memory store was missed and it fell back to grepping daily logs), set **MEMORY_DEGRADED** and print: "Memory: DEGRADED (grep-fallback) — no canonical per-ticker stance; treat any recalled verdict as low-confidence, not an authoritative supersede." Continue the run, but do not present a grep-fallback stance as the canonical current call.
+
 ---
 
-## Step 0 — Load holdings from Google Sheet (if provided)
+## Step 0.5 — Load holdings from Google Sheet (if provided)
 
 If the user passed a Google Sheet URL, read the holdings before seeding the todo list.
 Use the `gws-sheets-read` skill (https://www.skills.sh/googleworkspace/cli/gws-sheets-read):
@@ -181,6 +182,29 @@ When holdings are loaded:
   and a **cash deployment section** (where to put `cash_to_deploy`)
 
 If no sheet URL was provided, skip this step and use the user-supplied ticker list or theme discovery.
+
+---
+
+## Step 0.7 — Preflight: is TradingView alive? (run before the per-ticker loop)
+
+Call `tradingview-tv_health_check` ONCE before starting the loop.
+- PASS → normal mode (pull live charts per Step 1).
+- FAIL (CDP down, or `tv_launch` returns "not found") → enter **DEGRADED_TECH** for the whole run:
+  - Technical read comes from `fundamentals.py` ONLY: `ma50`, `ma200`, `vs_200d_ma`, `vs_50d_ma`, `52w_high/low`, `dd_from_52wh`.
+  - RSI / Bollinger / MACD = **UNAVAILABLE** — do not guess them. Technical STATE collapses to `{ABOVE_TREND, BELOW_TREND, UNKNOWN}` (above/below the 200d).
+  - No live bar-close trigger is computable → every name is **WATCH-only, never BUY**; entry zones come from MA levels.
+  - Skip `capture_screenshot`; the screenshot self-check item does NOT apply in this mode.
+  - Tag every output block: `DEGRADED: TradingView down — trend-only read, no live trigger.`
+
+---
+
+## Step 0.8 — Triage when N > 12 (mandatory cap — do NOT full-panel every name)
+
+The per-ticker loop is ~9 MCP calls + 5 subagents per name; a real book of 50-80 names makes that thousands of calls. So when the holdings/watchlist has more than 12 names, triage:
+1. Rank every holding by decision-relevance: concentration weight (% of book), |unrealized P&L %|, whether it's a cash-deploy candidate, and proximity to a key technical level.
+2. Run the full 5-seat panel on the **top K only (default K = 10)**.
+3. Every other name gets a ONE-LINE `fundamentals.py`-only screen (no TradingView pull, no 5 seats). Promote any screened name into the full panel if it crosses a TRIM/EXIT threshold (e.g. > concentration cap, fundamental break, > -25% with deteriorating earnings).
+4. State K explicitly in the output so the user sees exactly which names were deep-analyzed vs one-line screened. Never silently drop names.
 
 ---
 
@@ -211,7 +235,7 @@ sqlite3 "$DB" 'ALTER TABLE stock_analysis ADD COLUMN smartmoney TEXT;' 2>/dev/nu
 
 ---
 
-## Step 1 — Sequential per-stock loop (orchestrator only; do NOT parallelize the data pull)
+## Step 1.5 — Sequential per-stock loop (orchestrator only; do NOT parallelize the data pull)
 
 Pick the next `pending` todo and `UPDATE todos SET status='in_progress'`. Then, for that ticker:
 
@@ -263,157 +287,15 @@ reads ONE lens and returns the fixed shape below. Seats share nothing, so they r
 > web_fetch news + run paywall-free feed scripts (`feeds/wsj.ts`/`feeds/ft.ts`); the **smart-money seat**
 > may web_fetch disclosed-flow sources (openinsider.com, 13f.info, EDGAR, capitoltrades.com). All other seats: injected data only.
 
-### Seat 1 — Fundamental (grounded in `fundamental-analysis`)
-```
-You are the FUNDAMENTAL seat. Read ONLY this lens:
-  /Users/engineer/workspace/backtest/.agents/skills/fundamental-analysis/SKILL.md
-Judge ONE stock on the injected data package — do not pull any data.
+| Seat | Lens file (read ONLY this) | Output shape |
+|---|---|---|
+| 1 Fundamental | `.agents/skills/fundamental-analysis/SKILL.md` | RATING / KEY METRIC / MOAT / MARGIN OF SAFETY / BLIND SPOT |
+| 2 Technical | `.agents/skills/analyst-technical-analysis/SKILL.md` | STATE / SETUP / TRIGGER / STOP / TARGET / BLIND SPOT |
+| 3 Narrative-Macro | web_fetch + feed scripts (read_news.ts, feeds/wsj.ts, feeds/ft.ts) | PHASE / THEME / SOURCES(≥2 real) / WHY / BLIND SPOT |
+| 4 Sentiment | injected package only | READ / KEY / CONTRARIAN TILT / BLIND SPOT |
+| 5 Smart-Money | web_fetch openinsider/13f.info/EDGAR/capitoltrades | VERDICT / CONVICTION / Form4·13F·13D·PTR / SOURCES |
 
-DATA PACKAGE:
-  <inject the full package: fundamentals.py JSON + TradingView studies>
-
-Assess: FCF yield, forward P/E, PEG, revenue & earnings growth, gross/operating margin, ROE/ROIC proxy,
-and moat quality (qualitative, from the numbers + what you know of the business model). Anchor on whether
-the VALUATION leaves a margin of safety at the CURRENT price — a great business at a rich multiple is not
-a fundamental BUY.
-
-Return ONLY this shape:
-  RATING: STRONG | GOOD | FAIR | POOR
-  KEY METRIC: <the one number that drives the rating, e.g. "FCF yield 4.2%, fwd P/E 19, PEG 0.7">
-  MOAT: <one line — durable advantage or commodity?>
-  MARGIN OF SAFETY: <yes/no + one line on price vs value>
-  BLIND SPOT: <one line — what fundamentals structurally cannot see here>
-```
-
-### Seat 2 — Technical (grounded in `analyst-technical-analysis`, Bernstein Set-Up→Trigger→Follow-Through)
-```
-You are the TECHNICAL seat. Read ONLY this lens:
-  /Users/engineer/workspace/backtest/.agents/skills/analyst-technical-analysis/SKILL.md
-Judge ONE stock on the injected data package + the chart description — do not pull any data.
-
-DATA PACKAGE:
-  <inject the full package: price, ma50, ma200, vs_200d_ma, RSI, BB, MACD, Volume, 52w hi/lo,
-   daily & weekly close arrays, and a one-paragraph read of the screenshot>
-
-Apply Set-Up → Trigger → Follow-Through:
-1. NAME the set-up (or say there is none): e.g. base breakout, pullback-to-200d, bull-flag, range,
-   momentum divergence. A pattern alone is NOT a signal.
-2. Define the BAR-CLOSE TRIGGER — the exact completed-bar event that confirms (e.g. "daily close above
-   $280 on above-avg volume"). No trigger = no trade.
-3. Set a MARKET-BASED STOP from structure/range/MA — never an arbitrary dollar amount.
-4. State follow-through: first target + risk:reward.
-
-Return ONLY this shape:
-  STATE: SETUP_NAMED | NO_SETUP | BROKEN   (BROKEN = below 200d with no base, or failed breakdown)
-  SETUP: <name, or "no recognizable setup">
-  TRIGGER: <bar-close event on timeframe, or "none yet — WATCH">
-  STOP: <price level + basis (support / MA / range low)>
-  TARGET: <price + risk:reward X:1>
-  BLIND SPOT: <one line — TA is weak-evidence; this is a hypothesis, not validated alpha>
-```
-
-### Seat 3 — Narrative / Macro (theme durability + cycle phase)
-```
-You are the NARRATIVE/MACRO seat. Judge whether this stock rides a DURABLE theme or is noise, and where
-the theme sits in its cycle. You MUST web_fetch before citing any news.
-
-DATA PACKAGE:
-  <inject the package + the theme tag assigned in discovery>
-
-⛔ HARD RULE: call web_fetch on a real URL before citing it. No fetched URL = not a source.
-A fabricated headline invalidates the whole verdict.
-
-GET NEWS IN TWO STEPS (read_news.ts for discovery; feed scripts for citation — why: read_news.ts events
-cluster multi-outlet coverage into deduplicated events but sources(json) lacks a single canonical URL
-per event, so use read_news.ts for topic breadth, then pull verbatim-citeable teasers via feed scripts):
-  bun .agents/skills/read-news/scripts/read_news.ts --source ft,wsj --query "<theme/ticker entities>" --days 7
-  bun .agents/skills/read-news/scripts/feeds/wsj.ts --feed markets,business --query "<theme/ticker>" --days 7 --text
-  bun .agents/skills/read-news/scripts/feeds/ft.ts  --section markets,companies --query "<theme/ticker>" --days 7 --text
-Each feed-script record = real wsj.com/ft.com URL + verbatim publisher teaser + date. Cite as:
-  [T1]/[T2] url (date) — "<teaser>" (teaser is verbatim publisher text — no paywalled body needed).
-Then web_fetch ≥1 non-paywalled outlet for additional breadth:
-Bloomberg (https://www.bloomberg.com/markets), Reuters (https://www.reuters.com/markets/), Yahoo Finance
-topic pages. Quote verbatim — never paraphrase from memory.
-
-Classify the theme phase:
-  EARLY_CYCLE  — theme just forming, few names, skeptics dominate, flows starting
-  MID_CYCLE    — theme established, broad participation, earnings confirming, not yet euphoric
-  LATE_CYCLE   — consensus, every fund owns it, valuations stretched, marginal buyer thinning
-  FADING       — narrative breaking down, flows reversing, story no longer moves the stock
-
-Return ONLY this shape:
-  PHASE: EARLY_CYCLE | MID_CYCLE | LATE_CYCLE | FADING
-  THEME: <the durable theme this rides, or "no durable theme — idiosyncratic/noise">
-  SOURCES (ranked, ≥2 real):
-    [T1] https://<article-url — web_fetched, or a wsj.com/ft.com URL from the feed scripts> — "<verbatim quote or publisher teaser>" → T1 because: <one line>
-    [T2] https://<article-url — web_fetched, or a wsj.com/ft.com URL from the feed scripts> — "<verbatim quote or publisher teaser>" → T2 because: <one line>
-  WHY: <one line — is the theme durable and is this name a real beneficiary?>
-  BLIND SPOT: <one line — news is lagging/reflexive; what this lens misreads>
-If <2 real fetched sources: PHASE defaults to the technical read; write "INSUFFICIENT DATA — do not guess".
-```
-
-### Seat 4 — Sentiment / Positioning (contrarian)
-```
-You are the SENTIMENT/POSITIONING seat. Read the crowd's positioning as a CONTRARIAN signal — extreme
-bullishness = caution; quiet accumulation with no euphoria = signal. Use the injected package only.
-
-DATA PACKAGE:
-  <inject the package: short_percent, institutional_pct, recommendation_mean, analyst_count,
-   RSI, vs_200d_ma, dd_from_52wh, volume vs avg>
-
-Read: short interest (high + rising into a base = squeeze fuel; high + falling = thesis breaking),
-institutional ownership % (very high = crowded, little marginal buyer left), analyst consensus
-(recommendation_mean near 1.0 with 40+ analysts = everyone already bullish = contrarian caution; mean
->2.5 = ignored/hated = contrarian interest), and RSI/extension as a froth gauge.
-
-Return ONLY this shape:
-  READ: QUIET_ACCUM | NEUTRAL | CROWDED | EXTREME
-  KEY: <the one positioning fact, e.g. "rec_mean 1.3 across 45 analysts, inst 80% — fully crowded">
-  CONTRARIAN TILT: <one line — does positioning support or warn against entry now?>
-  BLIND SPOT: <one line — positioning can stay crowded for years in a strong trend>
-```
-
-### Seat 5 — Smart-Money / Institutional Flows (disclosed-flows)
-```
-You are the SMART-MONEY seat. Fetch ONLY via web_fetch — NO TradingView, NO yfinance.
-Cover 4 per-ticker disclosed-flow classes for a US equity: Form 4 insider buys, 13F institutional
-holders, 13D/13G activist stakes, congressional PTR buys. Skip market-implied spokes
-(options/dark-pool/polymarket — not per-equity queryable at this resolution; the full
-analyst-smartmoney lens covers them).
-
-⛔ HARD RULE: web_fetch a real URL before citing any filing, holder, or transaction.
-No fetched URL = not a source. Fabricated filing or transaction → verdict invalidated.
-<2 fetched sources OR no signal found → output NEUTRAL + "INSUFFICIENT DATA — do not guess".
-
-DATA PACKAGE: <inject: company name + ticker (your query inputs)>
-
-FETCH (web_fetch each URL; stop early if signal is clear):
-  Form 4: https://openinsider.com/screener?s={TICKER}   — code P only, last 30d
-     ≥3 distinct insiders → ACC | 2 incl. CEO/CFO → ACC | 1 buy → NEUTRAL | sells → ignore
-  13F:    https://13f.info/stock/{TICKER}  (fallback: https://www.hedgefollow.com/{TICKER})
-     net adds > net trims last Q → ACC | mixed → NEUTRAL | net trims dominant → DIST
-  13D:    https://efts.sec.gov/LATEST/search-index?q=%22{TICKER}%22&forms=SC+13D,SC+13G&dateRange=custom&startdt={90d_ago}
-     new 13D/13G in last 90d → ACC | none → NEUTRAL
-  PTR:    https://www.capitoltrades.com/trades?ticker={TICKER}&txType=buy
-     ≥3 different members buying → ACC | fewer → NEUTRAL
-
-SYNTHESIS (analyst-smartmoney verdict contract):
-  ACCUMULATING if ≥2 classes ACC | DISTRIBUTING if ≥2 classes DIST | else NEUTRAL
-  CONVICTION: HIGH ≥3 aligned | MED 2 aligned | LOW 1 | N/A on conflict or NEUTRAL
-  Hedge-as-signal check: a 13F put or institutional put block is NOT a buy — never count as ACC.
-
-Return ONLY:
-  VERDICT:      ACCUMULATING | DISTRIBUTING | NEUTRAL
-  CONVICTION:   HIGH | MED | LOW | N/A
-  Form 4:       [ACC/DIST/NEUTRAL/UNAVAIL] — {one line: cluster_size or "no open-market purchases"}
-  13F:          [ACC/DIST/NEUTRAL/UNAVAIL] — {one line: net adds vs trims, key fund if notable}
-  13D:          [ACC/DIST/NEUTRAL/UNAVAIL] — {one line: activist + stake % or "none in 90d"}
-  PTR:          [ACC/DIST/NEUTRAL/UNAVAIL] — {one line: member names + count or "none"}
-  CONFIRMATION: {N classes agreeing — e.g. "2 of 4: Form4 + 13F both ACC"}
-  INVALIDATION: {e.g. "Form 4 cluster sell or 13F net reduction >20% next Q flips DIST"}
-  SOURCES:      [every URL actually fetched — never omit; or "INSUFFICIENT DATA"]
-  NOTE: Educational only. 13F: 45-day lagged long-only. PTR: alpha contested post-STOCK Act.
-```
+**Full subagent prompts — copy verbatim from `references/seat-prompts.md`.** Each seat receives the same injected data package; only Seats 3 and 5 may make external calls.
 
 **1e. Persist the seat verdicts and decision:**
 ```sql
@@ -464,6 +346,21 @@ a BUY conviction at 3/5; ACCUMULATING adds +1 conviction when ≥2 other seats a
 **A WATCH verdict is an alert trigger** — "good company, wrong price; buy near $X / when RSI < V"
 is exactly when to register a notify-me job carrying the entry thesis via the **`mkt`** skill, so
 the user is pinged when the zone/indicator fires. See *Set a buy-alert* below.
+
+### Holdings decision table (when cost basis is known — Google-Sheet path)
+
+When positions are loaded with cost basis, map seat votes to HOLD/ADD/TRIM/EXIT (not BUY/WATCH/SKIP):
+
+| Decision | Condition |
+|---|---|
+| **EXIT** | Fundamental POOR **OR** Narrative FADING **OR** Technical BROKEN **OR** thesis invalidated. Harvest the loss if underwater. (SKIP-equivalent.) |
+| **TRIM** | Position weight > concentration cap (default >15% of book) **OR** Sentiment EXTREME **OR** LATE_CYCLE while extended. Trim to target weight; thesis may still be intact. |
+| **ADD** | The BUY gate (Fundamental ≥ GOOD, Technical SETUP_NAMED with live trigger, Narrative EARLY/MID, Sentiment ≠ EXTREME) is met **AND** current weight < cap. (BUY-equivalent, sized as an add to an existing position.) |
+| **HOLD** | Thesis intact (Fundamental ≥ FAIR, not FADING) but no add trigger or already at target weight. |
+
+(LATE_CYCLE → TRIM here, not EXIT: with cost basis and an intact thesis, you reduce rather than fully exit — unlike the no-position SKIP.)
+
+Precedence: EXIT dominates, then TRIM (concentration is its own lever, independent of the entry signal), then ADD vs HOLD on the trigger. In DEGRADED_TECH mode (TradingView down), ADD is unavailable (no live trigger) — the holdings verdict is limited to HOLD/TRIM/EXIT.
 
 ---
 
@@ -554,7 +451,7 @@ $280 trigger rule must clear strategy-discovery-backtest before risking capital.
 
 ## Self-check before printing the signal table
 
-- [ ] Every ticker has `status='done'` in `stock_analysis`.
+- [ ] Every FULL-PANEL ticker has `status='done'` in `stock_analysis`; one-line-screened names (N>12 triage) carry a one-line note and are listed, not dropped.
 - [ ] Each stock block ends with a concrete **entry zone + bar-close trigger + market-based stop** — never
       a vague "looks good". WATCH/SKIP names what would change it.
 - [ ] The technical seat **named a setup or said there is none**; no BUY without a live trigger.
@@ -564,11 +461,12 @@ $280 trigger rule must clear strategy-discovery-backtest before risking capital.
       asserted from memory.
 - [ ] The honest base-rate note is present: single names are satellites, index is the bar; passing panels
       are hypotheses to be backtested in `strategy-discovery-backtest`.
-- [ ] A TradingView screenshot is embedded inline (via the `view` tool on the `file_path`) per stock.
+- [ ] A TradingView screenshot is embedded inline per stock — UNLESS in DEGRADED_TECH mode (TradingView down), where screenshots are skipped and each block is tagged DEGRADED.
 - [ ] The smart-money seat cited ≥1 real filing/trade URL it actually web_fetched (openinsider, 13f.info,
       EDGAR, or capitoltrades), or returned `NEUTRAL — INSUFFICIENT DATA`; no filing is fabricated.
 - [ ] Portfolio sizing/concentration was deferred to `stock-chair`; ETF allocation was deferred to
       `tradfi-portfolio-manager`. This skill stayed on individual-stock entries only.
+- [ ] recall.ts `source` was checked; if `grep-fallback`, the run is tagged MEMORY_DEGRADED and recalled stances flagged low-confidence.
 
 ## Set a buy-alert (notify-me-when) — for WATCH verdicts
 
