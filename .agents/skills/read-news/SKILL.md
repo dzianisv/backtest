@@ -153,9 +153,9 @@ tags}` (optional `body`). `ingest` accepts a bare list or `{"records": [...]}`.
 
 ```bash
 bun test ./.agents/skills/read-news/scripts/
-# news_store.test.ts includes a GOLDEN PARITY gate that runs the retired Python store side-by-side
-# and asserts identical ingest counts, new-since sets, and query ranking — the regression guard that
-# lets the Python pipeline stay retired.
+# news_store.test.ts includes a GOLDEN PARITY gate: a frozen snapshot of the retired Python store's
+# exact ingest counts, new-since set, and query ranking (captured before retirement). The TS store must
+# reproduce them — the regression guard that lets the Python pipeline stay retired.
 ```
 
 ## Fit

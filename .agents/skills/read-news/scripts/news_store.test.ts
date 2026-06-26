@@ -749,27 +749,43 @@ const FIXTURE = [
   },
 ];
 
-describe("golden parity test", () => {
-  const pyDb = `${PARITY_DIR}/parity-py.db`;
+describe("golden parity test (frozen snapshot vs retired news_store.py)", () => {
+  // GOLDEN values captured from the reference Python store
+  // (crypto-news-store/news_store.py @ origin/main) run on the FIXTURE below, BEFORE that
+  // Python pipeline was retired in favor of this TS store. They are the SPEC: this TS store
+  // must reproduce Python's exact dedup counts, new-since set, and query ranking. The snapshot
+  // is frozen (not a live spawn) so the guard survives deleting the Python source.
+  // To re-verify against a restored copy:
+  //   git show <pre-migration-ref>:.agents/skills/crypto-news-store/news_store.py > /tmp/ns.py
+  //   python3 /tmp/ns.py --db /tmp/p.db ingest --json <fixture> && ...new-since/query
   const tsDb = `${PARITY_DIR}/parity-ts.db`;
+  const ingestDb = `${PARITY_DIR}/parity-ingest.db`;
   const fixtureFile = `${PARITY_DIR}/parity-fixture.json`;
-
-  const pyScript = ".agents/skills/crypto-news-store/news_store.py";
   const tsScript = ".agents/skills/read-news/scripts/news_store.ts";
 
-  function tryPython(args: string[]): { stdout: string; stderr: string; ok: boolean } {
-    for (const py of ["python3", "/Users/engineer/.venv/bin/python3"]) {
-      const r = Bun.spawnSync([py, ...args]);
-      if (r.exitCode === 0) {
-        return {
-          stdout: new TextDecoder().decode(r.stdout),
-          stderr: new TextDecoder().decode(r.stderr),
-          ok: true,
-        };
-      }
-    }
-    return { stdout: "", stderr: "python not found", ok: false };
-  }
+  const GOLDEN_INGEST = { new: 15, duplicate: 1, events_touched: 2 };
+  const GOLDEN_NEW_SINCE_TITLES = [
+    "Apple announces new AI chip for iPhone 18",
+    "Bitcoin hits new all-time high above $100k",
+    "Bitcoin miners face profitability squeeze after halving",
+    "DeFi total value locked surpasses $200 billion milestone",
+    "Ethereum spot ETF sees record single-day inflows",
+    "Federal Reserve holds interest rates steady at 5.25%",
+    "Gold hits record high amid dollar weakness",
+    "JPMorgan launches institutional crypto trading desk",
+    "MicroStrategy announces purchase of 5,000 BTC",
+    "Nvidia reports record Q2 earnings beating estimates",
+    "SEC approves new crypto custody rules for banks",
+    "Solana network upgrade boosts throughput to 50k TPS",
+    "US inflation falls to 2.1% in May approaching Fed target",
+  ];
+  const GOLDEN_QUERY_TOP5 = [
+    "Bitcoin hits new all-time high above $100k",
+    "JPMorgan launches institutional crypto trading desk",
+    "MicroStrategy announces purchase of 5,000 BTC",
+    "Bitcoin miners face profitability squeeze after halving",
+    "DeFi total value locked surpasses $200 billion milestone",
+  ];
 
   function runTs(args: string[]): { stdout: string; ok: boolean } {
     const r = Bun.spawnSync(["bun", tsScript, ...args]);
@@ -782,73 +798,51 @@ describe("golden parity test", () => {
   beforeAll(() => {
     mkdirSync(PARITY_DIR, { recursive: true });
     writeFileSync(fixtureFile, JSON.stringify(FIXTURE, null, 2));
+    // Populate the shared DB used by the new-since + query tests (order-independent).
+    runTs(["--db", tsDb, "ingest", "--json", fixtureFile]);
   });
 
   afterAll(() => {
     if (existsSync(PARITY_DIR)) rmSync(PARITY_DIR, { recursive: true, force: true });
   });
 
-  test("ingest counts match Python reference", () => {
-    const pyResult = tryPython([pyScript, "--db", pyDb, "ingest", "--json", fixtureFile]);
-    expect(pyResult.ok).toBe(true);
-
-    const tsResult = runTs(["--db", tsDb, "ingest", "--json", fixtureFile]);
+  test("ingest counts match Python golden snapshot", () => {
+    const tsResult = runTs(["--db", ingestDb, "ingest", "--json", fixtureFile]);
     expect(tsResult.ok).toBe(true);
 
-    const pyIngest = JSON.parse(pyResult.stdout) as IngestResult;
     const tsIngest = JSON.parse(tsResult.stdout) as IngestResult;
-
-    // Core parity: exact dedup and near-dup clustering counts must match
-    expect(tsIngest.new).toBe(pyIngest.new);
-    expect(tsIngest.duplicate).toBe(pyIngest.duplicate);
-    expect(tsIngest.events_touched).toBe(pyIngest.events_touched);
-
-    // Verify expected values
-    expect(pyIngest.new).toBe(15);
-    expect(pyIngest.duplicate).toBe(1);
-    expect(pyIngest.events_touched).toBe(2);
+    expect(tsIngest.new).toBe(GOLDEN_INGEST.new);
+    expect(tsIngest.duplicate).toBe(GOLDEN_INGEST.duplicate);
+    expect(tsIngest.events_touched).toBe(GOLDEN_INGEST.events_touched);
   });
 
-  test("new-since returns same set of event titles as Python", () => {
-    // Depends on ingest already done in prior test; re-run if DBs missing
-    const pyResult = tryPython([pyScript, "--db", pyDb, "new-since", "--days", "3650"]);
-    expect(pyResult.ok).toBe(true);
-
+  test("new-since returns same set of event titles as Python golden snapshot", () => {
     const tsResult = runTs(["--db", tsDb, "new-since", "--days", "3650"]);
     expect(tsResult.ok).toBe(true);
 
-    const pyEvents = JSON.parse(pyResult.stdout) as { title: string }[];
     const tsEvents = JSON.parse(tsResult.stdout) as { title: string }[];
-
-    const pyTitles = new Set(pyEvents.map((e) => e.title));
     const tsTitles = new Set(tsEvents.map((e) => e.title));
 
-    // Same set of titles (order can differ due to tied timestamps)
-    expect(tsTitles.size).toBe(pyTitles.size);
-    for (const t of pyTitles) expect(tsTitles.has(t)).toBe(true);
+    expect(tsTitles.size).toBe(GOLDEN_NEW_SINCE_TITLES.length);
+    for (const t of GOLDEN_NEW_SINCE_TITLES) expect(tsTitles.has(t)).toBe(true);
   });
 
-  test("query returns same top event titles as Python", () => {
+  test("query returns same top events as Python golden snapshot", () => {
     const q = "bitcoin all time high institutional";
-
-    const pyResult = tryPython([pyScript, "--db", pyDb, "query", "--q", q, "--k", "5"]);
-    expect(pyResult.ok).toBe(true);
-
     const tsResult = runTs(["--db", tsDb, "query", "--q", q, "--k", "5"]);
     expect(tsResult.ok).toBe(true);
 
-    const pyQ = JSON.parse(pyResult.stdout) as { title: string }[];
     const tsQ = JSON.parse(tsResult.stdout) as { title: string }[];
-
-    // Top result must agree
-    expect(pyQ.length).toBeGreaterThan(0);
     expect(tsQ.length).toBeGreaterThan(0);
-    expect(tsQ[0].title).toBe(pyQ[0].title);
 
-    // Top-3 titles must appear in both (as sets — BM25 minor score diffs may reorder)
-    const pyTop3 = new Set(pyQ.slice(0, 3).map((e) => e.title));
+    // Top result must match Python exactly.
+    expect(tsQ[0].title).toBe(GOLDEN_QUERY_TOP5[0]);
+
+    // Top-3 set must match Python's top-3 (BM25 sub-1e-7 score diffs may reorder within the set).
+    const goldenTop3 = new Set(GOLDEN_QUERY_TOP5.slice(0, 3));
     const tsTop3 = new Set(tsQ.slice(0, 3).map((e) => e.title));
-    for (const t of pyTop3) expect(tsTop3.has(t)).toBe(true);
+    expect(tsTop3.size).toBe(goldenTop3.size);
+    for (const t of goldenTop3) expect(tsTop3.has(t)).toBe(true);
   });
 });
 
