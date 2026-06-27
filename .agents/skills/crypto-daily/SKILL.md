@@ -28,7 +28,7 @@ Publish today's crypto portfolio analysis to Notion, Telegram, and X.com.
 
 Telegram-cli script: `~/.agents/skills/telegram-cli/telegram-cli.py`  
 Chrome-use binary: `~/.agents/skills/chrome-use/scripts/chrome-use`  
-Notion parent page ID (hardcoded): `15dac25eb49f8048b97ec7f1cffc5d6b` (the `crypto` page)
+Notion parent page ID: read at runtime from `.cache/crypto-daily/notion.yaml` (`page_id` field) — **never hardcoded**
 
 ---
 
@@ -53,7 +53,27 @@ else
 fi
 ```
 
-**0c. If NOT fresh:** invoke `crypto-advisor` first (full run, all 11 tokens in the universe), then return here.
+**0c. Read the token universe from `.cache/crypto-daily/portfolio.csv`:**
+```bash
+PORTFOLIO_CSV=".cache/crypto-daily/portfolio.csv"
+if [ -f "$PORTFOLIO_CSV" ]; then
+  TICKERS=$(grep -v '^#' "$PORTFOLIO_CSV" | tail -n +2 | cut -d, -f1 | grep -v '^$' | paste -sd' ' -)
+fi
+
+if [ -z "$TICKERS" ]; then
+  echo "LOG: $PORTFOLIO_CSV missing or yields zero tickers — falling back to crypto-advisor default universe."
+  TICKERS=""   # empty string signals crypto-advisor to use its own default
+fi
+```
+
+If `$TICKERS` is non-empty, pass it to crypto-advisor using the documented custom-run prompt:
+```
+Invoke the crypto-advisor skill. Token universe for this run: [<TICKERS space-separated>].
+Follow all skill instructions: ...
+```
+If `$TICKERS` is empty (file missing or no rows), invoke crypto-advisor with no token override — it runs its built-in default universe.
+
+**0d. If NOT fresh:** invoke `crypto-advisor` first (with the token universe determined in 0c), then return here.
 **If fresh:** continue to Step 1 with the existing `$REPORT` file.
 
 ---
@@ -78,16 +98,30 @@ If the Telegram recap section is missing from the report, construct it per the `
 
 **Use the Notion MCP tools directly** — no script needed, no NOTION_TOKEN env var.
 
-**2a. Create the page** (empty, under the `crypto` parent):
+**2a. Read the Notion target from config** (STOP if missing or empty):
+```bash
+NOTION_CONFIG=".cache/crypto-daily/notion.yaml"
+if [ ! -f "$NOTION_CONFIG" ]; then
+  echo "ERROR: $NOTION_CONFIG not found. Create it with a page_id field before running /crypto-daily." >&2
+  exit 1
+fi
+NOTION_PARENT_PAGE_ID=$(grep '^page_id:' "$NOTION_CONFIG" | sed -E 's/.*"([a-f0-9]+)".*/\1/')
+if [ -z "$NOTION_PARENT_PAGE_ID" ]; then
+  echo "ERROR: page_id is empty in $NOTION_CONFIG. Set it to the 32-char hex Notion page id." >&2
+  exit 1
+fi
+```
+
+**2b. Create the page** (empty, under the configured parent):
 ```
 notion-API-post-page
-  parent: {"page_id": "15dac25eb49f8048b97ec7f1cffc5d6b"}
+  parent: {"page_id": "{NOTION_PARENT_PAGE_ID}"}
   properties: {"title": {"title": [{"type":"text","text":{"content":"📊 Crypto Daily — {TODAY}"}}]}}
   children: []
 ```
 Save the returned `id` as `PAGE_ID`.
 
-**2b. Convert the report to Notion blocks** — parse the Markdown line by line:
+**2c. Convert the report to Notion blocks** — parse the Markdown line by line:
 - `# heading` → `heading_1` block
 - `## heading` → `heading_2` block  
 - `### heading` → `heading_3` block
@@ -98,7 +132,7 @@ Save the returned `id` as `PAGE_ID`.
 - Strip Markdown bold/links from paragraph text (Notion rich_text doesn't parse inline Markdown)
 - Chunk text to ≤ 2000 chars per `rich_text` object (Notion API hard limit)
 
-**2c. Append blocks in batches of 50** using `notion-API-patch-block-children`:
+**2d. Append blocks in batches of 50** using `notion-API-patch-block-children`:
 ```
 notion-API-patch-block-children
   block_id: {PAGE_ID}
@@ -106,7 +140,7 @@ notion-API-patch-block-children
 ```
 Repeat until all blocks are appended.
 
-**2d. Print the page URL:**
+**2e. Print the page URL:**
 ```
 ✅ Notion page: https://app.notion.com/p/Crypto-Daily-{TODAY}-{PAGE_ID_no_hyphens}
 ```
@@ -353,7 +387,7 @@ row = {
     )[:300]
 }
 
-csv_path = ".agents/skills/crypto-advisor/eval/crypto-advisor.eval.csv"
+csv_path = ".cache/crypto-advisor/crypto-advisor.eval.csv"
 write_header = not os.path.exists(csv_path) or os.path.getsize(csv_path) == 0
 with open(csv_path, "a", newline="") as f:
     w = csv.DictWriter(f, fieldnames=row.keys())
@@ -384,7 +418,7 @@ no_fabrication:     {N}/5
 ─────────────────────
 OVERALL:            {N}/5
 {summary sentence}
-CSV: .agents/skills/crypto-advisor/eval/crypto-advisor.eval.csv
+CSV: .cache/crypto-advisor/crypto-advisor.eval.csv
 ```
 
 **6d. Low-score warning:**

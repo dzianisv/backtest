@@ -68,7 +68,7 @@ narrative noise: if narrative is bullish but flows are negative, the market is t
    the ETF-flow fetch workaround all live in **`[[read-news]]`** — read that skill for details.
    ```bash
    bun .agents/skills/read-news/scripts/read_news.ts \
-     --db .db/news.db --days 5 \
+     --db .cache/read-news/news.db --days 5 \
      --query "bitcoin BTC ETF regulation treasury strategy"
    # Returns deduped events ranked by query. ~270 articles across 9 feeds. Keyless, no API key needed.
    # For targeted search: append Google News RSS (see read-news skill)

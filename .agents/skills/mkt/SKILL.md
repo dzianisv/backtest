@@ -43,7 +43,7 @@ mkt version
 An advisor sets an alert by calling `mkt-alert.ts add`. Every job MUST carry **reasoning**
 (the thesis) — that's the whole point; a price with no "why" is noise.
 
-Job shape (stored in `~/.config/mkt/agent-alerts.json`):
+Job shape (stored in `.cache/mkt/agent-alerts.json` in the repo):
 ```jsonc
 {
   "id": "aave-usd-below-73-a1b2",
@@ -194,7 +194,7 @@ inject alerts via the webhook. Default to `127.0.0.1`. Never commit tokens — k
 - `scripts/mkt-alert.ts` — register / list / remove alert jobs (the advisor→alert contract).
 - `scripts/check.ts` — the scheduled job: evaluate → notify with reasoning → dedup → expiry.
 - `scripts/indicators.ts` — pure RSI / MACD / SMA math (shared with tests).
-- `scripts/store.ts` — sidecar job store (`~/.config/mkt/agent-alerts.json`).
+- `scripts/store.ts` — sidecar job store (`.cache/mkt/agent-alerts.json` in the repo).
 - `scripts/check.test.ts` — Bun test (indicator math + evaluate/dedup/expiry logic).
 
 ## Done = verified

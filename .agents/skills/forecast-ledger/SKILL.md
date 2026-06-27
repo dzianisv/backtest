@@ -30,7 +30,7 @@ with its probability**, **resolved on its date**, and **scored**.
 ## The loop
 
 ```bash
-L="python3 .agents/skills/forecast-ledger/ledger.py"   # ledger at $FORECAST_LEDGER or ./forecasts/ledger.jsonl
+L="python3 .agents/skills/forecast-ledger/ledger.py"   # ledger at $FORECAST_LEDGER or ./.cache/forecast-ledger/ledger.jsonl
 
 # 1. LOG every dated call, the moment it's made (p = your probability, 0..1)
 $L add --asset BTC --q "BTC <=\$50k before 2026-07-01" --p 0.65 --by 2026-07-01 \

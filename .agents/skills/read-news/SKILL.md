@@ -30,7 +30,7 @@ never silently dropped, never invented.
 
 ```bash
 bun .agents/skills/read-news/scripts/read_news.ts \
-  --db .db/news.db --days 5 \
+  --db .cache/read-news/news.db --days 5 \
   --query "bitcoin BTC ETF regulation treasury strategy"
 # → {fetched, feeds_ok, unavailable:[...], events:[ {title, source_count, ...} ranked by relevance ]}
 ```
@@ -41,7 +41,7 @@ failures come back in `unavailable` (loud) — never silently dropped.
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--db` | `.db/news.db` (env `CRYPTO_NEWS_DB`) | SQLite file |
+| `--db` | `.cache/read-news/news.db` (env `CRYPTO_NEWS_DB`) | SQLite file |
 | `--days` | `3` | recency window for new-since / query |
 | `--k` | `15` | max events returned by `--query` |
 | `--query` | `""` | if set → ranked relevant events; else → all new-since |
@@ -50,7 +50,7 @@ failures come back in `unavailable` (loud) — never silently dropped.
 After the brief is written, mark events surfaced so they don't repeat next run:
 
 ```bash
-bun .agents/skills/read-news/scripts/news_store.ts --db .db/news.db mark-surfaced --ids 1 4 --on 2026-06-15
+bun .agents/skills/read-news/scripts/news_store.ts --db .cache/read-news/news.db mark-surfaced --ids 1 4 --on 2026-06-15
 ```
 
 ## Targeted single-source pulls (FT / WSJ on demand)
@@ -67,7 +67,7 @@ bun .agents/skills/read-news/scripts/feeds/wsj.ts --feed markets --days 5 --limi
 `scripts/` — **Bun + `bun:sqlite` only** (no network at store layer, no embedding model, zero npm deps).
 
 - `read_news.ts` — the orchestrator: fetch all feeds → ingest (dedup + state) → query / new-since → JSON.
-- `news_store.ts` — the SQLite store (single file, default `.db/news.db`):
+- `news_store.ts` — the SQLite store (single file, default `.cache/read-news/news.db`):
   - **`articles`** — one row per ingested article (+ `canonical_url`, `content_hash`, `simhash`).
   - **`articles_fts`** (FTS5) — BM25 over `title + summary` for named entities/tickers (`MSTR`, `$11B`, `ETF`).
   - **`events`** — one row per event cluster carrying cross-run state: `{first_seen, last_updated,
@@ -140,7 +140,7 @@ curl -s "https://api.alternative.me/fng/?limit=7"
 ```bash
 S="bun .agents/skills/read-news/scripts/news_store.ts"   # add --db <path> for a throwaway store
 
-$S --db .db/news.db ingest --json records.json   # idempotent → {new, duplicate, events_touched}
+$S --db .cache/read-news/news.db ingest --json records.json   # idempotent → {new, duplicate, events_touched}
 $S query --q "strategy bitcoin" --days 2 --k 10           # HYBRID BM25+near-dup, fused via RRF → events
 $S new-since --days 2                                     # events in window AND not yet surfaced (panel feed)
 $S mark-surfaced --ids 1 4 --on 2026-06-15                # stamp surfaced; excludes from future new-since

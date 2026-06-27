@@ -5,7 +5,7 @@ Zero-cost alternative to vector DB. Financial journalism uses consistent
 domain vocabulary ("bottleneck", "capacity constrained", "supply shortage")
 so BM25 keyword search works as well as semantic search — no embeddings needed.
 
-DB location: ~/.local/share/trend-research/articles.db
+DB location: <repo_root>/.cache/stocks-trend-screener/articles.db
 """
 
 import sqlite3
@@ -14,7 +14,17 @@ from pathlib import Path
 from datetime import datetime, date
 from typing import Optional
 
-DB_DIR = Path.home() / ".local" / "share" / "trend-research"
+
+def _find_repo_root() -> Path:
+    """Walk up from this file's location until a .git directory is found."""
+    p = Path(__file__).resolve()
+    for parent in [p] + list(p.parents):
+        if (parent / ".git").exists():
+            return parent
+    raise RuntimeError("Could not find repo root (no .git found up from %s)" % __file__)
+
+
+DB_DIR = _find_repo_root() / ".cache" / "stocks-trend-screener"
 DB_PATH = DB_DIR / "articles.db"
 
 

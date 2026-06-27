@@ -1,0 +1,5 @@
+# Notion target for stocks-daily reports.
+# The report is published as a child page under this page.
+# Retarget by replacing page_url; page_id is the 32-char hex from the URL tail.
+page_url: "https://app.notion.com/p/stocks-portfolio-38cac25eb49f800cad98d4eed9c11513"
+page_id: "38cac25eb49f800cad98d4eed9c11513"

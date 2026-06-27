@@ -4,7 +4,7 @@
 Why: a forecast you never grade is an opinion. Tetlock's whole finding is that forecasters
 improve ONLY via scored feedback (Brier + calibration). This is that feedback loop.
 
-Storage: one JSON object per line (JSONL) at $FORECAST_LEDGER or ./forecasts/ledger.jsonl
+Storage: one JSON object per line (JSONL) at $FORECAST_LEDGER or ./.cache/forecast-ledger/ledger.jsonl
 
 Usage:
   ledger.py add --asset BTC --q "BTC <=$50k before 2026-07-01" --p 0.65 --by 2026-07-01 \
@@ -16,7 +16,7 @@ Usage:
 import argparse, json, os, sys
 from datetime import date
 
-LEDGER = os.environ.get("FORECAST_LEDGER", os.path.join("forecasts", "ledger.jsonl"))
+LEDGER = os.environ.get("FORECAST_LEDGER", os.path.join(".cache", "forecast-ledger", "ledger.jsonl"))
 
 
 def _load():

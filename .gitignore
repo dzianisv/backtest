@@ -71,3 +71,15 @@ logs/
 !.claude/settings.json
 !.opencode/
 !.opencode/plugins/
+
+# Relocated skill runtime state + personal holdings under .cache/{skill}/ (public repo — never commit).
+# Intentionally NOT ignored (stay committed): .cache/analyst-smartmoney-*/ ledgers,
+# .cache/crypto-advisor/crypto-advisor.eval.csv, and per-skill .cache/*/notion.yaml.
+.cache/stocks-daily/positions.csv
+.cache/crypto-daily/portfolio.csv
+.cache/defi-portfolio-manager/
+.cache/forecast-ledger/
+.cache/mkt/
+.cache/dip-scanner/
+.cache/read-news/
+.cache/stocks-trend-screener/

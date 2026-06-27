@@ -7,7 +7,7 @@ import {
 } from "./portfolio_cache.ts";
 
 function tmpFile(): string {
-  return join(mkdtempSync(join(tmpdir(), "pcache-")), ".crypto-portfolio.csv");
+  return join(mkdtempSync(join(tmpdir(), "pcache-")), "crypto-portfolio.csv");
 }
 
 test("parseCsvLine handles quotes, commas, and doubled quotes", () => {
@@ -92,5 +92,5 @@ test("resolveCachePath honors --file then env then repo-root walk", () => {
   expect(resolveCachePath(["latest", "--file", "/x/y.csv"])).toBe("/x/y.csv");
   expect(resolveCachePath(["latest"], { CRYPTO_PORTFOLIO_CSV: "/e/v.csv" } as any)).toBe("/e/v.csv");
   const p = resolveCachePath(["wallets"], {} as any, "/Users/engineer/workspace/backtest/.agents/skills");
-  expect(p).toBe("/Users/engineer/workspace/backtest/.crypto-portfolio.csv");
+  expect(p).toBe("/Users/engineer/workspace/backtest/.cache/defi-portfolio-manager/crypto-portfolio.csv");
 });
