@@ -93,6 +93,18 @@ Append to `.agents/memory/YYYY-MM-DD.md` before replying. Format:
 
 Then `git add ... && git commit && git push` — DoD gate requires no uncommitted/unpushed changes.
 
+## Research outputs → Notion
+
+All research goes into Notion under the [research page](https://app.notion.com/p/research-38cac25eb49f8072a1abe1c6d6e22e86). One page per run. Plain English. Short.
+
+What belongs there:
+- Every `research-market` / `research-crypto-market` workflow output
+- 13F / 13D watch reports
+- Deep-research analyses (architecture, system design, etc.)
+- Daily crypto portfolio runs (via `crypto-daily`)
+
+Use the Notion MCP tools (`mcp__claude_ai_Notion__notion-create-pages`) with `parent page_id = 38cac25eb49f8072a1abe1c6d6e22e86`. Also write the file to `research/` as usual (git is the backup; Notion is the readable version).
+
 ## Memory model — two-tier, ranked (reuses OpenClaw memory-core)
 
 Two surfaces, mirroring OpenClaw's evergreen-vs-dated split (`temporal-decay.ts:71-95`):
