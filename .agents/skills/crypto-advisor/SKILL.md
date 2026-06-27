@@ -165,6 +165,20 @@ CREATE TABLE IF NOT EXISTS token_analysis (
 
 ---
 
+## Step 0.5 — Create the run artifact directory
+
+Run once, before the per-token loop. All artifacts for this run land under this directory.
+
+```bash
+RUN_DIR=".cache/crypto-advisor/research/$(date +%Y-%m-%d_%H-%M)"
+mkdir -p "$RUN_DIR"
+echo "Artifacts: $RUN_DIR"
+```
+
+Every token gets its own subdirectory: `$RUN_DIR/{TOKEN}/`. Each file written below is append-safe (the directory is new per run).
+
+---
+
 ## Step 1 — Sequential per-token loop (orchestrator does this; do NOT parallelize the data pull)
 
 Pick the next `pending` todo and `UPDATE todos SET status='in_progress'`. Then, for that token:
@@ -214,6 +228,17 @@ Rationale: the 200wMA is one indicator, not the decision. Refusing to buy a toke
 If TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
 
 **1c. Assemble the data package** by merging the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the helper's moving-average block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it.
+
+**Cache the data package:**
+```bash
+mkdir -p "$RUN_DIR/{TOKEN}"
+# Write the assembled package as JSON for reproducibility and debugging
+python3 -c "
+import json, sys
+pkg = sys.argv[1]
+open('$RUN_DIR/{TOKEN}/data_package.json', 'w').write(pkg)
+" "$DATA_PACKAGE_JSON"
+```
 
 **1d. Run the 5-seat quorum on the package.** Either reason through the 5 seats inline, or spawn the five `analysis-*` seat subagents **in parallel** (on-chain, sentiment, macro, order-flow, narrative) with the package **injected** — seats per token may be parallel because they share nothing; only the *data pull* must be serial. Each seat returns: zone, posture (BULLISH|NEUTRAL|BEARISH), confidence, 1-line bull, 1-line bear, invalidation.
 
@@ -310,6 +335,17 @@ Invalidation: <what reverses this verdict>
 
 **If you have fewer than 2 successfully fetched sources after trying all applicable URLs above, set posture = NEUTRAL and note "INSUFFICIENT DATA" — do not guess.**
 
+**Cache seat results** — write each seat's output immediately after it returns:
+```bash
+# One file per seat; written inline as the seats complete (parallel or serial)
+echo '{on_chain_seat_json}'   > "$RUN_DIR/{TOKEN}/seat_on_chain.json"
+echo '{sentiment_seat_json}'  > "$RUN_DIR/{TOKEN}/seat_sentiment.json"
+echo '{macro_seat_json}'      > "$RUN_DIR/{TOKEN}/seat_macro.json"
+echo '{order_flow_seat_json}' > "$RUN_DIR/{TOKEN}/seat_order_flow.json"
+echo '{narrative_seat_json}'  > "$RUN_DIR/{TOKEN}/seat_narrative.json"
+```
+Each seat JSON must include at minimum: `{posture, confidence, bull_line, bear_line, invalidation, sources:[]}`.
+
 **1e. Aggregate into the compact verdict and persist:**
 ```json
 {"symbol":"BTC","quorum_verdict":"BULLISH|SPLIT|BEARISH|UNCERTAIN",
@@ -322,7 +358,37 @@ UPDATE token_analysis SET quorum_verdict=?, dominant_zone=?, seats_bull=?, seats
 UPDATE todos SET status='done' WHERE id='tok-{TOKEN}';
 ```
 
+**Cache the verdict:**
+```bash
+echo '{verdict_json}' > "$RUN_DIR/{TOKEN}/verdict.json"
+```
+
 **1f. Repeat** for the next `pending` todo until none remain.
+
+**After all tokens complete — write the full report:**
+```bash
+# The report = exec recap + Block 1 (signal table) + Block 2 (verdicts) + Block 3 (sources)
+echo "$FULL_REPORT_MARKDOWN" > "$RUN_DIR/report.md"
+echo "Run artifacts: $RUN_DIR"
+```
+
+Directory layout after a complete run:
+```
+.cache/crypto-advisor/research/2026-06-27_14-30/
+├── report.md
+├── BTC/
+│   ├── data_package.json
+│   ├── seat_on_chain.json
+│   ├── seat_sentiment.json
+│   ├── seat_macro.json
+│   ├── seat_order_flow.json
+│   ├── seat_narrative.json
+│   └── verdict.json
+├── ETH/
+│   └── ...
+└── AAVE/
+    └── ...
+```
 
 ---
 

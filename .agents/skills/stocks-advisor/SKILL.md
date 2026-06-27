@@ -201,6 +201,35 @@ If no sheet URL was provided, skip this step and use the user-supplied ticker li
 
 ---
 
+## Step 0.6 — Create the run artifact directory
+
+Run once before the per-ticker loop. All per-ticker data packages, seat results, and the final report land here.
+
+```bash
+RUN_DIR=".cache/stocks-advisor/research/$(date +%Y-%m-%d_%H-%M)"
+mkdir -p "$RUN_DIR"
+echo "Artifacts: $RUN_DIR"
+```
+
+Every ticker gets its own subdirectory: `$RUN_DIR/{TICKER}/`. Directory layout after a complete run:
+```
+.cache/stocks-advisor/research/2026-06-27_14-30/
+├── report.md
+├── AVGO/
+│   ├── data_package.json          # merged TV + fundamentals.py output
+│   ├── seat_fundamental.json
+│   ├── seat_technical.json
+│   ├── seat_narrative_macro.json
+│   ├── seat_sentiment.json
+│   ├── seat_smart_money.json
+│   └── verdict.json               # decision, entry_low/high, trigger, stop, target, conviction
+├── MRVL/
+│   └── ...
+└── ...
+```
+
+---
+
 ## Step 0.7 — Preflight: is TradingView alive? (run before the per-ticker loop)
 
 Call `tradingview-tv_health_check` ONCE before starting the loop.
@@ -294,6 +323,16 @@ Any field yfinance lacks is `null` — never fill a null with a guess.
 from `summary=true`, the daily/weekly close arrays) with the full `fundamentals.py` JSON. This single
 package is what every seat receives — seats add nothing to it except the narrative seat's fetched news.
 
+**Cache the data package:**
+```bash
+mkdir -p "$RUN_DIR/{TICKER}"
+python3 -c "
+import json, sys
+pkg = sys.argv[1]
+open('$RUN_DIR/{TICKER}/data_package.json', 'w').write(pkg)
+" "$DATA_PACKAGE_JSON"
+```
+
 **1d. Spawn the 5 seats IN PARALLEL** (task subagents), each with the **same** package injected. Each seat
 reads ONE lens and returns the fixed shape below. Seats share nothing, so they run concurrently.
 
@@ -316,12 +355,28 @@ reads ONE lens and returns the fixed shape below. Seats share nothing, so they r
 
 **Full subagent prompts — copy verbatim from `references/seat-prompts.md`.** Each seat receives the same injected data package; only Seats 3 and 5 may make external calls.
 
+**Cache seat results** — write each seat's output immediately after it returns:
+```bash
+echo '{fundamental_json}'     > "$RUN_DIR/{TICKER}/seat_fundamental.json"
+echo '{technical_json}'       > "$RUN_DIR/{TICKER}/seat_technical.json"
+echo '{narrative_macro_json}' > "$RUN_DIR/{TICKER}/seat_narrative_macro.json"
+echo '{sentiment_json}'       > "$RUN_DIR/{TICKER}/seat_sentiment.json"
+echo '{smart_money_json}'     > "$RUN_DIR/{TICKER}/seat_smart_money.json"
+```
+Each seat JSON must include at minimum: `{verdict, conviction, key_metric, blind_spot, sources:[]}`.
+
 **1e. Persist the seat verdicts and decision:**
 ```sql
 UPDATE stock_analysis SET company=?, theme=?, theme_phase=?, fundamental=?, technical=?,
   narrative=?, sentiment=?, smartmoney=?, decision=?, entry_low=?, entry_high=?, trigger=?, stop=?, target=?,
   conviction=?, status='done' WHERE symbol=?;
 UPDATE todos SET status='done' WHERE id='stk-{TICKER}';
+```
+
+**Cache the verdict:**
+```bash
+echo '{verdict_json}' > "$RUN_DIR/{TICKER}/verdict.json"
+# verdict_json = {decision, entry_low, entry_high, trigger, stop, target, conviction, theme, invalidation}
 ```
 
 **1f. Repeat** for the next `pending` todo until none remain.
