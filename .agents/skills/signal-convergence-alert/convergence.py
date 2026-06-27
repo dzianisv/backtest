@@ -5,7 +5,7 @@ independent sources. The point: a ticker that shows up in BOTH a dip screen AND 
 AND a 13F buy is a high-conviction, time-sensitive convergence — DM it immediately.
 
 Reads (any subset that exists):
-  ~/.openclaw/workspace/investor/pools/dip_candidates.jsonl   {"ticker": "...", ...}   source=dip (≤5d)
+  .cache/dip-scanner/dip_candidates.jsonl   {"ticker": "...", ...}   source=dip (≤5d)
   ~/.openclaw/workspace/investor/pools/narrative.jsonl        {"ticker": "...", ...}   source=journalism (≤5d)
   <13F ledger>.jsonl          {"ticker": "...", ...}            source=13f       (last 14d)
   <congress ledger>.jsonl     {"ticker": "...", ...}            source=congress  (last 14d)
@@ -47,12 +47,12 @@ def _resolve_path(env_var: str, openclaw_default: str, repo_fallback: str) -> st
 
 
 POOLS = [
-    ("dip", _resolve_path("DIP_POOL", os.path.join(_POOLS_DIR, "dip_candidates.jsonl"), "pools/dip_candidates.jsonl"), 5),
+    ("dip", _resolve_path("DIP_POOL", os.path.join(_REPO_ROOT, ".cache", "dip-scanner", "dip_candidates.jsonl"), ".cache/dip-scanner/dip_candidates.jsonl"), 5),
     ("journalism", _resolve_path("NARRATIVE_POOL", os.path.join(_POOLS_DIR, "narrative.jsonl"), "pools/narrative.jsonl"), 5),
-    ("13f", _resolve_path("THIRTEENF_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/13f/recommended.jsonl"), ".ledgers/13F/recommended.jsonl"), 14),
-    ("congress", _resolve_path("CONGRESS_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/congress/recommended.jsonl"), ".ledgers/PTR/recommended.jsonl"), 14),
-    ("13d", _resolve_path("THIRTEEND_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/13d/recommended.jsonl"), ".ledgers/13D/recommended.jsonl"), 14),
-    ("form4", _resolve_path("FORM4_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/form4/recommended.jsonl"), ".ledgers/Form4/recommended.jsonl"), 14),
+    ("13f", _resolve_path("THIRTEENF_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/13f/recommended.jsonl"), ".cache/analyst-smartmoney-13f/recommended.jsonl"), 14),
+    ("congress", _resolve_path("CONGRESS_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/congress/recommended.jsonl"), ".cache/analyst-smartmoney-ptr/recommended.jsonl"), 14),
+    ("13d", _resolve_path("THIRTEEND_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/13d/recommended.jsonl"), ".cache/analyst-smartmoney-13d/recommended.jsonl"), 14),
+    ("form4", _resolve_path("FORM4_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/form4/recommended.jsonl"), ".cache/analyst-smartmoney-form4/recommended.jsonl"), 14),
 ]
 
 

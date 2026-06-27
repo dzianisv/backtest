@@ -93,6 +93,17 @@ Append to `.agents/memory/YYYY-MM-DD.md` before replying. Format:
 
 Then `git add ... && git commit && git push` — DoD gate requires no uncommitted/unpushed changes.
 
+## Research outputs → Notion
+
+Skills publish to Notion **only when their own config enables it.** Check `.cache/{skill}/notion.yaml` before publishing — do not publish if the file is absent or `enabled: false`.
+
+| Skill | Config | Notion destination |
+|---|---|---|
+| `crypto-advisor` | `.cache/crypto-advisor/notion.yaml` | [crypto-advisor](https://app.notion.com/p/crypto-advisor-38cac25eb49f80dcb894e842589863cf) |
+| ad-hoc research | — | [research](https://app.notion.com/p/research-38cac25eb49f8072a1abe1c6d6e22e86) |
+
+Title format: `YYYY-MM-DD-{narrative}` (e.g. `2026-06-26-xfear-aave-buy`). Always write `research/` too — git is the backup, Notion is the readable view.
+
 ## Memory model — two-tier, ranked (reuses OpenClaw memory-core)
 
 Two surfaces, mirroring OpenClaw's evergreen-vs-dated split (`temporal-decay.ts:71-95`):
@@ -113,6 +124,39 @@ newest-first). Inject the printed `<prior_context>` block into the run.
 **Write** (per verdict): `bun .agents/skills/portfolio-memory/remember.ts --desk stocks --ticker COIN
 --verdict TRIM --date <date> --conviction 2 --body "..."` — upserts the canonical line + appends the
 dated log. The CIO prose summary above is still appended for narrative history.
+
+## Skill evaluation — how to run + where results live
+
+Run the hyperagent improvement loop on any skill with `/hyperagent-eval-skill`. Point it at the skill and it runs actor/judge/archive/holdout automatically.
+
+**Storage layout** (all under `.cache/{skill}/`):
+
+```
+.cache/{skill}/
+├── {skill}.eval.csv       ← score history (one row per run; append-only)
+├── crypto.eval.csv        ← legacy format (crypto-advisor only)
+├── notion.yaml            ← Notion publish config (opt-in)
+├── research/              ← saved run reports (YYYY-MM-DD <narrative>.md)
+└── evals/                 ← hyperagent eval scaffold (if set up)
+    ├── RUBRIC.md
+    ├── cases/train/
+    ├── cases/holdout/     ← FROZEN — never open while editing
+    ├── archive/           ← all past SKILL.md variants (winners + losers)
+    ├── iterations/        ← judge output + diagnosis per round
+    └── scores.md          ← per-dimension trend table
+```
+
+**Running an eval:**
+```
+/hyperagent-eval-skill   ← targets the current skill; runs actor/judge/archive/holdout
+```
+
+**CSV columns** (`{skill}.eval.csv`):
+`commit_id, iteration, prompt_summary, output_summary, score_correctness, score_completeness, score_clarity, score_overall, judge_feedback`
+
+One row per run. The judge is a fresh subagent with no access to the skill body — blind scoring only. Never self-grade.
+
+**Stop condition:** holdout mean ≥ target (4.2 default) AND no dimension < 3.0 AND train mean flat for 2 rounds → CONVERGED. Ship that variant.
 
 ## Skills
 

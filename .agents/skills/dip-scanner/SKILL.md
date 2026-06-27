@@ -143,7 +143,7 @@ python3 .agents/skills/dip-scanner/dip_scanner.py --tickers LEU,KGS,POWL,MSFT,BT
 Run with `--emit-pool` to deterministically append HIGH+MEDIUM rows:
 ```bash
 python3 .agents/skills/dip-scanner/dip_scanner.py --universe all --emit-pool
-# writes to ~/.openclaw/workspace/investor/pools/dip_candidates.jsonl (durable, not /tmp)
+# writes to .cache/dip-scanner/dip_candidates.jsonl (durable, not /tmp)
 ```
 That path is read by `signal-convergence-alert` at 08:30 UTC.
 

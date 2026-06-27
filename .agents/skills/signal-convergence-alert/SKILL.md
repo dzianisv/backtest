@@ -27,7 +27,7 @@ It reads the day's accumulated pools (whichever exist):
 
 | Source | Pool file | Written by |
 |--------|-----------|------------|
-| `dip` | `~/.openclaw/workspace/investor/pools/dip_candidates.jsonl` (≤5d) | dip-scanner (07:45, `--emit-pool`) |
+| `dip` | `.cache/dip-scanner/dip_candidates.jsonl` (≤5d) | dip-scanner (07:45, `--emit-pool`) |
 | `journalism` | `~/.openclaw/workspace/investor/pools/narrative.jsonl` (≤5d) | mention_velocity (08:10) |
 | `13f` | 13F dedup ledger (last 14d) | analyst-smartmoney-13f |
 | `congress` | congress dedup ledger (last 14d) | analyst-smartmoney-ptr |

@@ -8,8 +8,8 @@
  * against a fresh live read. It is a CACHE, not a source of truth — always re-pull live before
  * acting on any number (APYs/balances move; addresses do not).
  *
- * Storage: a long-format CSV (one row per position per snapshot) at the repo root
- * `.crypto-portfolio.csv` (gitignored — wallet addresses must not be pushed to a public repo).
+ * Storage: a long-format CSV (one row per position per snapshot) at
+ * `.cache/defi-portfolio-manager/crypto-portfolio.csv` (gitignored — wallet addresses must not be pushed to a public repo).
  * Override the path with --file <path> or the CRYPTO_PORTFOLIO_CSV env var.
  *
  * Columns (fixed order):
@@ -39,19 +39,19 @@ export const COLUMNS = [
 ] as const;
 export type Row = Partial<Record<(typeof COLUMNS)[number], string>>;
 
-/** Resolve the cache file path: --file > CRYPTO_PORTFOLIO_CSV > <repo-root>/.crypto-portfolio.csv. */
+/** Resolve the cache file path: --file > CRYPTO_PORTFOLIO_CSV > <repo-root>/.cache/defi-portfolio-manager/crypto-portfolio.csv. */
 export function resolveCachePath(argv: string[], env = process.env, startDir = process.cwd()): string {
   const i = argv.indexOf("--file");
   if (i >= 0 && argv[i + 1]) return argv[i + 1];
   if (env.CRYPTO_PORTFOLIO_CSV) return env.CRYPTO_PORTFOLIO_CSV;
   let dir = startDir;
   for (;;) {
-    if (existsSync(join(dir, ".git"))) return join(dir, ".crypto-portfolio.csv");
+    if (existsSync(join(dir, ".git"))) return join(dir, ".cache", "defi-portfolio-manager", "crypto-portfolio.csv");
     const parent = dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
-  return join(startDir, ".crypto-portfolio.csv");
+  return join(startDir, ".cache", "defi-portfolio-manager", "crypto-portfolio.csv");
 }
 
 function escapeCsv(v: string): string {

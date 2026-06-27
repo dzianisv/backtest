@@ -212,7 +212,7 @@ export function parseArgs(): { dbPath: string; days: number; noEnrich: boolean }
     else if (args[i] === "--no-enrich") noEnrich = true;
   }
 
-  if (!dbPath) dbPath = join(repoRoot(), ".db", "news.db");
+  if (!dbPath) dbPath = join(repoRoot(), ".cache", "read-news", "news.db");
   return { dbPath, days, noEnrich };
 }
 

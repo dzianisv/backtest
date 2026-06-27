@@ -57,7 +57,7 @@ function parseCliArgs(): ReadNewsOpts {
 // ── Core logic (exported for tests) ─────────────────────────────────────────
 
 export async function runReadNews(opts: ReadNewsOpts = {}): Promise<ReadNewsResult> {
-  const dbPath = opts.db ?? process.env.CRYPTO_NEWS_DB ?? ".db/news.db";
+  const dbPath = opts.db ?? process.env.CRYPTO_NEWS_DB ?? ".cache/read-news/news.db";
   const days = opts.days ?? 3;
   const k = opts.k ?? 15;
   const queryStr = opts.query ?? "";

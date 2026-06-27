@@ -76,6 +76,13 @@ ORCHESTRATOR (you)
   │   a) Research DB — check already-ingested articles (instant):
   │      python3 .agents/skills/stocks-trend-screener/scripts/db/research_db.py search "<ticker>"
   │
+  │   a2) EDGAR full-text (always try before FT/WSJ for any public US company):
+  │       web_fetch "https://efts.sec.gov/LATEST/search-index?q=%22<company_name>%22+%22<keyword>%22&forms=10-Q,10-K&startdt=<90d_ago>&enddt=<today>"
+  │       → returns full SEC filing text, free, no paywall, body always available.
+  │       → For revenue acceleration: fetch the latest 10-Q revenue table directly.
+  │       → For supply/demand language: search for "capacity", "backlog", "constrained".
+  │       This is the primary body source. Use it FIRST before attempting FT/Bloomberg.
+  │
   │   b) FT headlines (verified working — Google News RSS proxy for ft.com):
   │      web_fetch "https://news.google.com/rss/search?q=site:ft.com+<ticker>+when:30d&hl=en-US&gl=US&ceid=US:en"
   │      → returns ~100 FT headlines with RSS teasers (~100-200 char publisher descriptions)
@@ -125,7 +132,7 @@ ORCHESTRATOR (you)
 
 For a deterministic firm-wide feed (not per-ticker, equity feeds only), use [[read-news]]'s `read_news.ts`:
 ```bash
-bun .agents/skills/read-news/scripts/read_news.ts --db .db/news.db --days 7 --query "<ticker or theme>" --source ft,wsj
+bun .agents/skills/read-news/scripts/read_news.ts --db .cache/read-news/news.db --days 7 --query "<ticker or theme>" --source ft,wsj
 ```
 This screener uses the per-ticker Google News search above by design; the read-news pipeline is the fallback when you want aggregated + deduped FT/WSJ events without per-ticker scoping.
 
@@ -205,7 +212,7 @@ advantage of an agent team reading financial journalism.
 
 ### How to read articles (including paywalled sources)
 
-**Use `web_fetch` directly for per-ticker journalism search. For a deterministic firm-wide feed (equity feeds: FT + WSJ), use [[read-news]]'s `read_news.ts`: `bun .agents/skills/read-news/scripts/read_news.ts --db .db/news.db --days 7 --query "<ticker or theme>" --source ft,wsj` — returns `{fetched, feeds_ok, unavailable, events}`.**
+**Use `web_fetch` directly for per-ticker journalism search. For a deterministic firm-wide feed (equity feeds: FT + WSJ), use [[read-news]]'s `read_news.ts`: `bun .agents/skills/read-news/scripts/read_news.ts --db .cache/read-news/news.db --days 7 --query "<ticker or theme>" --source ft,wsj` — returns `{fetched, feeds_ok, unavailable, events}`.**
 
 1. **FT headlines:** `web_fetch "https://news.google.com/rss/search?q=site:ft.com+<topic>+when:7d&hl=en-US&gl=US&ceid=US:en"`
 2. **WSJ headlines:** `web_fetch "https://news.google.com/rss/search?q=site:wsj.com+<topic>+when:7d&hl=en-US&gl=US&ceid=US:en"`
@@ -221,12 +228,16 @@ If NO browser: state "No browser — FT/Bloomberg bodies unavailable. Headlines 
 <instructions>
 ## Step 0 — Mode detection (MANDATORY FIRST STEP)
 
+**Your FIRST output line must declare the detected mode and the exact trigger word that decided it**, e.g. `Mode: CONVICTION_MODE (trigger: "high-confidence")`. Forcing this declaration prevents silent misrouting — the single most common failure of this skill.
+
 Read the user's trigger phrase:
-- "high confidence", "no noise", "best picks", "just give me names", "your best ideas", "only strong ones" → **CONVICTION_MODE**
+- "high confidence" / "high-confidence", "surge", "buy today" / "to buy", "no noise", "best picks", "just give me names", "your best ideas", "only strong ones" → **CONVICTION_MODE**
 - "find trends", "weekly scan", "full research", "what's waking up", "scan for emerging" → **RESEARCH_MODE**
 - Default if ambiguous → **RESEARCH_MODE**
 
-In CONVICTION_MODE: skip the subagent fan-out in Step 2, use the CONVICTION_MODE path in orchestration, and apply the 4-question skeptic filter. Show only the final 3-name table. No intermediate process output.
+**Mode vs depth (critical precedence rule):** "research", "deep research", "deep-research", "do /deep-research", "dig deep" set DEPTH, **not mode**. If ANY CONVICTION trigger above is present, the request is **CONVICTION_MODE** even when "deep-research" also appears — "deep-research" then means *do the full feed-stack verification on each candidate*, it does NOT switch you to RESEARCH_MODE. A request for "high-confidence surge picks, do deep research" is CONVICTION_MODE with thorough verification. Route to RESEARCH_MODE only when NO conviction trigger is present.
+
+In CONVICTION_MODE: skip the subagent fan-out in Step 2, use the CONVICTION_MODE path in orchestration, and apply the 4-question skeptic filter. Output MAX 3 names; **only SURVIVED + HIGH advances — MEDIUM/LOW go to a brief watchlist, never into the finalist list.** If fewer than 3 pass at HIGH, output fewer (an honest 1-name answer beats 3 padded ones). Show only the final table + per-survivor thesis; no full RESEARCH_MODE table, no process narrative.
 
 In RESEARCH_MODE: execute all 5 steps as described below in full.
 
@@ -390,6 +401,44 @@ material monopoly, auto supplier with robotics contracts. If it's already in the
 Record your skeptic assessment for each candidate. Be honest — the majority should be dropped.
 </step_4_actions>
 
+## Step 4.5 — Grounding gate (mandatory — applied per finalist before output)
+
+For EVERY candidate that survived Step 4, you must satisfy ALL THREE checks before it may appear
+in the Step 5 output table or CONVICTION_MODE output block. A candidate that cannot pass all three
+is marked `INSUFFICIENT_GROUNDING` and moved to the killed list with reason "body source not reached".
+
+**Check G1 — Resolved publisher URL (not a Google News redirect)**
+At least one citation for this finalist must be a direct publisher URL (e.g. `https://www.wsj.com/articles/...`,
+`https://seekingalpha.com/article/...`, `https://efts.sec.gov/...`). A `news.google.com` URL alone
+does NOT pass. Resolution path (try in order):
+1. EDGAR / SEC EDGAR full-text: always free, always body. Use first for filings/Form 4 claims.
+2. WSJ bodies: `read_article.ts "<wsj-url>"` via Wayback — works without Chrome.
+3. Reuters / CNBC / open press releases: `web_fetch` directly — no paywall.
+4. FT / Bloomberg bodies: invoke `bypass-paywalls` skill (Chrome session required).
+5. If all paths fail: record `[FETCH FAILED: <url>]` — do NOT substitute a Google News URL.
+
+**Check G2 — >=1 verbatim body quote (not a headline, not a teaser <=200 chars)**
+At least one citation for this finalist must include a verbatim excerpt from the article body —
+not the RSS teaser, not the headline reworded. Minimum 1 sentence of actual body text, copied
+exactly, in quotes. If the body is unreachable for ALL sources for this finalist, record
+`[BODY UNREACHABLE: <outlets tried>]` and downgrade confidence to LOW.
+
+**Check G3 — Qualifying metrics resolved (not UNKNOWN)**
+Any metric named in Step 4 Q4 (revenue acceleration) or used as evidence for the demand inflection
+(growth rate, backlog size, market share %) must be sourced to a specific filing, earnings call, or
+data fetch — not left as UNKNOWN. Resolution path:
+1. Run `fundamentals.py <ticker>` for revenue trend.
+2. Search EDGAR for the latest 10-Q/10-K revenue table.
+3. Search the research DB: `research_db.py search "<ticker> revenue"`.
+If after all three paths the metric is still UNKNOWN, do NOT assert it. State the unknown explicitly
+and it counts against confidence (caps the finalist at LOW, never HIGH).
+
+**INSUFFICIENT_GROUNDING rule:**
+A finalist that fails G1 AND G2 (i.e., only RSS stubs, no resolved URL, no body quote) is
+AUTOMATICALLY disqualified as a HIGH finalist. It may appear on a watchlist at LOW confidence
+only, with the label `BODY_NOT_REACHED — watch only`.
+In CONVICTION_MODE: a finalist failing G1 AND G2 is KILLED, period. No watchlist slot.
+
 ## Step 5 — Rank, output, and route
 
 <step_5_actions>
@@ -421,7 +470,8 @@ HIGH-CONVICTION PICKS — [DATE] — [N names]
   Why now: [2 sentences — the specific demand inflection and why revenue is accelerating]
   Catalyst: [specific event] — [quarter/date]
   Risk: [the one thing that kills it]
-  Source: [outlet] [url] [date] — "[verbatim quote confirming catalyst is live]"
+  Source (BODY): [resolved-publisher-url] (YYYY-MM-DD) — "[verbatim body sentence — not a headline]"
+  Source (DATA): [how revenue-accel was verified — filing/fundamentals.py/EDGAR — or state BODY_NOT_REACHED]
 
 [repeat for each survivor, max 3]
 
@@ -562,6 +612,9 @@ Every external claim (news event, data point, quote, analysis) MUST include ALL 
 Format in output: `[TIER] https://exact-url (YYYY-MM-DD) — "verbatim quote"`
 
 **Never write:**
+- An RSS teaser or article headline as the "verbatim quote" — the quote must be from the article body
+  (at least one full sentence of body text, not the <=200-char teaser or headline)
+- A `news.google.com` URL as the resolved source URL — it must be the publisher's direct URL
 - Source name alone (`CoinDesk`, `Bloomberg`) — without URL it is hallucination bait
 - A quote without its URL
 - A URL without a date
@@ -790,7 +843,7 @@ python3 .agents/skills/stocks-trend-screener/scripts/db/research_db.py themes
 python3 .agents/skills/stocks-trend-screener/scripts/db/research_db.py theses
 ```
 
-DB file: `~/.local/share/trend-research/articles.db` (persists across sessions, zero cost)
+DB file: `.cache/stocks-trend-screener/articles.db` (persists across sessions, zero cost)
 
 ### Why SQLite + BM25, not vector DB
 

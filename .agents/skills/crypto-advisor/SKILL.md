@@ -33,7 +33,7 @@ flowchart TD
 
     subgraph NEWS["News Pipeline  narrative seat only"]
         RN["read_news.ts\nfetch + ingest + query"]
-        NDB[".db/news.db"]
+        NDB[".cache/read-news/news.db"]
         RN --> NDB
     end
 
@@ -261,7 +261,7 @@ For any non-L1 token (not BTC/ETH/SOL/TON), you MUST verify protocol mechanics v
    bun .agents/skills/read-news/scripts/feeds/ft.ts  --section markets,global-economy --query bitcoin --days 5 --text
    ```
    For a broader consolidated crypto+macro event feed (deduped across all outlets), use [[narrative-news]]:
-   `bun .agents/skills/read-news/scripts/read_news.ts --db .db/news.db --days 5 --query "<token/theme>"`.
+   `bun .agents/skills/read-news/scripts/read_news.ts --db .cache/read-news/news.db --days 5 --query "<token/theme>"`.
 
 2. **Read what actually came back.** If the fetch returns an error or no relevant content, write `[FETCH FAILED: <url>]` — do NOT count it toward the 3-source minimum, do NOT invent what it "would have said."
 
@@ -345,7 +345,16 @@ Before finalising signals, count total BUY + BUY(small) signals across all token
 | Fear (25–49)          | 6                     |
 | Neutral+ (50–100)     | no cap                |
 
-If total BUYs exceed the cap: downgrade lowest-conviction BUYs to HOLD, starting from the bottom of the ranked list (smallest seats_bull first, then lowest confidence), until the cap is met. Print: `⚠️ Governor: {n} BUY(s) downgraded to HOLD (regime cap F&G={value})`.
+**Always perform these steps in order — even when no downgrades fire:**
+
+1. **Rank all BUY/BUY(small) signals by conviction** (ascending): sort by `seats_bull` ascending, then by `confidence` ascending (MED < HIGH). Print the ranked list.
+2. **Count total BUYs** and compare to the regime cap.
+3. **If total > cap**: downgrade from the bottom of the ranked list (lowest conviction first) until the cap is met. Print: `⚠️ Governor: {n} BUY(s) downgraded to HOLD (regime cap F&G={value})`.
+4. **If total ≤ cap**: no downgrades. Print: `✅ Governor: {total} BUY(s) within cap of {cap} (regime: {regime_name}, F&G={value})`.
+
+> Format note: `{total}` is the INTEGER COUNT of BUY + BUY(small) tokens. `BUY(s)` is a fixed label — do NOT substitute the specific signal subtype (e.g. do not write "BUY(small)(s)" or "1 BUY(small) within cap"). Always write `N BUY(s)` regardless of whether signals are BUY or BUY(small).
+
+This explicit ranking step is mandatory regardless of outcome — it makes the downgrade logic auditable and catches upstream signal errors (e.g., a token scored BUY(small) despite quorum=UNCERTAIN).
 
 Rationale: in a Fear regime the risk-reward of concentrated buying is poor; the governor enforces the "60–70% dry powder" discipline that a pure signal table cannot.
 
@@ -357,7 +366,26 @@ price/RSI/MACD level hits. See *Set a buy-alert* below.
 
 ## Step 3 — Print the full run report
 
-Print **three blocks** in this exact order:
+**Always start the report with a 2–3 sentence exec recap** before Block 1. No headers — just plain text. Format:
+
+```
+{High-conviction signal}: {TOKEN} — {1-line reason why: key indicator + zone + quorum}.
+{Second signal if exists, else skip}.
+Narrative: {1 sentence on the dominant market theme right now — regime, macro driver, what's moving the space}.
+```
+
+Rules:
+- Lead with the highest-conviction BUY or SELL (most seats, clearest zone). Skip if nothing above HOLD.
+- If all signals are HOLD, say so in one sentence + the dominant reason (e.g. "All 11 tokens HOLD — trend bearish, waiting for 200wMA reclaim").
+- The narrative sentence must be grounded in a fetched source from this run. No URL = no claim.
+- Keep it under 3 sentences total. Not a list — flowing text.
+
+Example:
+```
+HIGH-CONVICTION BUY: AAVE — 4/5 seats bullish, zone=DEEP_VALUE (RSI 23, −62% from ATH, above 200wMA support at $62). BUY(small): LINK on RWA tailwind (Swift/Euroclear pipeline live). Narrative: Extreme Fear (F&G 18) — AI/tech macro selloff hit crypto hard this week; quality DeFi is at cycle-floor valuations while fundamentals (TVL, fees) held.
+```
+
+Print **three blocks** after the exec recap, in this exact order:
 
 ### Block 1 — Signal table (one-glance summary)
 ```
@@ -594,6 +622,70 @@ Educational only. Not financial advice. DYOR.
 ⛔ Never use `head -c 4000` — it can truncate multibyte emojis and silently cut the disclaimer.
 
 **⛔ If a narrative claim has no fetched URL, either drop the claim or replace it with "no specific catalyst" — do NOT state a news fact without a source link.**
+
+---
+
+## Step 7 — Publish to Notion (config-gated)
+
+Only runs if `.cache/crypto-advisor/notion.yaml` exists and `enabled: true`.
+
+**7a. Read the config:**
+```bash
+CONFIG=".cache/crypto-advisor/notion.yaml"
+[ -f "$CONFIG" ] && ENABLED=$(python3 -c "import yaml,sys; c=yaml.safe_load(open('$CONFIG')); print(c.get('enabled','false'))") || ENABLED=false
+```
+
+**7b. Build the page title** using `title_template` from the config:
+
+Derive each variable from the completed run:
+- `{date}` → today's date (`YYYY-MM-DD`)
+- `{fg_label}` → map the F&G value used in Step 2:
+  - 0–24 → `xfear`
+  - 25–49 → `fear`
+  - 50–74 → `neutral`
+  - 75–89 → `greed`
+  - 90–100 → `xgreed`
+- `{signals}` → take the top 1–2 BUY/BUY(small) tokens (by conviction, highest first), uppercase, space-joined, append ` buy`; if none, use `all hold`
+  - Examples: `AAVE buy`, `AAVE LINK buy`, `all hold`
+
+Full title example: `2026-06-26 xfear AAVE buy`
+
+**7c. Create the Notion page** using the Notion MCP tool:
+
+```
+notion-create-pages
+  parent: {"type": "page_id", "page_id": "<parent_page_id from config>"}
+  pages: [{
+    "properties": {"title": "<computed title>"},
+    "content": "<full report markdown: Block 1 + Block 2 + Block 3 + Telegram recap>"
+  }]
+```
+
+The content is the full run output — signal table, per-token verdicts, news sources, Telegram recap — in markdown. No need to reformat; paste the blocks verbatim.
+
+**7d. Save to local file** (always — even if Notion is disabled):
+
+```bash
+TITLE="{computed title}"   # e.g. "2026-06-26 xfear AAVE buy"
+mkdir -p .cache/crypto-advisor/research
+python3 -c "
+import sys
+title = sys.argv[1]
+content = sys.argv[2]
+with open(f'.cache/crypto-advisor/research/{title}.md', 'w') as f:
+    f.write(content)
+" "$TITLE" "$FULL_REPORT_MARKDOWN"
+```
+
+`$FULL_REPORT_MARKDOWN` = exec recap + Block 1 + Block 2 + Block 3 + Telegram recap, concatenated.
+
+**7e. Print the result:**
+```
+✅ Saved: .cache/crypto-advisor/research/{title}.md
+✅ Notion: https://app.notion.com/p/<page-id>   ← only if Notion enabled
+```
+
+If the config is absent or `enabled: false`, still save the file (7d always runs); skip Notion (7c).
 
 ---
 

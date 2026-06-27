@@ -30,7 +30,7 @@ news_store.ts:274-279
 optional: cosine(emb, rep_emb) ≥ 0.85
 (CRYPTO_NEWS_EMBED_COS)"]
 
-    DB[("SQLite .db/news.db
+    DB[("SQLite .cache/read-news/news.db
 articles · events
 article_assets
 articles_fts (FTS5)
@@ -115,7 +115,7 @@ Dedup unit behavior (news_store.test.ts:280, 369):
 
 | Flag | Purpose | Default |
 |---|---|---|
-| `--db <path>` | SQLite DB path (overrides `CRYPTO_NEWS_DB`) | `.db/news.db` |
+| `--db <path>` | SQLite DB path (overrides `CRYPTO_NEWS_DB`) | `.cache/read-news/news.db` |
 | `--days <n>` | Recency window for result filtering | `3` |
 | `--k <n>` | Max events returned | `15` |
 | `--query <str>` | RRF hybrid text query → `query()` | — (uses `newSince` if absent) |
@@ -128,7 +128,7 @@ Output JSON: `{ fetched, feeds_ok, unavailable, events }`.
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `CRYPTO_NEWS_DB` | SQLite DB path | `.db/news.db` (news_store.ts:15, read_news.ts:60) |
+| `CRYPTO_NEWS_DB` | SQLite DB path | `.cache/read-news/news.db` (news_store.ts:15, read_news.ts:60) |
 | `CRYPTO_NEWS_EMBED_CMD` | Shell command: stdin=text → stdout=JSON float array | _(unset — embeddings disabled)_ (news_store.ts:150) |
 | `CRYPTO_NEWS_JACCARD` | Jaccard similarity threshold for event clustering | `0.15` (news_store.ts:17,264) |
 | `CRYPTO_NEWS_EMBED_COS` | Cosine similarity threshold for dense-vector cluster match | `0.85` (news_store.ts:263) |

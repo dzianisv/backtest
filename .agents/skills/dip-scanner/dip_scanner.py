@@ -35,8 +35,10 @@ except ImportError:
 
 # === CONSTANTS ===
 
+_SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.abspath(os.path.join(_SKILL_DIR, "..", "..", ".."))
 DEFAULT_POOL = os.environ.get(
-    "DIP_POOL", os.path.expanduser("~/.openclaw/workspace/investor/pools/dip_candidates.jsonl"))
+    "DIP_POOL", os.path.join(_REPO_ROOT, ".cache", "dip-scanner", "dip_candidates.jsonl"))
 
 SP100 = [
     "AAPL", "MSFT", "AMZN", "NVDA", "GOOGL", "META", "BRK-B", "LLY", "JPM", "V",

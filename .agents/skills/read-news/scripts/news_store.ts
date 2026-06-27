@@ -12,7 +12,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const DEFAULT_DB = ".db/news.db";
+const DEFAULT_DB = ".cache/read-news/news.db";
 const SIMHASH_BITS = 64;
 const DEFAULT_JACCARD = 0.15;
 const SHINGLE = 3;    // token window for SimHash features

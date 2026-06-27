@@ -1,9 +1,23 @@
 #!/usr/bin/env bun
-import { join } from "path";
+import { join, dirname } from "path";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 
-const CONFIG_DIR = join(process.env.HOME ?? "~", ".config", "mkt");
-const STORE_PATH = join(CONFIG_DIR, "agent-alerts.json");
+// Alert STATE lives in the repo .cache/mkt/ so it travels with the skill and
+// is accessible regardless of cwd (daemon/cron can run from anywhere).
+// Daemon CONFIG stays in ~/.config/mkt/config.yaml — user config, not skill state.
+function findRepoRoot(start: string): string {
+  let dir = start;
+  while (true) {
+    if (existsSync(join(dir, ".git"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error("could not find repo root (.git) from " + start);
+    dir = parent;
+  }
+}
+
+const REPO_ROOT = findRepoRoot(import.meta.dir);
+const CACHE_DIR = join(REPO_ROOT, ".cache", "mkt");
+const STORE_PATH = join(CACHE_DIR, "agent-alerts.json");
 
 export type Cond = { condition: string; value: number; period?: number };
 
@@ -32,7 +46,7 @@ export function loadJobs(): AlertJob[] {
 }
 
 export function saveJobs(jobs: AlertJob[]): void {
-  mkdirSync(CONFIG_DIR, { recursive: true });
+  mkdirSync(CACHE_DIR, { recursive: true });
   writeFileSync(STORE_PATH, JSON.stringify(jobs, null, 2), "utf8");
 }
 

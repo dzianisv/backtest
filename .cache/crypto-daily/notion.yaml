@@ -1,0 +1,5 @@
+# Notion target for crypto-daily reports.
+# The report is published as a child page under this page.
+# Retarget by replacing page_url; page_id is the 32-char hex from the URL tail.
+page_url: "https://app.notion.com/p/crypto-advisor-38cac25eb49f80dcb894e842589863cf"
+page_id: "38cac25eb49f80dcb894e842589863cf"

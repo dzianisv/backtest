@@ -12,7 +12,7 @@ Data: Google News RSS (free, no key, stdlib only). Counts only headlines whose p
 --days (Google serves a fixed ~100-item feed, so a recency filter is what makes counts move).
 NEVER fabricates a headline; a failed fetch → that ticker is [unavailable], not invented.
 
-Ledger: $NARRATIVE_LEDGER or ~/.openclaw/workspace/investor/narrative_ledger.jsonl
+Ledger: $NARRATIVE_LEDGER or <repo_root>/.cache/stocks-trend-screener/narrative_ledger.jsonl
 
 Usage:
     python3 mention_velocity.py --tickers NVDA,WDC,STX,MU,AVGO --days 7
@@ -22,11 +22,24 @@ from __future__ import annotations
 import argparse, json, os, re, sys
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
-LEDGER = os.environ.get("NARRATIVE_LEDGER", os.path.expanduser("~/.openclaw/workspace/investor/narrative_ledger.jsonl"))
+
+def _find_repo_root() -> Path:
+    """Walk up from this file's location until a .git directory is found."""
+    p = Path(__file__).resolve()
+    for parent in [p] + list(p.parents):
+        if (parent / ".git").exists():
+            return parent
+    raise RuntimeError("Could not find repo root (no .git found up from %s)" % __file__)
+
+
+_CACHE_DIR = _find_repo_root() / ".cache" / "stocks-trend-screener"
+
+LEDGER = os.environ.get("NARRATIVE_LEDGER", str(_CACHE_DIR / "narrative_ledger.jsonl"))
 # DURABLE pool (NOT /tmp — convergence runs in a separate cron session that can't see this job's /tmp).
 NARRATIVE_POOL = os.environ.get("NARRATIVE_POOL", os.path.expanduser("~/.openclaw/workspace/investor/pools/narrative.jsonl"))
 MIN_BASELINE_OBS = 3  # need this many prior daily observations before a spike may FEED convergence (cold-start guard)

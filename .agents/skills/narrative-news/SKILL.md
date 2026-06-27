@@ -35,7 +35,7 @@ state), and returns the **ranked, question-relevant** deduped events in one shot
 
 ```bash
 bun .agents/skills/read-news/scripts/read_news.ts \
-  --db .db/news.db --days 5 \
+  --db .cache/read-news/news.db --days 5 \
   --query "<key entities from the question: e.g. bitcoin BTC ETF Strategy MicroStrategy treasury Fed Coinbase COIN>"
 # → {fetched, feeds_ok, unavailable:[...], events:[ {title, source_count, ...} ranked by relevance ]}
 ```
@@ -45,7 +45,7 @@ failures come back in `unavailable` (loud, NFR6) — never silently dropped.
 
 After the brief is written, the workflow marks events surfaced so they don't repeat next run:
 ```bash
-bun .agents/skills/read-news/scripts/news_store.ts --db .db/news.db mark-surfaced --ids <ids...>
+bun .agents/skills/read-news/scripts/news_store.ts --db .cache/read-news/news.db mark-surfaced --ids <ids...>
 ```
 
 **Fallback (only if read_news fails):** pull a single source to stdout with
