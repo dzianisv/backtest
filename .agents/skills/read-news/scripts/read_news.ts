@@ -69,7 +69,7 @@ export async function runReadNews(opts: ReadNewsOpts = {}): Promise<ReadNewsResu
   // When --asset is set, also pull market sources for that specific asset
   if (opts.asset) {
     fetchAssets = [opts.asset];
-    fetchSources = [...(sources ?? NEWS_FEEDS), "tradingview", "coinmarketcap"];
+    fetchSources = [...(sources ?? NEWS_FEEDS), "tradingview", "coinmarketcap", "googlefinance", "morningstar"];
   }
 
   const { records, unavailable } = await fetchAllNews({ sources: fetchSources, assets: fetchAssets });

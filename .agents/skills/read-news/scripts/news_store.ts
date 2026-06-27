@@ -437,6 +437,23 @@ export function queryByAsset(
     + dateFilter
     + ` ORDER BY e.last_updated DESC LIMIT ?`,
   ).all(...params) as Row[];
+
+  // Override each event's representative title with the most-recent article title
+  // that is actually tagged for this asset. Without this, a near-dup-clustered event
+  // (e.g. AAPL + GOOGL analyst consensus merged into one event because 0B/0H/0S made
+  // their titles nearly identical) would surface the wrong ticker's title when queried
+  // by the other asset.
+  const titleStmt = db.prepare(
+    `SELECT a.title FROM articles a
+     JOIN article_assets aa ON aa.article_id = a.id
+     WHERE a.event_id = ? AND aa.asset = ?
+     ORDER BY a.published_at DESC LIMIT 1`,
+  );
+  for (const row of rows) {
+    const art = titleStmt.get(row.event_cluster_id, norm) as { title: string } | null;
+    if (art?.title) row.title = art.title;
+  }
+
   return rows.map(eventDict);
 }
 

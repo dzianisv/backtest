@@ -19,10 +19,11 @@ import { fetchCryptoFeed, CRYPTO_FEED_URLS } from "./crypto";
 import {
   fetchTradingViewNews,
   fetchCmcNews,
-  fetchGoogleFinanceNews,
   fetchMarketNews,
   DEFAULT_MARKET_ASSETS,
 } from "./markets";
+import { fetchGoogleFinance } from "./googlefinance";
+import { fetchMorningstar } from "./morningstar";
 
 const CRYPTO_SOURCES = Object.keys(CRYPTO_FEED_URLS);
 
@@ -30,7 +31,7 @@ const CRYPTO_SOURCES = Object.keys(CRYPTO_FEED_URLS);
 export const NEWS_FEEDS: string[] = ["ft", "wsj", ...CRYPTO_SOURCES];
 
 // Known per-asset market sources
-const MARKET_SOURCES = new Set(["tradingview", "coinmarketcap", "googlefinance"]);
+const MARKET_SOURCES = new Set(["tradingview", "coinmarketcap", "googlefinance", "morningstar"]);
 
 function ftToArticle(a: FtArticle): Article {
   return {
@@ -109,11 +110,13 @@ export async function fetchAllNews(opts?: {
           records.push(...articles);
           for (const e of errors) unavailable.push(`coinmarketcap:${e}`);
         } else if (sourceName === "googlefinance") {
-          const isCrypto = ["BTC","ETH","SOL","TON","HYPE","AAVE","JUP","UNI","AERO","PUMP","LINK"].includes(upper);
-          const gfSym = isCrypto ? `${upper}USD:CRYPTO` : `${upper}:NASDAQ`;
-          const { articles, errors } = await fetchGoogleFinanceNews(gfSym);
+          const { articles, errors } = await fetchGoogleFinance(upper);
           records.push(...articles);
           for (const e of errors) unavailable.push(`googlefinance:${e}`);
+        } else if (sourceName === "morningstar") {
+          const { articles, errors } = await fetchMorningstar(upper);
+          records.push(...articles);
+          for (const e of errors) unavailable.push(`morningstar:${e}`);
         }
       } catch (e) {
         unavailable.push(`${sourceName}:${e instanceof Error ? e.message : String(e)}`);

@@ -1,6 +1,6 @@
 # Crypto-Advisor Eval Rubric
 
-7 dimensions, each scored 0–5. All anchors are concrete and verifiable against SKILL.md.
+8 dimensions, each scored 0–5. All anchors are concrete and verifiable against SKILL.md.
 
 Stop condition: mean holdout ≥ 4.2 AND no dimension below 3.0, OR 3 rounds completed (whichever first).
 
@@ -183,3 +183,34 @@ Stop condition: mean holdout ≥ 4.2 AND no dimension below 3.0, OR 3 rounds com
 - **2** — multiple unsourced claims; or one URL that was not actually fetched cited as if fetched
 - **1** — fabricated URL cited as real source; or news facts stated confidently without any source
 - **0** — systematic fabrication — multiple invented URLs/headlines/quotes presented as real
+
+---
+
+## Dimension 8 — output_readability
+
+**What it measures:** Whether the user-facing outputs (exec recap, Telegram message, per-token plain-English verdicts) are readable by a non-expert without knowing internal codes.
+
+**Banned from user-facing outputs (auto-fail if present):**
+- Zone codes: `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN`
+- Quorum codes: `BULLISH`, `BEARISH`, `UNCERTAIN`, `SPLIT` (as standalone labels)
+- Seat counts: `3B/1Br`, `0B/4Br`, `seats_bull`, `seats_bear`
+- Data gate codes: `UNKNOWN (81wk)`, `INSUFFICIENT`, `dominant_zone`
+
+**What IS allowed in user-facing outputs:**
+- `RSI 39` (already human-readable)
+- `down 62% from all-time high`
+- `4 of 5 analysis perspectives bullish`
+- `only 18 months of price history available`
+- `4-year moving average unavailable — using 80-week proxy`
+
+**Applies to:** exec recap paragraph, Telegram block, Block 2 per-token verdicts.
+**Does NOT apply to:** Block 1 signal table (internal summary), Block 3 source citations, Step 4 critic reports.
+
+**Anchors:**
+
+- **5** — Zero internal codes in any user-facing output. Exec recap and Telegram use plain English throughout. Every signal is explained by what it means, not what it's called. "Down 62% from its high with strong fundamentals" not "DEEP_VALUE, 3B/1Br."
+- **4** — One or two internal codes slip through (e.g. "RSI 39" is fine; "DEEP_VALUE" is not), but overall readable.
+- **3** — Several codes present but main signal and catalyst are still understandable.
+- **2** — Significant jargon — a Telegram subscriber would not understand the key message without knowing the internal schema.
+- **1** — Output reads like a schema dump. Signals present but not explained. Codes dominate.
+- **0** — Telegram/exec recap is incomprehensible to a non-expert. Pure codes, no plain English.

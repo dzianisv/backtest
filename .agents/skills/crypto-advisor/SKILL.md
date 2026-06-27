@@ -195,12 +195,23 @@ tradingview-capture_screenshot                             → save screenshot; 
 ```
 Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. Helper output: EMA20, SMA50, SMA200, 200-week MA, and the death cross (classic SMA50/SMA200, exact). Nothing else — it does not recompute RSI/BB/MACD.
 
-**⛔ DATA SUFFICIENCY GATE — run before zone classification:**
-Count the number of weekly closes returned by `tradingview-data_get_ohlcv count=210 timeframe=W`.
-- If `weekly_closes < 200`: set `200wMA = INSUFFICIENT`, `dominant_zone = UNKNOWN`.
-- Zone `UNKNOWN` **blocks** BUY and BUY(small) — signal must be HOLD until sufficient history is available.
-- Rationale: 365 days of daily data ≈ 52 weekly closes; 200-week MA requires ~4 years (~200 weekly closes) to be valid. Reporting a 200wMA from 52 weekly closes is mathematically meaningless and produces fabricated zone signals.
-- If TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
+**⛔ DATA SUFFICIENCY RULE — 200wMA only:**
+Count the weekly closes from `tradingview-data_get_ohlcv count=210 timeframe=W`.
+
+If `weekly_closes < 200`:
+- Set `200wMA = INSUFFICIENT` — do NOT compute or print a 200wMA value; it would be meaningless.
+- Compute the longest available weekly MA from the data you do have (e.g. a ~80wk MA if 81 closes are available). Label it explicitly: `~{N}wk MA proxy: ${value}` — never label it "200wMA".
+- Classify zone from available data: use % from all-time high + distance from the proxy MA. A token at -70% from its ATH and below its proxy MA is still DEEP_VALUE by any reasonable measure.
+- Do NOT force zone = UNKNOWN. Do NOT block BUY or BUY(small) based on missing 200wMA.
+- Cap the signal at **BUY (small)** maximum (not BUY) when weekly_closes < 200 — this acknowledges the reduced conviction from limited history.
+- Add a plain-English note in the per-token verdict: e.g. "4-year moving average not yet available (only N months of price history) — using shorter-term trend as proxy."
+
+If `weekly_closes >= 200`:
+- Compute 200wMA normally. Proceed without restriction.
+
+Rationale: the 200wMA is one indicator, not the decision. Refusing to buy a token that is 70% below its all-time high with a 3/5 bullish quorum because it lacks exactly 4 years of weekly data is a false precision error. The quorum is the decision engine; the 200wMA is context.
+
+If TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
 
 **1c. Assemble the data package** by merging the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the helper's moving-average block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it.
 
@@ -267,6 +278,13 @@ For any non-L1 token (not BTC/ETH/SOL/TON), you MUST verify protocol mechanics v
 
 3. **Quote verbatim** — copy an exact sentence or number from the page. Do not paraphrase from memory.
 
+**⛔ DeFiLlama QUOTE RULE:** DeFiLlama pages are metric dashboards — the "verbatim quote" must be a literal copy of the numbers shown on the page. Accepted examples:
+  - `"Protocol Revenue (24h): $X | Annual: $X | TVL: $X"`
+  - `"Fees (30d): $X | Revenue (30d): $X"`
+  - `"Chain Revenue (24h)$65,225... App Revenue (24h)$1.1m"`
+
+A descriptive summary ("protocol revenue confirmed", "GHO expansion ongoing", "buy-distribute program live") is **NOT a verbatim quote** — it is a paraphrase and fails this check. If you can't find a quotable metric string on the DeFiLlama page, write `[FETCH FAILED: no parseable metric found]` and do not invent a description.
+
 4. **Rank sources by signal quality:**
    - **Tier 1 — Primary signal**: on-chain/flow data with timestamps and hard numbers (ETF flow $, protocol revenue $, F&G index value). Weight: 3×. Drives posture.
    - **Tier 2 — Credible context**: Bloomberg/Reuters/FT/WSJ/CoinDesk/TheBlock with named sources and specific claims. Weight: 2×. Supports posture.
@@ -295,7 +313,7 @@ Invalidation: <what reverses this verdict>
 **1e. Aggregate into the compact verdict and persist:**
 ```json
 {"symbol":"BTC","quorum_verdict":"BULLISH|SPLIT|BEARISH|UNCERTAIN",
- "dominant_zone":"DEEP_VALUE|FAIR_VALUE|ELEVATED|EXTREME|UNKNOWN",
+ "dominant_zone":"DEEP_VALUE|FAIR_VALUE|ELEVATED|EXTREME",
  "seats_bull":3,"seats_bear":2,"key_support":60000,"key_resistance":66000,"confidence":"HIGH|MED|LOW"}
 ```
 ```sql
@@ -328,12 +346,12 @@ Map seat postures to `quorum_verdict` using this truth table — no interpretati
 
 | Signal | Condition |
 |---|---|
-| **BUY** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone ∈ {DEEP_VALUE, FAIR_VALUE}` |
+| **BUY** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone ∈ {DEEP_VALUE, FAIR_VALUE}`, `weekly_closes >= 200` |
 | **BUY\*** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone = ELEVATED` → downgrade to **HOLD** + note "await pullback" |
 | **BUY\*\*** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone = EXTREME` → downgrade to **HOLD** + note "extended, avoid" |
-| **BUY (small)** | `quorum_verdict = SPLIT`, `dominant_zone = DEEP_VALUE` |
+| **BUY (small)** | (`quorum_verdict = BULLISH`, seats_bull ≥ 3, `weekly_closes < 200`) OR (`quorum_verdict = SPLIT`, `dominant_zone = DEEP_VALUE`) |
 | **SELL** | `quorum_verdict = BEARISH`, seats_bear ≥ 4 |
-| **HOLD** | everything else (including `dominant_zone = UNKNOWN`) |
+| **HOLD** | everything else |
 
 ## Portfolio Governor — regime-aware buy cap
 
@@ -350,9 +368,7 @@ Before finalising signals, count total BUY + BUY(small) signals across all token
 1. **Rank all BUY/BUY(small) signals by conviction** (ascending): sort by `seats_bull` ascending, then by `confidence` ascending (MED < HIGH). Print the ranked list.
 2. **Count total BUYs** and compare to the regime cap.
 3. **If total > cap**: downgrade from the bottom of the ranked list (lowest conviction first) until the cap is met. Print: `⚠️ Governor: {n} BUY(s) downgraded to HOLD (regime cap F&G={value})`.
-4. **If total ≤ cap**: no downgrades. Print: `✅ Governor: {total} BUY(s) within cap of {cap} (regime: {regime_name}, F&G={value})`.
-
-> Format note: `{total}` is the INTEGER COUNT of BUY + BUY(small) tokens. `BUY(s)` is a fixed label — do NOT substitute the specific signal subtype (e.g. do not write "BUY(small)(s)" or "1 BUY(small) within cap"). Always write `N BUY(s)` regardless of whether signals are BUY or BUY(small).
+4. **If total ≤ cap**: no downgrades. Print how many buys there are vs the cap, in plain English (e.g. `✅ Governor: 2 buys within the cap of 4 — regime: Extreme Fear, F&G=18`). The exact label format doesn't matter.
 
 This explicit ranking step is mandatory regardless of outcome — it makes the downgrade logic auditable and catches upstream signal errors (e.g., a token scored BUY(small) despite quorum=UNCERTAIN).
 
@@ -382,8 +398,10 @@ Rules:
 
 Example:
 ```
-HIGH-CONVICTION BUY: AAVE — 4/5 seats bullish, zone=DEEP_VALUE (RSI 23, −62% from ATH, above 200wMA support at $62). BUY(small): LINK on RWA tailwind (Swift/Euroclear pipeline live). Narrative: Extreme Fear (F&G 18) — AI/tech macro selloff hit crypto hard this week; quality DeFi is at cycle-floor valuations while fundamentals (TVL, fees) held.
+AAVE is the only buy: down 62% from its high and sitting above its long-term average price floor at $62, with 4 of 5 analysis perspectives bullish. LINK also worth watching — RSI at 23 (historically oversold) with real institutional adoption via Swift and Euroclear. Sentiment: Fear & Greed at 18 — the AI/tech selloff dragged crypto down hard this week while DeFi fundamentals (locked value, fees) held steady.
 ```
+
+⛔ **Jargon banned from the exec recap:** Never write `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN`, `BULLISH`, `BEARISH`, `UNCERTAIN`, `seats_bull`, `seats_bear`, `quorum_verdict`, `0B/4Br`, or any internal code. Write what it means in plain English, as if explaining to a friend who doesn't follow crypto charts.
 
 Print **three blocks** after the exec recap, in this exact order:
 
@@ -391,11 +409,11 @@ Print **three blocks** after the exec recap, in this exact order:
 ```
 === CRYPTO PORTFOLIO RUN — {timestamp} ===   (data: TradingView MCP)
 
-Token | Signal      | Zone       | Quorum | Bulls/Bears
-------|-------------|------------|--------|------------
-BTC   | HOLD        | FAIR_VALUE | SPLIT  | 2 / 2
-ETH   | BUY (small) | DEEP_VALUE | SPLIT  | 1 / 2
-SOL   | BUY (small) | DEEP_VALUE | SPLIT  | 3 / 1
+Token | Signal      | Valuation | Quorum | Bulls/Bears
+------|-------------|-----------|--------|------------
+BTC   | HOLD        | fair      | SPLIT  | 2 / 2
+ETH   | BUY (small) | cheap     | SPLIT  | 1 / 2
+SOL   | BUY (small) | cheap     | SPLIT  | 3 / 1
 ...
 ```
 
@@ -484,6 +502,22 @@ Self-check before printing:
 
 > **Why this step exists:** The UNI error. The quorum produced "no fee accrual" with confidence because the data package didn't contradict it. A fresh agent reading TheBlock for 60 seconds would have seen "UNIfication passes 99.9% — fee switch activated". No further reasoning required. The error was not in the quorum logic — it was in the absence of a live news check before accepting the verdict.
 
+**⛔ PRE-FLIGHT CRITIC COUNT:** Before spawning any critics, write out the full list of tokens you are about to critique — one per line. Count them. The count MUST match the token universe size for this run (default: 11). If you have fewer, add the missing tokens NOW.
+
+Common mistake to avoid: running critics only on BUY/SELL "actionable" tokens and skipping HOLDs.
+HOLD verdicts can be wrong — the original UNI error was a HOLD with stale tokenomics ("no fee accrual" when the fee switch had already passed). Every HOLD token needs a critic pass for Q2 STALE MECH.
+
+Write this list before calling any critic subagent:
+```
+Critic list (must equal universe count):
+1. BTC — HOLD
+2. ETH — SELL
+...
+11. LINK — HOLD
+Total: 11/11 ✓
+```
+If your total is < universe count, do not proceed — add the missing rows first.
+
 **4a. For **every token** (not just flagged ones), spawn a verdict-critic subagent in parallel.** ⛔ All tokens must be covered — partial coverage is INCOMPLETE. Pass it:
 - Token symbol and the full quorum verdict text (signal, zone, quorum, all 5 seat postures, key claims)
 - The following instructions:
@@ -536,6 +570,8 @@ If FLAG: "<specific verdict text that must be corrected> → correct to: <correc
 **4c. Act on FLAGs before printing Block 1:**
 - `OVERALL: FLAG` on any token → **revise that token's quorum verdict** to address the specific critique, re-run the signal decision for that token, and mark it `⚠️ REVISED` in Block 1.
 - `OVERALL: PASS` on all tokens → print `✅ Verdict Critic: {n}/{total} tokens reviewed` where `n` must equal `total` (total = count of tokens in the universe this run). ⛔ If n < total, the run is INCOMPLETE — do not proceed to Block 1.
+
+⛔ **SELF-CHECK BEFORE BLOCK 1:** Verify `n == total` by re-reading the critic list you wrote in the pre-flight above. If any token from the pre-flight list is missing a printed CRITIC — {TOKEN} / OVERALL: result, you have an incomplete run. Run the missing critics now. Do not print Block 1 until all critics are printed and counted.
 
 > The critic cannot access TradingView tools — only `web_fetch`. That is intentional: it reads the world, not the chart. Technical signals are the quorum's job; the critic's only job is "does today's news contradict this?"
 
@@ -595,9 +631,9 @@ After Block 3 and citation validation, print a compact Telegram-formatted messag
 ─────────────────────────────
 💼 PORTFOLIO SIGNALS
 
-{EMOJI} {TOKEN} ${price} | RSI {rsi} | {pct_from_ath}% ATH
-{SIGNAL_EMOJI} {SIGNAL} • {1-line catalyst with [source: URL] if news-driven}
-📌 {action note}
+{EMOJI} {TOKEN} ${price} | RSI {rsi} | {pct_from_ath}% below all-time high
+{SIGNAL_EMOJI} {SIGNAL} • {1-line plain-English catalyst — what's happening, why it matters}
+📌 {plain-English action note — what to do or watch}
 
 ... (repeat per token)
 
@@ -613,6 +649,39 @@ After Block 3 and citation validation, print a compact Telegram-formatted messag
 
 Educational only. Not financial advice. DYOR.
 ```
+
+Concrete example of one token line (this is what it should look like):
+```
+🟢 AAVE $92 | RSI 40 | 62% below all-time high
+🟢 BUY • DeFi lending leader — $27B locked, real yield from borrowing spreads, stablecoin (GHO) growing [source: https://defillama.com/protocol/aave]
+📌 Buy in small tranches at $80–95. Stop if it breaks below $75.
+
+⚪ AERO $0.47 | RSI 38 | too new to classify (18 months of history)
+⚪ HOLD • Base chain DEX with real trading fees, but spending more on token rewards than it earns — wait for that to flip
+📌 Watch for emissions to drop below revenue before adding.
+
+⚪ TON $1.60 | RSI 35 | 70% below all-time high
+⚪ HOLD • Telegram's blockchain — 900M potential users but legal uncertainty around founder Durov weighs on institutional buyers
+📌 No entry until legal situation resolves.
+```
+
+**⛔ JARGON BAN — Telegram only:** The words `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN` must NEVER appear in the Telegram message. These are internal analysis codes, not human language. Replace with plain English or drop entirely:
+
+| Internal code | Plain English for Telegram |
+|---|---|
+| DEEP_VALUE | "-{pct}% from all-time high" (already in `{pct_from_ath}% ATH` — omit zone entirely) |
+| FAIR_VALUE | omit — the signal and price already convey this |
+| ELEVATED | "near cycle high" |
+| EXTREME | "extreme overbought" |
+| UNKNOWN | "limited price history" |
+
+The `{pct_from_ath}% ATH` field in the per-token line already tells the audience how cheap or expensive the asset is — the zone label is redundant and must be dropped.
+
+Also banned from Telegram: `quorum_verdict` codes (`BULLISH`, `BEARISH`, `UNCERTAIN`, `SPLIT`), `dominant_zone`, `seats_bull`, `seats_bear`, `confidence` field labels, and any field name from the signal table. Use plain-English equivalents:
+- `BULLISH quorum` → "strong buy case" or omit
+- `BEARISH quorum` → omit (the SELL signal already says it)
+- `3B/1Br` seat counts → omit entirely
+- `RSI 39.8` → keep (this is already human-readable)
 
 **Telegram length limit is 4096 bytes (hard limit).** If the recap exceeds 4096 chars:
 - Split into parts at token boundaries (never mid-token, never mid-line).

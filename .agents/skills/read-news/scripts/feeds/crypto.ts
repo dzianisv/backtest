@@ -17,7 +17,7 @@ export const CRYPTO_FEED_URLS: Record<string, string> = {
   // Direct coinbase.com/blog RSS is Cloudflare-gated (403); use Google News proxy instead.
   coinbase:
     "https://news.google.com/rss/search?q=(site%3Acoinbase.com%2Fblog+OR+site%3Acoinbase.com%2Finstitutional)+when%3A14d&hl=en-US&gl=US&ceid=US%3Aen",
-  bloomberg: "https://www.bloomberg.com/feed/podcast/etf-report.xml", // podcast feed; often 403
+  bloomberg: "https://feeds.bloomberg.com/markets/news.rss", // markets feed
 };
 
 // Feeds that carry full body text in content:encoded
