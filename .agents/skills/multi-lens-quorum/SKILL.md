@@ -51,7 +51,7 @@ uninvestable", the "do nothing / hold cash" seat. A quorum with no built-in diss
 consensus. Don't stack correlated lenses (three inflationists outvoting one deflationist isn't 3-to-1
 signal — it's one view counted thrice).
 
-Naming convention: **thinker-lenses = `analytics-*`**, **discipline lenses = `analyst-*`**, and there are
+Naming convention: **thinker-lenses = `investor-*` / `research-*`**, **discipline lenses = `analyst-*`**, and there are
 method/conductor skills. The repo's available lens menu (`.agents/skills/`):
 
 | Lens skill | Brings (the seat) | Natural role in a quorum |

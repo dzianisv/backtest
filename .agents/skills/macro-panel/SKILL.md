@@ -1,20 +1,20 @@
 ---
 name: macro-panel
-description: Convene the macro-economist panel — run a market, asset, or portfolio question through multiple thinker-lenses at once and surface their AGREEMENT and DISAGREEMENT instead of one view. The panel is Lyn Alden (fiscal dominance/debasement/BTC), Ray Dalio (debt cycles/world order/all-weather), Stanley Druckenmiller (liquidity/timing/sizing), Lacy Hunt (deflation dissent), Michael Pettis (trade/capital-flows/China), Russell Napier (financial repression), and Warren Buffett (bubble-discipline/quality-value). Use when the user asks "what does the panel think", "run the macro team on this", "convene the economists", "get multiple macro views", "where do the economists agree/disagree", or wants a debated, multi-perspective macro/asset call rather than a single lens. Routes to the individual analytics-* skills; this skill is the conductor, not a replacement for them. Educational, not advice.
+description: Convene the macro-economist panel — run a market, asset, or portfolio question through multiple thinker-lenses at once and surface their AGREEMENT and DISAGREEMENT instead of one view. The panel is Lyn Alden (fiscal dominance/debasement/BTC), Ray Dalio (debt cycles/world order/all-weather), Stanley Druckenmiller (liquidity/timing/sizing), Lacy Hunt (deflation dissent), Michael Pettis (trade/capital-flows/China), Russell Napier (financial repression), and Warren Buffett (bubble-discipline/quality-value). Use when the user asks "what does the panel think", "run the macro team on this", "convene the economists", "get multiple macro views", "where do the economists agree/disagree", or wants a debated, multi-perspective macro/asset call rather than a single lens. Routes to the individual investor-* and research-* thinker-lens skills; this skill is the conductor, not a replacement for them. Educational, not advice.
 license: MIT
 compatibility: opencode
 metadata:
   audience: macro-investors
   domain: macro-and-asset-strategy
   role: panel-conductor
-  source: composes the analytics-* thinker skills (assembled 2026-06-07)
+  source: composes the investor-* and research-* thinker skills (assembled 2026-06-07)
 ---
 
 # Macro Panel — Convene the Team
 
 Run a question through several thinker-lenses and report the **debate**, not a single answer. The value
 is the *disagreement*: when seven independent frameworks converge, that's signal; where they split, that
-names the real risk. This skill is the **conductor** — it routes to the individual `analytics-*` skills,
+names the real risk. This skill is the **conductor** — it routes to the individual `investor-*` and `research-*` thinker-lens skills,
 which hold the actual frameworks and primary sources.
 
 ## The panel (seven seats, chosen for non-overlapping return-drivers)
@@ -101,7 +101,7 @@ seat's current view.)
 - **Each lens is a lens, not gospel;** carry each thinker's caveats (they have all been wrong/early).
 - **Don't strawman a seat** to manufacture consensus — give each its strongest form.
 - **Ground each view** in that skill's reference + primary source; time-stamp every "current" claim.
-- This skill **composes** the `analytics-*` skills and complements `fundamental-analysis` /
+- This skill **composes** the `investor-*` and `research-*` thinker-lens skills and complements `fundamental-analysis` /
   `analyst-smartmoney-13f`; it informs `regime-detection` / `portfolio-construction`. It does not
   replace the backtest/valuation gate or your own judgment.
 

@@ -19,7 +19,7 @@ CIO of an agentic hedge-fund team. Two books, separate ledgers:
 | "Find trending stocks" | `stocks-trend-screener` workflow | journalism screen → quorum |
 | Buy/hold/size judgment | `multi-lens-quorum` skill | 4-7 independent lenses |
 | "Where does X go by [date]?" | `superforecasting` skill | logged to forecast-ledger for scoring |
-| Macro view | `macro-panel` skill | 9 analytics-* thinker lenses |
+| Macro view | `macro-panel` skill | 9 investor-*/research-* thinker lenses |
 | Risk-on / risk-off | `regime-detection` skill | weighted signal ensemble |
 | Run the fund / daily cycle | `hedge-fund-manager` skill | delegates to sub-skills |
 | Weekly portfolio review | `tradfi-portfolio-manager` skill | REVIEW→ASSESS→RESEARCH→DECIDE→ORDER |

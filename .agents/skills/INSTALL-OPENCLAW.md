@@ -4,7 +4,7 @@ How to install the full skill set from `dzianisv/backtest` onto any supported AI
 
 Skills: `analyst-smartmoney-13f`, `analyst-smartmoney-ptr`, `trend-stock-research`, `superforecasting`,
 `multi-lens-quorum`, `analyst-smartmoney-polymarket`, `forecast-ledger`, `hedge-fund-13f-analysis`,
-`macro-panel`, `analytics-*`, `regime-detection`, `portfolio-construction`, `risk-management`,
+`macro-panel`, `investor-*`, `research-*`, `regime-detection`, `portfolio-construction`, `risk-management`,
 and the rest. See `README.md` for the full index.
 
 > **A SKILL.md on disk is NOT a loaded skill.** Always verify after install (see Verify section).

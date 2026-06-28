@@ -11,7 +11,7 @@ metadata:
   panel-seat: bubble-discipline-and-quality-value
 ---
 
-# Analytics: The Warren Buffett Lens
+# Investor: The Warren Buffett Lens
 
 Apply Warren Buffett's framework to a question. This skill is the **synthesis + router**; the detail
 lives in `references/`. He is the panel's **bubble-discipline / quality-value / capital-allocation

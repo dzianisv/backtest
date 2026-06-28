@@ -60,7 +60,7 @@ The prompt tells the agent to:
 
 ## Architecture — how skills delegate
 
-> **Naming convention:** `analyst-*` = analytical lens (methodology), `analytics-*` = thinker-persona (a person's worldview), `*-chair` = final decision synthesizer, `*-desk` = evidence consolidator, `feed-*` = news source adapter, `*-monitor/*-screener/*-scanner` = data/alerting, `*-connector` = broker execution bridge.
+> **Naming convention:** `analyst-*` = analytical lens (methodology), `investor-*` = investor-persona thinker lens (a person's worldview; bottom-up/capital allocator), `research-*` = researcher-persona thinker lens (a person's worldview; macro/thematic), `*-chair` = final decision synthesizer, `*-desk` = evidence consolidator, `feed-*` = news source adapter, `*-monitor/*-screener/*-scanner` = data/alerting, `*-connector` = broker execution bridge.
 
 ### The top-level orchestrators
 

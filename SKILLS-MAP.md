@@ -92,7 +92,7 @@ These are sub-skills. Call them via their orchestrator, not directly:
 `crypto-research-desk`, `stock-research-desk`, `crypto-chair`, `stock-chair`,
 `research-manager`, `portfolio-construction`, `risk-management`, `rebalancing`,
 `dip-tranches-strategy`, `tax-loss-harvesting`, `trend-following`, all `feed-*` adapters,
-all `analytics-*` lenses (consumed by macro-panel or multi-lens-quorum),
+all `investor-*` and `research-*` thinker lenses (consumed by macro-panel or multi-lens-quorum),
 all `analyst-*` lenses (consumed by multi-lens-quorum),
 `research-smartmoney` (family orchestrator — runs spokes; use directly or via hedge-fund-committee),
 `analyst-smartmoney-options`, `analyst-smartmoney-darkpool` (analytical — consumed by multi-lens-quorum or research-smartmoney).
@@ -142,7 +142,7 @@ Skills audited: 63 total.
 |---------|-------|---------|
 | Active, distinct gap | 52 | keep |
 | Deprecated (liveness-monitor, agentic-fund-orchestration) | 2 | archived |
-| Analytics lenses (analytics-*) | 9 | keep — consumed as seats by quorum + panel |
+| Investor/research thinker lenses (investor-*/research-*) | 9 | keep — consumed as seats by quorum + panel |
 | Analyst lenses (analyst-*) | 4 | keep — methodology-based, different from thinker-personas |
 | Feed adapters (feed-*) | 8 | keep — each normalizes a distinct source |
 

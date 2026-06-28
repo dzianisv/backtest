@@ -166,7 +166,7 @@ same pipeline serially in-agent). Parallelism is the design: independent lenses 
 | `analyst-smartmoney-13f` | weekly P1 | new institutional buys → ledger → convergence |
 | `analyst-smartmoney-ptr` | weekly P1 | STOCK Act buys → ledger → convergence |
 | `multi-lens-quorum` | weekly P2 | buy/sell/hold verdict engine |
-| `macro-panel` + `analytics-*` | weekly P2 | the quorum lenses + macro backdrop |
+| `macro-panel` + `investor-*`/`research-*` | weekly P2 | the quorum lenses + macro backdrop |
 | `fundamental-analysis` | weekly P2 | valuation lens |
 | `risk-management` | weekly P3 (+ daily gate) | VETO authority |
 | `portfolio-monitor` | weekly P3 | holdings triggers → PRIORITY ACTIONS |

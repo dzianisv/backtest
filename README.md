@@ -634,7 +634,7 @@ Full spec: [`docs/crypto-advisor-panel.prd.md`](docs/crypto-advisor-panel.prd.md
 | `narrative-news` | Consumes feed-* adapters → deduped events with priced-in tags |
 | `crypto-news-store` | Dedup/state store for crypto news events |
 
-### Analyst lenses (analyst-* / analytics-*)
+### Analyst lenses (analyst-* / investor-* / research-*)
 
 | Skill | Description |
 |---|---|

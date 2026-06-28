@@ -11,7 +11,7 @@ metadata:
   panel-seat: value-origin-and-rules-based-margin-of-safety
 ---
 
-# Analytics: The Benjamin Graham Lens
+# Investor: The Benjamin Graham Lens
 
 Apply Benjamin Graham's framework to a question. This skill is the **synthesis + router**; the detail
 lives in `references/`. Graham is the **father of value investing** and Buffett's teacher — the
