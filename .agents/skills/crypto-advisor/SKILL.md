@@ -157,62 +157,47 @@ echo "Artifacts: $RUN_DIR"
 
 ---
 
-## Step 1 — Sequential per-token loop
+## Step 1 — Pre-fetch TradingView data via tradingview-fetch skill
+
+**Before the quorum loop**, run the `tradingview-fetch` skill for all tokens at once:
+
+```
+Run tradingview-fetch for: BTC ETH SOL TON HYPE AAVE JUP UNI AERO PUMP LINK
+```
+
+This writes `.cache/tradingview/{today}/{TOKEN}.json` for every token. Once complete, the quorum loop reads from disk — no MCP calls needed inside the loop or inside any seat.
+
+```bash
+CACHE_DIR=".cache/tradingview/$(date +%F)"
+# After tradingview-fetch completes, verify:
+ls "$CACHE_DIR"/*.json | wc -l   # should equal token count
+```
+
+> **Why a separate skill:** TradingView has a single chart slot. `tradingview-fetch` owns that constraint internally (sequential fetch, one symbol at a time). Once data is on disk, any agent, subagent, or runtime reads plain JSON — no browser, no MCP, no session dependency.
+
+---
+
+## Step 1 (quorum loop) — Per-token analysis
 
 Pick the next `pending` todo, `UPDATE todos SET status='in_progress'`, then for that token:
 
-> **Why sequential here:** TradingView MCP uses a single shared chart slot — two tokens cannot be pulled at once. Steps 1a–1c are the **Trend seat pre-fetch only** — the CIO pulls this data because TradingView MCP tools are unavailable inside subagents. No other seat receives or needs this data.
+**1a. Read the Trend seat package from cache.**
 
-**1a. Pull TradingView data — for the Trend seat.** Call `tradingview-chart_get_state` and inspect `studies`. **Add a study only if its name is NOT already present** — a duplicate pushes a second identical series and produces duplicate rows in `data_get_study_values`. Remove extras with `chart_manage_indicator action=remove`. Required studies (add only if absent): **Relative Strength Index**, **Bollinger Bands**, **MACD**. Do NOT add length-N EMAs (length input ignored — constraint 3). Volume is always present.
-
-```
-tradingview-chart_get_state                                → inspect studies list; deduplicate before proceeding
-tradingview-chart_set_symbol     symbol="BINANCE:{TOKEN}USDT"
-tradingview-chart_set_timeframe  timeframe="D"
-tradingview-data_get_ohlcv       count=365 summary=true   → 52w high/low + avg volume
-tradingview-data_get_ohlcv       count=210 summary=false  → >=200 daily closes (for SMA200)
-tradingview-data_get_study_values                          → RSI(14), BB(20,2), MACD, Volume (one of each)
-tradingview-chart_set_timeframe  timeframe="W"
-tradingview-data_get_ohlcv       count=210 summary=false  → weekly closes (for 200-week MA)
-tradingview-chart_set_timeframe  timeframe="D"             → reset to daily
-tradingview-capture_screenshot                             → save screenshot; then call view tool on the returned file_path to embed the image inline in your reply for this token
-```
-
-**1b. Compute moving averages for Trend seat — from TradingView closes.** Take RSI(14), Bollinger(20,2), MACD line/signal/hist, Volume from `data_get_study_values` verbatim; 52w high/low + avg volume from the daily `summary=true` pull. Then fill the MA gap:
 ```bash
-/Users/engineer/.venv/bin/python3 .agents/skills/crypto-advisor/scripts/indicators.py /tmp/{TOKEN}.json
-```
-Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. Output: EMA20, SMA50, SMA200, 200-week MA, and the death cross (classic SMA50/SMA200, exact). It does not recompute RSI/BB/MACD.
-
-**DATA SUFFICIENCY RULE — 200wMA only:** Count the weekly closes from `tradingview-data_get_ohlcv count=210 timeframe=W`.
-
-If `weekly_closes < 200`:
-- Set `200wMA = INSUFFICIENT` — do NOT compute or print a 200wMA value.
-- Compute the longest available weekly MA and label it `~{N}wk MA proxy: ${value}` — never "200wMA".
-- Classify zone from % off all-time high + distance from the proxy MA. A token -70% from ATH and below its proxy MA is DEEP_VALUE.
-- Do NOT force zone = UNKNOWN. Do NOT block BUY or BUY(small) on a missing 200wMA.
-- Cap the signal at **BUY (small)** maximum.
-- Add a plain-English note: e.g. "4-year moving average not yet available (only N months of price history) — using shorter-term trend as proxy."
-
-If `weekly_closes >= 200`: compute 200wMA normally; proceed without restriction.
-
-If a TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
-
-**1c. Assemble the Trend seat package** — merge TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the MA block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it. This package goes to the Trend seat only. Cache it:
-```bash
-mkdir -p "$RUN_DIR/{TOKEN}"
-python3 -c "
-import json, sys
-pkg = sys.argv[1]
-open('$RUN_DIR/{TOKEN}/seat_trend_input.json', 'w').write(pkg)
-" "$TREND_PACKAGE_JSON"
+CACHE_DIR=".cache/tradingview/$(date +%F)"
+TREND_PKG=$(cat "$CACHE_DIR/{TOKEN}.json")
+SCREENSHOT="$CACHE_DIR/{TOKEN}.png"
 ```
 
-**1d. Run the 5-seat quorum — each seat owns its own data.** Spawn all five seats **in parallel** (seats share nothing). Only the Trend seat receives the TradingView package (subagents cannot access MCP tools). All other seats receive only `{ token, price_usd }` and are responsible for fetching their own data.
+View the screenshot inline: `view "$SCREENSHOT"`
+
+If the file is missing, run `tradingview-fetch` for that token before continuing.
+
+**1b. Run the 5-seat quorum — each seat owns its own data.** Spawn all five seats **in parallel** (seats share nothing). Trend seat reads from the pre-fetched cache file. All other seats receive only `{ token, price_usd }` and fetch their own data independently.
 
 | Seat | Skill | Data it fetches itself |
 |---|---|---|
-| **Trend** | `analytics-stanley-druckenmiller` | Receives TV package from CIO. No additional fetch needed. |
+| **Trend** | `analytics-stanley-druckenmiller` | Reads `.cache/tradingview/{date}/{TOKEN}.json` — no MCP needed. |
 | **Value** | `analytics-benjamin-graham` | Fetches price history + ATH reference to compute zone and margin of safety. |
 | **Quality** | `analytics-warren-buffett` | `web_fetch https://defillama.com/protocol/{slug}` — revenue, TVL, moat signals. |
 | **Cycle** | `analytics-ray-dalio` | `web_fetch https://api.alternative.me/fng/?limit=1` (F&G) + macro headlines. |
