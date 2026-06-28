@@ -9,61 +9,9 @@ metadata:
   role: portfolio-manager
 ---
 
-```mermaid
-flowchart TD
-    TU["Token Universe\nBTC · ETH · SOL · TON · HYPE\nAAVE · JUP · UNI · AERO · PUMP · LINK"]
-
-    TU -->|one token at a time| DP
-
-    subgraph SERIAL["Data Pull — SERIAL  one token at a time"]
-        DP["chart_set_symbol\nD+W OHLCV · study values\nscripts/indicators.py\nEMA20 / SMA50 / SMA200"]
-    end
-
-    DP -->|assembled data package| OC & SE & MA & OF & NA
-
-    subgraph SEATS["5-Seat Quorum — PARALLEL per token"]
-        OC["On-Chain\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
-        SE["Sentiment\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
-        MA["Macro\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
-        OF["Order-Flow\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
-        NA["Narrative\nzone · posture · confidence\nbull-line · bear-line · invalidation"]
-    end
-
-    NA -->|"calls — NOT web_fetch subagents deprecated"| RN
-
-    subgraph NEWS["News Pipeline  narrative seat only"]
-        RN["read_news.ts\nfetch + ingest + query"]
-        NDB[".cache/read-news/news.db"]
-        RN --> NDB
-    end
-
-    OC & SE & MA & OF & NA -->|"BULLISH / NEUTRAL / BEARISH"| AGG
-
-    AGG["Aggregation\ncount seats_bull · seats_bear"]
-
-    AGG --> QV{"quorum_verdict\nBULLISH / SPLIT / BEARISH / UNCERTAIN"}
-
-    QV -->|"BULLISH + ≥3 bulls"| BUY[BUY]
-    QV -->|"SPLIT + DEEP_VALUE"| BUYSM["BUY (small)"]
-    QV -->|"BEARISH + ≥4 bears"| SELL[SELL]
-    QV -->|"UNCERTAIN / SPLIT"| HOLD[HOLD]
-
-    BUY & BUYSM & SELL & HOLD --> VD["Token Verdict"]
-
-    VD --> VC
-
-    subgraph POST["Post-Hooks"]
-        VC["Step 4 — Verdict Critic\nparallel critics per token\nre-check verdict vs live news"]
-        CV["Step 5 — Citation Validator\nre-fetch every cited URL cold"]
-        VC --> CV
-    end
-
-    CV --> RPT["Final Report\nSignal Table · Plain-English Verdicts · Ranked News"]
-```
-
 # Crypto Advisor
 
-Analyze every token in the universe **sequentially** → decide BUY/SELL/HOLD per token → print the signal table.
+Analyze every token in the universe **sequentially** (single shared chart slot) → assemble one data package per token → run a 5-seat quorum in parallel → decide BUY/SELL/HOLD → Verdict Critic → Citation Validator → print the report.
 
 > Educational analysis, not financial advice. No leverage. Ever.
 
@@ -73,7 +21,7 @@ Analyze every token in the universe **sequentially** → decide BUY/SELL/HOLD pe
 ```
 Run the crypto advisor
 ```
-The skill analyzes the default token universe, pulls live TradingView data, runs a 5-seat quorum per token, and prints the full 3-block report (signal table + plain-English verdicts + ranked news sources). **Attach a TradingView screenshot for each token.**
+Analyzes the default universe, pulls live TradingView data, runs a 5-seat quorum per token, prints the 3-block report (signal table + plain-English verdicts + ranked news). **Attach a TradingView screenshot for each token.**
 
 ### Custom token set
 ```
@@ -103,16 +51,10 @@ Educational, not financial advice.
 
 ## Token universe
 
-**⛔ STALENESS RULE — applies to every row in this table:**
-> Any claim about token mechanics (fee switch, buyback, burn, staking yield, revenue accrual, governance status) is a **live fact that can change via governance vote at any time**. It MUST be verified by a live `web_fetch` before being used as evidence in a quorum verdict or a removal/addition decision. Never write or rely on a tokenomics claim from memory alone — the UNI error (fee switch described as "perpetually failed" when it had passed 6 months earlier) is the canonical example of why.
->
-> **Verify protocol mechanics before using them:**
-> 1. `web_fetch https://defillama.com/protocol/{slug}` → check Protocol Revenue row (non-zero = fee capture exists)
-> 2. `web_fetch https://www.theblock.co/search?query={token}+fee+switch` → check for recent governance votes
-> 3. If DeFiLlama shows revenue AND you recall "no fee accrual" → you are stale. Fetch the governance forum before concluding.
+**STALENESS RULE — every row:** Any tokenomics claim (fee switch, buyback, burn, staking yield, revenue accrual, governance status) is a live fact that changes via governance vote. Verify it with a live `web_fetch` before using it in any verdict or add/remove decision — never from memory. Full verification procedure: §On-chain seat (Step 1d).
 
-| Token | Rationale (verified 2026-06-23) | TradingView symbol |
-|-------|--------------------------------|-------------------|
+| Token | Rationale | TradingView symbol |
+|-------|-----------|-------------------|
 | BTC   | Foundational monetary layer; largest market cap | `BINANCE:BTCUSDT` |
 | ETH   | Smart-contract platform; stablecoin infra (53% of $300B market) | `BINANCE:ETHUSDT` |
 | SOL   | High-performance L1; Solana DeFi base layer | `BINANCE:SOLUSDT` |
@@ -120,7 +62,7 @@ Educational, not financial advice.
 | HYPE  | Hyperliquid perp DEX; 97% revenue auto-buyback hardcoded; real cashflow token | `OKX:HYPEUSDT` |
 | AAVE  | Leading DeFi lending protocol; real yield from spreads + GHO fees; >$1T cumulative loans | `BINANCE:AAVEUSDT` |
 | JUP   | Jupiter — Solana DeFi super-app (perps, lending, launchpad, DCA, staking); 15+ fee streams | `BINANCE:JUPUSDT` |
-| UNI   | Uniswap — fee switch activated Dec 2025 (UNIfication, 99.9% vote); trading fees → burn UNI via Firepit; 100M burned at launch; $1B+/yr fee base; expanding to all v3 + 8 chains [verified: theblock.co/post/383742] | `BINANCE:UNIUSDT` |
+| UNI   | Uniswap — fee switch activated Dec 2025 (UNIfication, 99.9% vote); trading fees → burn UNI via Firepit; $1B+/yr fee base; expanding to all v3 + 8 chains | `BINANCE:UNIUSDT` |
 | AERO  | Aerodrome Finance — Base chain DEX; real trading fees; ve(3,3) tokenomics with revenue accrual | `BINANCE:AEROUSDT` |
 | PUMP  | Pump.fun — Solana meme launchpad; reflexive fees; track for cycle timing signal | `OKX:PUMPUSDT` |
 | LINK  | Oracle network; backbone of RWA tokenization (Swift, Euroclear, JPMorgan, UBS) | `BINANCE:LINKUSDT` |
@@ -129,11 +71,11 @@ Educational, not financial advice.
 
 ## Hard constraints — read before running (these dictate the whole design)
 
-1. **TradingView MCP tools live ONLY in the orchestrator (you).** Subagents spawned via the task tool get a fresh toolset with **no** `tradingview-*` tools — verified. So **YOU** must pull every chart datum yourself. Never tell a subagent to "pull TradingView data" — it cannot. Subagents may only *receive* an already-assembled data package and reason over it (they can still web-fetch F&G / on-chain).
-2. **The chart is a single shared symbol slot.** `chart_set_symbol` changes the one global chart, so two tokens cannot be pulled at once. **Therefore the data loop is strictly sequential, one token at a time.** Track progress in the `todos` table so a `/loop` or an interrupted run resumes cleanly.
-3. **Read every indicator TradingView can give from TradingView — don't recompute it.** `data_get_study_values` returns RSI(14), Bollinger(20,2), MACD(12,26,9) and Volume correctly at their standard lengths. Use those values verbatim. The **only** gap is moving averages: `chart_manage_indicator` ignores the MA `length` input (an added MA exposes `inputs:[]` and stays stuck at a short default ≈ price; verified BTC read $64,540 when SMA200 was ~$76,600) and has no `update` action. So EMA20 / SMA50 / SMA200 / 200-week-MA — and only those — are computed by `scripts/indicators.py` from the MCP's **own** returned closes (plain rolling means / EWMs; the data source stays 100% TradingView).
+1. **TradingView MCP tools live ONLY in the orchestrator (you).** Subagents get a fresh toolset with **no** `tradingview-*` tools, so YOU pull every chart datum. Never tell a subagent to "pull TradingView data" — it cannot. Subagents only *receive* an assembled data package and reason over it (they may still web-fetch F&G / on-chain).
+2. **The chart is a single shared symbol slot.** `chart_set_symbol` mutates the one global chart — two tokens cannot be pulled at once. **The data loop is strictly sequential, one token at a time.** Track progress in `todos` so a `/loop` or interrupted run resumes cleanly.
+3. **Read every indicator from TradingView — don't recompute it.** `data_get_study_values` returns RSI(14), Bollinger(20,2), MACD(12,26,9), Volume at standard lengths — use them verbatim. The only gap is moving averages: `chart_manage_indicator` ignores the MA `length` input and has no `update` action. So EMA20 / SMA50 / SMA200 / 200-week-MA — and only those — are computed by `scripts/indicators.py` from the MCP's **own** returned closes (the data source stays 100% TradingView).
 
-TradingView symbol mapping: `BINANCE:{TOKEN}USDT` (e.g. `BINANCE:BTCUSDT`). If a symbol is missing on Binance, try `OKX:{TOKEN}USDT`.
+TradingView symbol mapping: `BINANCE:{TOKEN}USDT`. If a symbol is missing on Binance, try `OKX:{TOKEN}USDT`.
 
 ---
 
@@ -167,7 +109,7 @@ CREATE TABLE IF NOT EXISTS token_analysis (
 
 ## Step 0.5 — Create the run artifact directory
 
-Run once, before the per-token loop. All artifacts for this run land under this directory.
+Run once before the per-token loop. Every token gets its own subdirectory `$RUN_DIR/{TOKEN}/`.
 
 ```bash
 RUN_DIR=".cache/crypto-advisor/research/$(date +%Y-%m-%d_%H-%M)"
@@ -175,20 +117,13 @@ mkdir -p "$RUN_DIR"
 echo "Artifacts: $RUN_DIR"
 ```
 
-Every token gets its own subdirectory: `$RUN_DIR/{TOKEN}/`. Each file written below is append-safe (the directory is new per run).
-
 ---
 
-## Step 1 — Sequential per-token loop (orchestrator does this; do NOT parallelize the data pull)
+## Step 1 — Sequential per-token loop (orchestrator only; do NOT parallelize the data pull)
 
-Pick the next `pending` todo and `UPDATE todos SET status='in_progress'`. Then, for that token:
+Pick the next `pending` todo, `UPDATE todos SET status='in_progress'`, then for that token:
 
-**1a. Pull TradingView data (MCP, in this session):**
-
-First, call `tradingview-chart_get_state` and inspect the `studies` list.  
-**Only add an indicator if its name is NOT already present** — adding a duplicate pushes a second identical series onto the chart, inflates context, and produces duplicate rows in `data_get_study_values`. Use `chart_manage_indicator action=remove` on the extra entity_id if duplicates already exist.
-
-Required studies (add only if absent): **Relative Strength Index**, **Bollinger Bands**, **MACD**. Do NOT add length-N EMAs — the length input is ignored (constraint 3). Volume is always present.
+**1a. Pull TradingView data (MCP, this session).** Call `tradingview-chart_get_state` and inspect `studies`. **Add a study only if its name is NOT already present** — a duplicate pushes a second identical series and produces duplicate rows in `data_get_study_values`. Remove extras with `chart_manage_indicator action=remove`. Required studies (add only if absent): **Relative Strength Index**, **Bollinger Bands**, **MACD**. Do NOT add length-N EMAs (length input ignored — constraint 3). Volume is always present.
 
 ```
 tradingview-chart_get_state                                → inspect studies list; deduplicate before proceeding
@@ -203,36 +138,29 @@ tradingview-chart_set_timeframe  timeframe="D"             → reset to daily
 tradingview-capture_screenshot                             → save screenshot; then call view tool on the returned file_path to embed the image inline in your reply for this token
 ```
 
-**1b. Read the indicators from TradingView; compute only the moving averages.** From `data_get_study_values` take RSI(14), Bollinger(20,2), MACD line/signal/hist, Volume — verbatim, no recompute. From the daily `summary=true` pull take 52w high/low + avg volume. Then fill the MA gap (computed MAs match TradingView's own values):
+**1b. Read indicators from TradingView; compute only the moving averages.** Take RSI(14), Bollinger(20,2), MACD line/signal/hist, Volume from `data_get_study_values` verbatim; 52w high/low + avg volume from the daily `summary=true` pull. Then fill the MA gap:
 ```bash
 /Users/engineer/.venv/bin/python3 .agents/skills/crypto-advisor/scripts/indicators.py /tmp/{TOKEN}.json
 ```
-Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. Helper output: EMA20, SMA50, SMA200, 200-week MA, and the death cross (classic SMA50/SMA200, exact). Nothing else — it does not recompute RSI/BB/MACD.
+Helper input: `{"symbol","price","daily_closes":[...],"weekly_closes":[...]}`. Output: EMA20, SMA50, SMA200, 200-week MA, and the death cross (classic SMA50/SMA200, exact). It does not recompute RSI/BB/MACD.
 
-**⛔ DATA SUFFICIENCY RULE — 200wMA only:**
-Count the weekly closes from `tradingview-data_get_ohlcv count=210 timeframe=W`.
+**DATA SUFFICIENCY RULE — 200wMA only:** Count the weekly closes from `tradingview-data_get_ohlcv count=210 timeframe=W`.
 
 If `weekly_closes < 200`:
-- Set `200wMA = INSUFFICIENT` — do NOT compute or print a 200wMA value; it would be meaningless.
-- Compute the longest available weekly MA from the data you do have (e.g. a ~80wk MA if 81 closes are available). Label it explicitly: `~{N}wk MA proxy: ${value}` — never label it "200wMA".
-- Classify zone from available data: use % from all-time high + distance from the proxy MA. A token at -70% from its ATH and below its proxy MA is still DEEP_VALUE by any reasonable measure.
-- Do NOT force zone = UNKNOWN. Do NOT block BUY or BUY(small) based on missing 200wMA.
-- Cap the signal at **BUY (small)** maximum (not BUY) when weekly_closes < 200 — this acknowledges the reduced conviction from limited history.
-- Add a plain-English note in the per-token verdict: e.g. "4-year moving average not yet available (only N months of price history) — using shorter-term trend as proxy."
+- Set `200wMA = INSUFFICIENT` — do NOT compute or print a 200wMA value.
+- Compute the longest available weekly MA and label it `~{N}wk MA proxy: ${value}` — never "200wMA".
+- Classify zone from % off all-time high + distance from the proxy MA. A token -70% from ATH and below its proxy MA is DEEP_VALUE.
+- Do NOT force zone = UNKNOWN. Do NOT block BUY or BUY(small) on a missing 200wMA.
+- Cap the signal at **BUY (small)** maximum.
+- Add a plain-English note: e.g. "4-year moving average not yet available (only N months of price history) — using shorter-term trend as proxy."
 
-If `weekly_closes >= 200`:
-- Compute 200wMA normally. Proceed without restriction.
+If `weekly_closes >= 200`: compute 200wMA normally; proceed without restriction.
 
-Rationale: the 200wMA is one indicator, not the decision. Refusing to buy a token that is 70% below its all-time high with a 3/5 bullish quorum because it lacks exactly 4 years of weekly data is a false precision error. The quorum is the decision engine; the 200wMA is context.
+If a TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
 
-If TradingView fallback was used (e.g. coingecko prices), tag every MA field: `[fallback: coingecko]`.
-
-**1c. Assemble the data package** by merging the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the helper's moving-average block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it.
-
-**Cache the data package:**
+**1c. Assemble the data package** — merge the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo) with the helper's MA block: price, %from-52wh, EMA20, SMA50, SMA200, death_cross, RSI, MACD line/signal/hist, BB upper/mid/lower + position, volume vs 30d avg, 200-week MA + %vs it. Cache it:
 ```bash
 mkdir -p "$RUN_DIR/{TOKEN}"
-# Write the assembled package as JSON for reproducibility and debugging
 python3 -c "
 import json, sys
 pkg = sys.argv[1]
@@ -240,84 +168,61 @@ open('$RUN_DIR/{TOKEN}/data_package.json', 'w').write(pkg)
 " "$DATA_PACKAGE_JSON"
 ```
 
-**1d. Run the 5-seat quorum on the package.** Either reason through the 5 seats inline, or spawn the five `analysis-*` seat subagents **in parallel** (on-chain, sentiment, macro, order-flow, narrative) with the package **injected** — seats per token may be parallel because they share nothing; only the *data pull* must be serial. Each seat returns: zone, posture (BULLISH|NEUTRAL|BEARISH), confidence, 1-line bull, 1-line bear, invalidation.
+**1d. Run the 5-seat quorum on the package.** Reason through the 5 seats inline, or spawn the five `analysis-*` seat subagents **in parallel** (on-chain, sentiment, macro, order-flow, narrative) with the package **injected** — seats share nothing, so they parallelize; only the data pull is serial. Each seat returns: zone, posture (BULLISH|NEUTRAL|BEARISH), confidence, 1-line bull, 1-line bear, invalidation.
 
-**On-chain seat — mandatory tokenomics live check for DeFi tokens.**
+**On-chain seat — tokenomics live check (DeFi tokens).** For any non-L1 token (not BTC/ETH/SOL/TON), verify protocol mechanics via live fetch before the on-chain verdict. **NEVER state a tokenomics claim (fee switch, buyback, burn, staking yield, revenue accrual) from memory — governance votes change protocol economics at any time.**
 
-For any non-L1 token (not BTC/ETH/SOL/TON), you MUST verify protocol mechanics via live fetch before the on-chain verdict. This is the **UNI rule** — named after the error where "no fee accrual" was stated confidently from stale memory when the fee switch had already passed 6 months earlier.
+1. `web_fetch https://defillama.com/protocol/{slug}` (e.g. `uniswap`, `aave`, `aerodrome`) — check the **Protocol Revenue** row (non-zero = fee capture exists somewhere) and the description for burns, buybacks, revenue distribution.
+2. If DeFiLlama shows non-zero revenue AND your recall says "no accrual" → **you are stale**. Fetch the governance forum: `web_fetch https://www.theblock.co/search?query={TOKEN}+fee+switch` and `web_fetch https://gov.uniswap.org` (or the protocol's forum).
+3. Characterize mechanics only after the live fetch. Quote the source verbatim; cite the URL.
 
-**⛔ NEVER state a tokenomics claim (fee switch, buyback, burn, staking yield, revenue accrual) from memory.** Governance votes can change protocol economics at any time. A claim that was true 3 months ago may be false today.
+**Narrative seat — sourcing protocol.**
 
-**Steps (do these before writing the on-chain verdict for any DeFi token):**
+**HARD RULE: call `web_fetch` on a real URL before citing it — OR cite a record from a feed script (`feeds/wsj.ts`/`feeds/ft.ts`/`read_news.ts`), which return real URLs + verbatim publisher teasers. A URL neither web_fetched nor returned by a feed script this run is NOT a source. A headline with no URL is a hallucination and invalidates the entire narrative verdict.**
 
-1. `web_fetch https://defillama.com/protocol/{slug}` (e.g. `uniswap`, `aave`, `aerodrome`)
-   - Look for: **Protocol Revenue** row. Non-zero = fee capture mechanism exists somewhere — investigate further even if you "know" the token has none.
-   - Look for: **Token burns**, **buybacks**, **revenue distribution** in the description.
-
-2. If DeFiLlama shows non-zero revenue AND your recalled knowledge says "no accrual" → **you are stale**. Do not use the recalled knowledge. Fetch the governance forum:
-   - `web_fetch https://www.theblock.co/search?query={TOKEN}+fee+switch`
-   - `web_fetch https://gov.uniswap.org` (or equivalent protocol forum)
-
-3. Only after the live fetch can you characterize the token mechanics in the verdict. Quote the fetched source verbatim; cite the URL.
-
-**Narrative seat — mandatory sourcing protocol.**
-
-**⛔ HARD RULE: You MUST call `web_fetch` on a real URL before you can cite it as a source — OR cite a record printed by the feed scripts (`feeds/wsj.ts`/`feeds/ft.ts`/`read_news.ts`), which return real URLs + verbatim publisher teasers. If you neither `web_fetch`ed the URL nor got it from a feed script this run, it is NOT a source — do not write it down. A fabricated headline with no URL is a hallucination and invalidates the entire narrative verdict.**
-
-**Step-by-step (do this in order, do not skip):**
-
-> ⚠️ **Known broken sources (do NOT use)**:
-> - `coindesk.com/search?q=...` — always returns the same unrelated featured article regardless of query. Never use search URLs.
+> **Known broken sources (never use):**
+> - `coindesk.com/search?q=...` — returns the same unrelated featured article regardless of query.
 > - `decrypt.co/tag/...` — 404 for most tokens.
-> - `cryptopanic.com/news/...` — returns only page title, no articles.
-> Use the **two-step discovery pattern** for news: (1) fetch a listing page to get current article URLs, (2) fetch the actual article URL for the quote.
+> - `cryptopanic.com/news/...` — returns only the page title, no articles.
+> Use the **two-step pattern**: (1) fetch a listing page for current article URLs, (2) fetch the article URL for the quote.
 
-1. **Call `web_fetch` on at least 3 of these starting URLs** for the token. Pick the most relevant:
+1. **`web_fetch` ≥3 of these starting URLs** for the token:
 
-   **On-chain data (T1 — always try first):**
-   - Fear & Greed: `https://api.alternative.me/fng/?limit=1` (JSON — hard T1)
-   - DeFiLlama chain page: `https://defillama.com/chain/ethereum` | `https://defillama.com/chain/solana` etc. (T1 — TVL, fees, revenue)
-   - DeFiLlama protocol page: `https://defillama.com/protocol/{token-slug}` e.g. `aave`, `uniswap`, `chainlink` (T1)
+   **On-chain data (T1 — try first):**
+   - Fear & Greed: `https://api.alternative.me/fng/?limit=1` (JSON)
+   - DeFiLlama chain: `https://defillama.com/chain/ethereum` | `.../solana` etc. (TVL, fees, revenue)
+   - DeFiLlama protocol: `https://defillama.com/protocol/{slug}` e.g. `aave`, `uniswap`, `chainlink`
 
    **News discovery — two-step (T2):**
-   - Step 1: fetch the **listing page** to get current article URLs:
-     - `https://www.coindesk.com/markets` → BTC/ETH price/macro news
-     - `https://www.coindesk.com/tech` → DeFi/protocol news
-     - `https://www.theblock.co/latest` → broad crypto news
-   - Step 2: from the listing page response, extract any article URL relevant to the token (e.g. `https://www.coindesk.com/markets/2026/06/21/bitcoin-holds-near-...`), then **fetch that article URL** and quote from its body. The article URL — not the listing page — is what you cite in Block 3.
+   - Step 1: fetch a **listing page** for current URLs: `https://www.coindesk.com/markets` (BTC/ETH/macro) · `https://www.coindesk.com/tech` (DeFi/protocol) · `https://www.theblock.co/latest` (broad).
+   - Step 2: extract a token-relevant article URL from the listing, fetch it, quote its body. Cite the article URL, not the listing.
 
-   **Macro context — FT/WSJ via paywall-free feed scripts (T2, for BTC/ETH & risk regime):**
-   Mainstream macro coverage (Fed, rates, liquidity, ETF flows, dollar) moves crypto but FT/WSJ are
-   paywalled/bot-blocked — do NOT web_fetch their listing pages. Instead run the feed scripts; each prints
-   real `wsj.com`/`ft.com` URLs + a verbatim 1-sentence publisher teaser + date (the teaser IS a citable
-   quote — use it as a T2 source without needing the paywalled body). NOTE: `--query` is AND-of-words, so
-   keep it to ONE topic word (e.g. `bitcoin`, `Fed`, `crypto`) or omit it and skim the top markets items:
+   **Macro context — FT/WSJ via feed scripts (T2, for BTC/ETH & risk regime):** FT/WSJ listing pages are paywalled/bot-blocked — do NOT web_fetch them. Run the feed scripts; each prints real `wsj.com`/`ft.com` URLs + a verbatim 1-sentence teaser + date (the teaser IS a citable T2 quote). `--query` is AND-of-words — use ONE topic word (e.g. `bitcoin`, `Fed`, `crypto`) or omit it:
    ```bash
-   bun .agents/skills/read-news/scripts/feeds/wsj.ts --feed markets --days 5 --limit 20 --text          # top markets/macro
+   bun .agents/skills/read-news/scripts/feeds/wsj.ts --feed markets --days 5 --limit 20 --text
    bun .agents/skills/read-news/scripts/feeds/ft.ts  --section markets,global-economy --query bitcoin --days 5 --text
    ```
-   For a broader consolidated crypto+macro event feed (deduped across all outlets), use [[narrative-news]]:
+   For a consolidated crypto+macro feed (deduped across outlets) use [[narrative-news]]:
    `bun .agents/skills/read-news/scripts/read_news.ts --db .cache/read-news/news.db --days 5 --query "<token/theme>"`.
 
-2. **Read what actually came back.** If the fetch returns an error or no relevant content, write `[FETCH FAILED: <url>]` — do NOT count it toward the 3-source minimum, do NOT invent what it "would have said."
+2. **Read what came back.** On error or no relevant content, write `[FETCH FAILED: <url>]` — do not count it toward the 3-source minimum, do not invent what it "would have said."
 
-3. **Quote verbatim** — copy an exact sentence or number from the page. Do not paraphrase from memory.
+3. **Quote verbatim** — copy an exact sentence or number; never paraphrase from memory.
 
-**⛔ DeFiLlama QUOTE RULE:** DeFiLlama pages are metric dashboards — the "verbatim quote" must be a literal copy of the numbers shown on the page. Accepted examples:
+**DeFiLlama QUOTE RULE:** DeFiLlama pages are metric dashboards — the quote must be a literal copy of the numbers shown. Accepted:
   - `"Protocol Revenue (24h): $X | Annual: $X | TVL: $X"`
   - `"Fees (30d): $X | Revenue (30d): $X"`
   - `"Chain Revenue (24h)$65,225... App Revenue (24h)$1.1m"`
 
-A descriptive summary ("protocol revenue confirmed", "GHO expansion ongoing", "buy-distribute program live") is **NOT a verbatim quote** — it is a paraphrase and fails this check. If you can't find a quotable metric string on the DeFiLlama page, write `[FETCH FAILED: no parseable metric found]` and do not invent a description.
+A descriptive summary ("protocol revenue confirmed", "GHO expansion ongoing") is a paraphrase and **FAILS** this check. If no quotable metric string exists, write `[FETCH FAILED: no parseable metric found]`.
 
 4. **Rank sources by signal quality:**
-   - **Tier 1 — Primary signal**: on-chain/flow data with timestamps and hard numbers (ETF flow $, protocol revenue $, F&G index value). Weight: 3×. Drives posture.
-   - **Tier 2 — Credible context**: Bloomberg/Reuters/FT/WSJ/CoinDesk/TheBlock with named sources and specific claims. Weight: 2×. Supports posture.
-   - **Tier 3 — Noise/sentiment gauge**: social media, "analysts say", recycled press releases. Weight: 0.5×. Informs sentiment only, never drives posture verdict.
+   - **Tier 1 — Primary signal:** on-chain/flow data with timestamps and hard numbers (ETF flow $, protocol revenue $, F&G value). Weight 3×. Drives posture.
+   - **Tier 2 — Credible context:** Bloomberg/Reuters/FT/WSJ/CoinDesk/TheBlock with named sources and specific claims. Weight 2×. Supports posture.
+   - **Tier 3 — Noise/sentiment gauge:** social media, "analysts say", recycled press releases. Weight 0.5×. Sentiment only, never drives posture.
 
-5. **Show the ranking reason** for each: one sentence (e.g. "T1: F&G returned value=18 with timestamp — hard data point directly measuring market fear").
-
-6. **State the invalidation anchor**: what would reverse this verdict if the evidence were opposite.
+5. **Show the ranking reason** per source (one sentence, e.g. "T1: F&G returned value=18 with timestamp — hard data point").
+6. **State the invalidation anchor**: what would reverse this verdict.
 
 Narrative seat output format (inline, per token):
 ```
@@ -333,18 +238,17 @@ Bear: <1-line>
 Invalidation: <what reverses this verdict>
 ```
 
-**If you have fewer than 2 successfully fetched sources after trying all applicable URLs above, set posture = NEUTRAL and note "INSUFFICIENT DATA" — do not guess.**
+**Fewer than 2 successfully fetched sources after trying all applicable URLs → set posture = NEUTRAL and note "INSUFFICIENT DATA". Do not guess.**
 
-**Cache seat results** — write each seat's output immediately after it returns:
+**Cache seat results** — write each seat's output as it returns:
 ```bash
-# One file per seat; written inline as the seats complete (parallel or serial)
 echo '{on_chain_seat_json}'   > "$RUN_DIR/{TOKEN}/seat_on_chain.json"
 echo '{sentiment_seat_json}'  > "$RUN_DIR/{TOKEN}/seat_sentiment.json"
 echo '{macro_seat_json}'      > "$RUN_DIR/{TOKEN}/seat_macro.json"
 echo '{order_flow_seat_json}' > "$RUN_DIR/{TOKEN}/seat_order_flow.json"
 echo '{narrative_seat_json}'  > "$RUN_DIR/{TOKEN}/seat_narrative.json"
 ```
-Each seat JSON must include at minimum: `{posture, confidence, bull_line, bear_line, invalidation, sources:[]}`.
+Each seat JSON includes at minimum: `{posture, confidence, bull_line, bear_line, invalidation, sources:[]}`.
 
 **1e. Aggregate into the compact verdict and persist:**
 ```json
@@ -357,8 +261,6 @@ UPDATE token_analysis SET quorum_verdict=?, dominant_zone=?, seats_bull=?, seats
   key_support=?, key_resistance=?, confidence=?, signal=?, status='done' WHERE symbol=?;
 UPDATE todos SET status='done' WHERE id='tok-{TOKEN}';
 ```
-
-**Cache the verdict:**
 ```bash
 echo '{verdict_json}' > "$RUN_DIR/{TOKEN}/verdict.json"
 ```
@@ -367,7 +269,7 @@ echo '{verdict_json}' > "$RUN_DIR/{TOKEN}/verdict.json"
 
 **After all tokens complete — write the full report:**
 ```bash
-# The report = exec recap + Block 1 (signal table) + Block 2 (verdicts) + Block 3 (sources)
+# report = exec recap + Block 1 (signal table) + Block 2 (verdicts) + Block 3 (sources)
 echo "$FULL_REPORT_MARKDOWN" > "$RUN_DIR/report.md"
 echo "Run artifacts: $RUN_DIR"
 ```
@@ -394,7 +296,7 @@ Directory layout after a complete run:
 
 ## quorum_verdict mapping (deterministic)
 
-Map seat postures to `quorum_verdict` using this truth table — no interpretation, no judgment:
+Map seat postures to `quorum_verdict` using this truth table — no interpretation:
 
 | seats_bull | seats_bear | quorum_verdict |
 |------------|------------|----------------|
@@ -421,7 +323,7 @@ Map seat postures to `quorum_verdict` using this truth table — no interpretati
 
 ## Portfolio Governor — regime-aware buy cap
 
-Before finalising signals, count total BUY + BUY(small) signals across all tokens. Apply regime cap based on the Fear & Greed index fetched during the run:
+Before finalising signals, count total BUY + BUY(small) across all tokens. Apply the regime cap from the F&G index fetched this run:
 
 | Regime (F&G)          | Max simultaneous BUYs |
 |-----------------------|-----------------------|
@@ -429,26 +331,22 @@ Before finalising signals, count total BUY + BUY(small) signals across all token
 | Fear (25–49)          | 6                     |
 | Neutral+ (50–100)     | no cap                |
 
-**Always perform these steps in order — even when no downgrades fire:**
+Perform these steps in order, even when no downgrades fire:
 
-1. **Rank all BUY/BUY(small) signals by conviction** (ascending): sort by `seats_bull` ascending, then by `confidence` ascending (MED < HIGH). Print the ranked list.
-2. **Count total BUYs** and compare to the regime cap.
-3. **If total > cap**: downgrade from the bottom of the ranked list (lowest conviction first) until the cap is met. Print: `⚠️ Governor: {n} BUY(s) downgraded to HOLD (regime cap F&G={value})`.
-4. **If total ≤ cap**: no downgrades. Print how many buys there are vs the cap, in plain English (e.g. `✅ Governor: 2 buys within the cap of 4 — regime: Extreme Fear, F&G=18`). The exact label format doesn't matter.
+1. **Rank all BUY/BUY(small) by conviction (ascending)**: `seats_bull` asc, then `confidence` asc (MED < HIGH). Print the ranked list.
+2. **Count total BUYs** vs the cap.
+3. **If total > cap**: downgrade from the bottom (lowest conviction first) until the cap is met. Print `⚠️ Governor: {n} BUY(s) downgraded to HOLD (regime cap F&G={value})`.
+4. **If total ≤ cap**: no downgrades. Print the count vs cap in plain English (e.g. `✅ Governor: 2 buys within the cap of 4 — Extreme Fear, F&G=18`).
 
-This explicit ranking step is mandatory regardless of outcome — it makes the downgrade logic auditable and catches upstream signal errors (e.g., a token scored BUY(small) despite quorum=UNCERTAIN).
+The ranking step makes downgrades auditable and catches upstream signal errors (e.g. a token scored BUY(small) despite quorum=UNCERTAIN). In a Fear regime it enforces the "60–70% dry powder" discipline a signal table alone cannot.
 
-Rationale: in a Fear regime the risk-reward of concentrated buying is poor; the governor enforces the "60–70% dry powder" discipline that a pure signal table cannot.
+**WAIT / HOLD with a named buy-zone** (e.g. "not now, but buy AAVE near $73") → register a notify-me job carrying your thesis via the **`mkt`** skill. See §Set a buy-alert.
 
 ---
 
-**WAIT / HOLD with a named buy-zone** (e.g. "not now, but buy AAVE near $73") → register a
-notify-me job carrying your thesis via the **`mkt`** skill, so the user is pinged when the
-price/RSI/MACD level hits. See *Set a buy-alert* below.
-
 ## Step 3 — Print the full run report
 
-**Always start the report with a 2–3 sentence exec recap** before Block 1. No headers — just plain text. Format:
+**Open with a 2–3 sentence exec recap** before Block 1. No headers — plain text. Format:
 
 ```
 {High-conviction signal}: {TOKEN} — {1-line reason why: key indicator + zone + quorum}.
@@ -460,16 +358,16 @@ Rules:
 - Lead with the highest-conviction BUY or SELL (most seats, clearest zone). Skip if nothing above HOLD.
 - If all signals are HOLD, say so in one sentence + the dominant reason (e.g. "All 11 tokens HOLD — trend bearish, waiting for 200wMA reclaim").
 - The narrative sentence must be grounded in a fetched source from this run. No URL = no claim.
-- Keep it under 3 sentences total. Not a list — flowing text.
+- Under 3 sentences total. Flowing text, not a list.
 
 Example:
 ```
 AAVE is the only buy: down 62% from its high and sitting above its long-term average price floor at $62, with 4 of 5 analysis perspectives bullish. LINK also worth watching — RSI at 23 (historically oversold) with real institutional adoption via Swift and Euroclear. Sentiment: Fear & Greed at 18 — the AI/tech selloff dragged crypto down hard this week while DeFi fundamentals (locked value, fees) held steady.
 ```
 
-⛔ **Jargon banned from the exec recap:** Never write `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN`, `BULLISH`, `BEARISH`, `UNCERTAIN`, `seats_bull`, `seats_bear`, `quorum_verdict`, `0B/4Br`, or any internal code. Write what it means in plain English, as if explaining to a friend who doesn't follow crypto charts.
+⛔ **Jargon banned from the exec recap:** Never write `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN`, `BULLISH`, `BEARISH`, `UNCERTAIN`, `seats_bull`, `seats_bear`, `quorum_verdict`, `0B/4Br`, or any internal code. Write what it means in plain English.
 
-Print **three blocks** after the exec recap, in this exact order:
+Print **three blocks** after the recap, in this exact order:
 
 ### Block 1 — Signal table (one-glance summary)
 ```
@@ -485,12 +383,12 @@ SOL   | BUY (small) | cheap     | SPLIT  | 3 / 1
 
 ### Block 2 — Plain-English verdict per token
 For every token write 3–5 sentences a non-expert can understand. Cover:
-- **Why this signal**: what 1–2 facts drove the decision (price vs 200w MA, RSI, death cross, on-chain zone).
-- **News catalyst** (if any): state the headline fact **and** append `[source: https://exact-article-url]` inline — no URL = do not mention the fact.
+- **Why this signal**: the 1–2 facts that drove the decision (price vs 200w MA, RSI, death cross, on-chain zone).
+- **News catalyst** (if any): state the headline fact **and** append `[source: https://exact-article-url]` inline — no URL = do not mention it.
 - **Main risk**: the single biggest thing that could make this call wrong.
 - **What to watch**: the one trigger that would change the signal (e.g. "close above SMA50" → HOLD flips to BUY).
 
-**⛔ HARD RULE for Block 2:** Every claim that comes from a fetched article, data feed, or external source MUST have an inline `[source: https://...]` immediately after it. Technical indicators (RSI, MACD, death cross) computed from price data do NOT need a source. Narrative facts (headlines, protocol TVL, fund flows, institutional events) DO. A claim with no `[source:]` tag is treated as unverified and must be removed.
+**⛔ HARD RULE for Block 2:** Every claim from a fetched article, data feed, or external source carries an inline `[source: https://...]` immediately after it. Technical indicators (RSI, MACD, death cross) computed from price data do NOT need a source; narrative facts (headlines, TVL, fund flows, institutional events) DO. A claim with no `[source:]` tag is unverified — remove it.
 
 Example:
 ```
@@ -518,8 +416,7 @@ Upgrade to BUY if price reclaims the 200-week MA (~$2,472).
 ```
 
 ### Block 3 — News & sources used by the Narrative seat
-List every URL the narrative seat fetched, with a one-line plain-English
-summary of what it said and why it was ranked T1/T2/T3.
+List every URL the narrative seat fetched, with a one-line plain-English summary and its T1/T2/T3 rank.
 
 ```
 --- NEWS SOURCES ---
@@ -532,48 +429,27 @@ BTC narrative (posture: BEARISH)
   [T2] https://www.coindesk.com/markets/2026/06/21/bitcoin-options-traders-scrambling → "Bitcoin traders are scrambling to buy options bets that would pay off if the selloff deepens" → T2: named-source journalism, live positioning data
   [T3] https://www.coindesk.com/markets/2026/06/20/bitcoin-54k-analyst-forecast → "Bitcoin price may be headed to $54,000, says analyst who forecast October's all-time high" → T3: analyst opinion, useful for risk framing, no hard data
   [FETCH FAILED: https://www.theblock.co/latest] — no BTC-specific articles visible
-
-ETH narrative (posture: BULLISH)
-  [T1] https://defillama.com/chain/ethereum — "Chain Revenue (24h)$65,225... App Revenue (24h)$1.1m... Bridged TVL$349.351b" → T1: primary on-chain metrics with exact daily figures
-  [T2] https://www.coindesk.com/tech/2026/06/21/ethereum-staking-update → "SharpLink Gaming adds ETH to treasury" → T2: credible source, specific catalyst
-  [FETCH FAILED: https://defillama.com/protocol/lido] — returned only funding rounds, no TVL data
 ```
+(DeFiLlama T1 example: `[T1] https://defillama.com/chain/ethereum — "Chain Revenue (24h)$65,225... App Revenue (24h)$1.1m... Bridged TVL$349.351b"` — exact metric string, not a paraphrase.)
 
-> ⚠️ Wrong (never do this):
-> ```
-> T1 — CoinDesk
-> Quote: "Bitcoin traders are scrambling..."
-> ```
-> Wrong because: no `https://` URL, no actual article link. Source name alone = hallucination risk.
->
-> Right:
-> ```
-> [T1] https://www.coindesk.com/markets/2026/06/21/bitcoin-options-traders-... — "Bitcoin traders are scrambling..."
-> ```
+⛔ Each entry is `[Tn] https://<article-url> — "<quote>"`. A bare source name (`T1 — CoinDesk`) with no `https://` URL is a hallucination — do not write it.
 
 Self-check before printing:
 - Every token has `status='done'` in `token_analysis`
 - `seats_bull + seats_bear <= 5` for each token
-- Every narrative source entry starts with `https://` followed by the **specific article URL** (not a listing/search page) — if any entry has only a source name or no URL, remove it and mark INSUFFICIENT DATA
+- Every narrative source entry starts with `https://` followed by the **specific article URL** (not a listing/search page) — else remove it and mark INSUFFICIENT DATA
 - **Two-step verified**: news citations point to the article URL you fetched (step 2), not the listing page (step 1)
-- **Block 2 inline links**: every news-based claim in Block 2 has `[source: https://...]` — scan each verdict and confirm; remove any fact that has no source tag
-- A TradingView screenshot is embedded inline (via `view` tool on the `file_path`) for every token — not just captured, but visible
-- **No source may be cited that was not actually fetched this run** — verify: "did I call web_fetch on this exact URL, or did a feed script return it?" If neither, remove it
+- **Block 2 inline links**: every news-based claim has `[source: https://...]` — scan each verdict; remove any fact with no source tag
+- A TradingView screenshot is embedded inline (via `view` tool on the `file_path`) for every token
+- **No source cited that was not actually fetched this run** — verify "did I web_fetch this exact URL, or did a feed script return it?" If neither, remove it
 
 ---
 
 ## Step 4 — Verdict Critic (post-hook: substance check)
 
-**Run this before printing Block 1.** For every token, a fresh subagent — with no memory of the quorum analysis — reads today's news and challenges the verdict. This catches the class of error where a verdict is technically consistent with the data package but contradicts something happening in the real world right now.
+**Run before printing Block 1.** For every token, a fresh subagent — with no memory of the quorum — reads today's news and challenges the verdict. This catches verdicts that are consistent with the data package but contradict something happening in the real world right now.
 
-> **Why this step exists:** The UNI error. The quorum produced "no fee accrual" with confidence because the data package didn't contradict it. A fresh agent reading TheBlock for 60 seconds would have seen "UNIfication passes 99.9% — fee switch activated". No further reasoning required. The error was not in the quorum logic — it was in the absence of a live news check before accepting the verdict.
-
-**⛔ PRE-FLIGHT CRITIC COUNT:** Before spawning any critics, write out the full list of tokens you are about to critique — one per line. Count them. The count MUST match the token universe size for this run (default: 11). If you have fewer, add the missing tokens NOW.
-
-Common mistake to avoid: running critics only on BUY/SELL "actionable" tokens and skipping HOLDs.
-HOLD verdicts can be wrong — the original UNI error was a HOLD with stale tokenomics ("no fee accrual" when the fee switch had already passed). Every HOLD token needs a critic pass for Q2 STALE MECH.
-
-Write this list before calling any critic subagent:
+**⛔ PRE-FLIGHT CRITIC COUNT:** Before spawning critics, write the full list of tokens to critique, one per line, and count them. The count MUST equal the universe size (default 11). Critique **every** token, HOLDs included — a HOLD can be wrong (the original UNI error was a HOLD with stale "no fee accrual" tokenomics). Write this before calling any critic:
 ```
 Critic list (must equal universe count):
 1. BTC — HOLD
@@ -582,39 +458,12 @@ Critic list (must equal universe count):
 11. LINK — HOLD
 Total: 11/11 ✓
 ```
-If your total is < universe count, do not proceed — add the missing rows first.
+If your total is < universe count, add the missing rows before proceeding.
 
-**4a. For **every token** (not just flagged ones), spawn a verdict-critic subagent in parallel.** ⛔ All tokens must be covered — partial coverage is INCOMPLETE. Pass it:
-- Token symbol and the full quorum verdict text (signal, zone, quorum, all 5 seat postures, key claims)
-- The following instructions:
+**4a. For every token, spawn a verdict-critic subagent in parallel.** ⛔ Partial coverage is INCOMPLETE. Pass it the token symbol, the full quorum verdict text (signal, zone, quorum, all 5 seat postures, key claims), and this prompt:
 
 ```
-You are a devil's advocate critic. Your job is to find problems with this verdict, not confirm it.
-You have NO prior knowledge of this analysis run — start fresh.
-
-Token: {TOKEN}
-Verdict to critique:
-{paste full quorum verdict block}
-
-Your task:
-1. Fetch these two URLs and read what comes back:
-   a. web_fetch https://www.theblock.co/search?query={TOKEN}+crypto (recent news listing)
-   b. web_fetch the most relevant article URL from (a) — pick the one most likely to challenge the verdict
-   c. web_fetch https://defillama.com/protocol/{slug} (protocol metrics and revenue)
-
-2. Challenge the verdict with these four questions. Answer each one:
-   Q1 DIRECTION: Does today's news point in the OPPOSITE direction from the signal?
-      (e.g. verdict=BEARISH but news says "protocol launches major feature, TVL up 40%")
-   Q2 STALE MECHANICS: Does the verdict make any categorical claim about protocol mechanics
-      (fee switch, buyback, burn, revenue accrual, governance status) that the news or DeFiLlama contradicts?
-      Red-flag phrases: "no fee accrual", "governance only", "no buyback", "fees go to LPs only",
-      "fee switch pending", "never passed". Any of these = verify against live data.
-   Q3 MISSING CATALYST: Is there a major event in the news (governance vote passed, exploit,
-      institutional adoption, regulatory decision, partnership) that the verdict completely ignores?
-   Q4 OVERCONFIDENCE: Does the verdict use absolute language ("permanently", "structurally",
-      "will never", "always has been") about something that governance or market conditions could change?
-
-3. Return this exact format:
+Return EXACTLY this format:
 
 CRITIC — {TOKEN}
 News fetched:
@@ -629,25 +478,47 @@ Q4 OVERCONF:    PASS | FLAG — <quote the overconfident phrase>
 
 OVERALL: PASS | FLAG
 If FLAG: "<specific verdict text that must be corrected> → correct to: <corrected claim with source URL>"
+
+Token: {TOKEN}
+Verdict to critique:
+{paste full quorum verdict block}
+
+Task:
+1. Fetch and read:
+   a. web_fetch https://www.theblock.co/search?query={TOKEN}+crypto (recent news listing)
+   b. web_fetch the most relevant article URL from (a) — the one most likely to challenge the verdict
+   c. web_fetch https://defillama.com/protocol/{slug} (protocol metrics and revenue)
+2. Answer each question:
+   Q1 DIRECTION: Does today's news point in the OPPOSITE direction from the signal?
+      (e.g. verdict=BEARISH but news says "protocol launches major feature, TVL up 40%")
+   Q2 STALE MECHANICS: Does the verdict make a categorical mechanics claim (fee switch, buyback, burn,
+      revenue accrual, governance status) that the news or DeFiLlama contradicts? Red-flag phrases:
+      "no fee accrual", "governance only", "no buyback", "fees go to LPs only", "fee switch pending",
+      "never passed" — verify each against live data.
+   Q3 MISSING CATALYST: Is there a major event (governance vote passed, exploit, institutional adoption,
+      regulatory decision, partnership) the verdict completely ignores?
+   Q4 OVERCONFIDENCE: Does the verdict use absolute language ("permanently", "structurally", "will never",
+      "always has been") about something governance or market conditions could change?
+
+Constraints: You are a devil's advocate — find problems, do not confirm. You have NO prior knowledge of
+this run; start fresh. You have only web_fetch, not TradingView — you read the world, not the chart.
 ```
 
 **4b. Print all critic reports** for all tokens in sequence.
 
 **4c. Act on FLAGs before printing Block 1:**
-- `OVERALL: FLAG` on any token → **revise that token's quorum verdict** to address the specific critique, re-run the signal decision for that token, and mark it `⚠️ REVISED` in Block 1.
-- `OVERALL: PASS` on all tokens → print `✅ Verdict Critic: {n}/{total} tokens reviewed` where `n` must equal `total` (total = count of tokens in the universe this run). ⛔ If n < total, the run is INCOMPLETE — do not proceed to Block 1.
+- `OVERALL: FLAG` on any token → **revise that token's quorum verdict** to address the critique, re-run the signal decision, and mark it `⚠️ REVISED` in Block 1.
+- `OVERALL: PASS` on all tokens → print `✅ Verdict Critic: {n}/{total} tokens reviewed` where `n` must equal `total`. ⛔ If n < total, the run is INCOMPLETE — do not proceed to Block 1.
 
-⛔ **SELF-CHECK BEFORE BLOCK 1:** Verify `n == total` by re-reading the critic list you wrote in the pre-flight above. If any token from the pre-flight list is missing a printed CRITIC — {TOKEN} / OVERALL: result, you have an incomplete run. Run the missing critics now. Do not print Block 1 until all critics are printed and counted.
-
-> The critic cannot access TradingView tools — only `web_fetch`. That is intentional: it reads the world, not the chart. Technical signals are the quorum's job; the critic's only job is "does today's news contradict this?"
+⛔ **SELF-CHECK BEFORE BLOCK 1:** Verify `n == total` by re-reading the pre-flight critic list. If any token is missing a printed `CRITIC — {TOKEN}` / `OVERALL` result, run the missing critics now. Do not print Block 1 until all critics are printed and counted.
 
 ---
 
 ## Step 5 — Citation validation (post-hook: format check)
 
-After printing Block 3, run the `reference-validator` post-hook to verify every source cited in the narrative seats is real.
+After printing Block 3, run the `reference-validator` post-hook to verify every narrative-seat source is real.
 
-**5a. Assemble the citations JSON** — collect every `[T1]`, `[T2]`, `[T3]` entry from Block 3 that has a real `https://` URL (skip `[FETCH FAILED]` entries — those are already flagged):
+**5a. Assemble the citations JSON** — collect every `[T1]`/`[T2]`/`[T3]` entry from Block 3 with a real `https://` URL (skip `[FETCH FAILED]`):
 
 ```json
 [
@@ -657,9 +528,9 @@ After printing Block 3, run the `reference-validator` post-hook to verify every 
 ]
 ```
 
-**5b. Spawn `reference-validator` as a subagent** — pass the full JSON array. The validator re-fetches every URL and checks if the quoted text is actually present in the page. It can use `web_fetch` (subagents have that tool; only `tradingview-*` tools are orchestrator-only).
+**5b. Spawn `reference-validator` as a subagent** — pass the full JSON array. It re-fetches every URL and checks the quoted text is present (subagents have `web_fetch`; only `tradingview-*` is orchestrator-only).
 
-⛔ **Non-skippable:** spawning the reference-validator subagent is mandatory. Self-attested prose checkmarks ("all citations verified", "✅ sources confirmed") do NOT satisfy this step — a subagent must actually run and its raw output must be printed verbatim in Step 5c. If the subagent is not spawned, mark the entire run as INCOMPLETE.
+⛔ **Non-skippable:** the subagent must actually run and its raw output must be printed verbatim in 5c. Self-attested checkmarks ("all citations verified") do NOT satisfy this step. If the subagent is not spawned, mark the run INCOMPLETE.
 
 ```
 Invoke the reference-validator skill with this citations JSON:
@@ -673,21 +544,19 @@ Invoke the reference-validator skill with this citations JSON:
 - Any token with only `FETCH_FAILED` sources → append `ℹ️ UNVERIFIED` to that token's signal.
 - If ALL sources for ALL tokens are `VERIFIED` or `PARTIAL` → print `✅ All citations verified`.
 
-> **Why this step exists:** LLM agents fabricate plausible-sounding URLs and headlines. The validator re-fetches every URL cold (subagent has no memory of the original fetch) and does a literal string match. A hallucinated quote will fail even if the URL resolves — the text won't be there.
-
 ---
 
 ## Step 6 — Telegram daily recap (append after both post-hooks)
 
 After Block 3 and citation validation, print the Telegram message for @CryptoAiInvestor.
 
-**Three mandatory elements per token — every token, no exceptions:**
+**Three mandatory elements per token — no exceptions:**
 
 1. **Market data** — price, RSI, MACD line vs signal, EMA20 vs SMA200 (above/below), % from ATH
-2. **5-seat panel recap** — exactly 1 sentence per seat (on-chain / sentiment / macro / order-flow / narrative) stating what that analyst saw and how they voted
-3. **All source links** — every URL fetched during research for this token, with a 1-line description. If no URL was fetched, write `no sources fetched` — never omit or fabricate
+2. **5-seat panel recap** — exactly 1 sentence per seat (on-chain / sentiment / macro / order-flow / narrative): what that analyst saw and how it voted
+3. **All source links** — every URL fetched for this token, with a 1-line description. If none, write `no sources fetched` — never omit or fabricate
 
-A token entry without all three elements is incomplete. Write them in this order for every token:
+A token entry without all three is incomplete. Write them in this order per token:
 
 ```
 {EMOJI} {TOKEN} ${price} | RSI {rsi} | MACD {direction} | {above/below} 4yr avg | {pct}% below ATH
@@ -727,26 +596,9 @@ A token entry without all three elements is incomplete. Write them in this order
 Educational only. Not financial advice. DYOR.
 ```
 
-**Concrete example (PUMP SELL and AAVE BUY):**
+**Concrete example (AAVE BUY):**
 
 ```
-🐸 PUMP $0.00131 | RSI 40 | MACD bearish crossover | below 4yr avg | 85% below ATH
-🔴 SELL — meme launchpad revenue collapsed 77% from peak ($263M → $60M) as speculation dried up; no recovery catalyst; 0 of 5 analysts bullish
-
-📊 Analyst panel (0/5 bullish):
-  On-chain: protocol revenue $60M Q2'26 vs $263M Q1'25 — structural collapse, voted SELL
-  Sentiment: RSI 40 in downtrend, no oversold bounce signal, voted SELL
-  Macro: risk-off regime hits speculative tokens hardest; no macro tailwind, voted SELL
-  Order-flow: death cross, price below all MAs, no accumulation volume, voted SELL
-  Narrative: no new catalysts; pump.fun losing mindshare; competitors taking share, voted SELL
-
-📰 Sources:
-  • https://defillama.com/protocol/pump-fun — quarterly revenue data showing -77% collapse
-
-📌 Avoid. If short: near 52w low ($0.001152) — risk of dead-cat bounce; size small.
-
-━━━━━━━━━━━━━━━━━━━━━━
-
 Ⓐ AAVE $92.18 | RSI 40 | MACD flattening | below 4yr avg ($140) | 34% below 4yr avg
 🟢 BUY — DeFi lending leader at deep discount: $27B locked, real yield from borrowing spreads + GHO fees, buy-distribute program live; 3 of 5 analysts bullish
 
@@ -768,12 +620,12 @@ Educational only. Not financial advice. DYOR.
 `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN`, `BULLISH`, `BEARISH`, `UNCERTAIN`, `SPLIT`, `dominant_zone`, `seats_bull`, `seats_bear`, `quorum_verdict`, `3B/1Br`, `0B/4Br`, `INSUFFICIENT`, `confidence` labels
 
 Plain-English replacements:
-- Zone labels → use `{pct}% below ATH` or `{pct}% below 4yr avg` — the number tells the story
-- Seat counts → use `{N} of 5 analysts bullish` in the signal line; the panel block explains each
+- Zone labels → `{pct}% below ATH` or `{pct}% below 4yr avg` — the number tells the story
+- Seat counts → `{N} of 5 analysts bullish` in the signal line; the panel block explains each
 - `UNKNOWN` zone → `only {N} months of price history — 4yr average not yet available`
 
-**Telegram length limit is 4096 bytes per message (hard limit).** With full panel + sources, 11 tokens will exceed one message. Split at token boundaries:
-- Part 1: header + BUY/SELL tokens (highest priority — user needs to act on these)
+**Telegram length limit is 4096 bytes per message (hard limit).** With full panel + sources, 11 tokens exceed one message. Split at token boundaries:
+- Part 1: header + BUY/SELL tokens (highest priority)
 - Part 2: remaining HOLD tokens + watch list + disclaimer
 - Send each part: `python3 telegram-cli.py send @CryptoAiInvestor "$PART_N"`
 - ⛔ Never use `head -c N` — silently truncates multibyte emoji
@@ -792,22 +644,14 @@ CONFIG=".cache/crypto-advisor/notion.yaml"
 [ -f "$CONFIG" ] && ENABLED=$(python3 -c "import yaml,sys; c=yaml.safe_load(open('$CONFIG')); print(c.get('enabled','false'))") || ENABLED=false
 ```
 
-**7b. Build the page title** using `title_template` from the config:
-
-Derive each variable from the completed run:
+**7b. Build the page title** using `title_template` from the config. Derive each variable from the completed run:
 - `{date}` → today's date (`YYYY-MM-DD`)
-- `{fg_label}` → map the F&G value used in Step 2:
-  - 0–24 → `xfear`
-  - 25–49 → `fear`
-  - 50–74 → `neutral`
-  - 75–89 → `greed`
-  - 90–100 → `xgreed`
-- `{signals}` → take the top 1–2 BUY/BUY(small) tokens (by conviction, highest first), uppercase, space-joined, append ` buy`; if none, use `all hold`
-  - Examples: `AAVE buy`, `AAVE LINK buy`, `all hold`
+- `{fg_label}` → map the F&G value used in Step 2: 0–24 → `xfear`; 25–49 → `fear`; 50–74 → `neutral`; 75–89 → `greed`; 90–100 → `xgreed`
+- `{signals}` → top 1–2 BUY/BUY(small) tokens (by conviction, highest first), uppercase, space-joined, append ` buy`; if none, use `all hold`. Examples: `AAVE buy`, `AAVE LINK buy`, `all hold`
 
 Full title example: `2026-06-26 xfear AAVE buy`
 
-**7c. Create the Notion page** using the Notion MCP tool:
+**7c. Create the Notion page:**
 
 ```
 notion-create-pages
@@ -818,7 +662,7 @@ notion-create-pages
   }]
 ```
 
-The content is the full run output — signal table, per-token verdicts, news sources, Telegram recap — in markdown. No need to reformat; paste the blocks verbatim.
+Paste the blocks verbatim — no reformatting.
 
 **7d. Save to local file** (always — even if Notion is disabled):
 
@@ -848,10 +692,7 @@ If the config is absent or `enabled: false`, still save the file (7d always runs
 
 ## Set a buy-alert (notify-me-when) — for WAIT / buy-zone verdicts
 
-When a token's verdict is "not yet, but buy at $X" or "act when RSI/MACD hits V", offer to
-register a durable alert so the user is pinged **with your reasoning** when it triggers. Use
-the **`mkt`** skill — it carries the thesis into the notification (mkt's own alert message
-can't). Emit the alert contract and register it:
+When a verdict is "not yet, but buy at $X" or "act when RSI/MACD hits V", offer to register a durable alert via the **`mkt`** skill — it carries the thesis into the notification (mkt's native message cannot):
 
 ```bash
 cd .agents/skills/mkt/scripts
@@ -861,16 +702,9 @@ bun mkt-alert.ts add --desk crypto --symbol AAVE-USD \
   --channel telegram:@CryptoAiInvestor --expiry 2026-07-31
 ```
 
-Indicator and compound buy-zones map to mkt conditions (`rsi_below`, `macd_cross`,
-`above`+`macd_cross` with `--match all`). A scheduled `bun check.ts` (runtime cron) then
-fires the Telegram/ntfy notification with the reasoning. See `.agents/skills/mkt/SKILL.md`
-for the three trigger patterns and the per-runtime scheduler cookbook. Recommend-only.
+Indicator and compound buy-zones map to mkt conditions (`rsi_below`, `macd_cross`, `above`+`macd_cross` with `--match all`). A scheduled `bun check.ts` (runtime cron) then fires the notification with the reasoning. See `.agents/skills/mkt/SKILL.md` for the trigger patterns and scheduler cookbook. Recommend-only.
 
-**Crypto is mkt's strong path** — quotes stream live from **Coinbase WS** (real-time, no
-geo-block), ideal for our 24/7 book. Use Coinbase symbol format: `BTC-USD`, `ETH-USD`,
-`AAVE-USD`, `SOL-USD` (dashes, **not** `BTCUSDT`). A very thin/new alt with no Coinbase feed
-returns no quote — that one job logs an error and is skipped; every other job still runs. So
-keep alerts to tokens in our universe (all of which have Coinbase feeds).
+Use Coinbase symbol format: `BTC-USD`, `ETH-USD`, `AAVE-USD`, `SOL-USD` (dashes, **not** `BTCUSDT`) — quotes stream live from Coinbase WS (real-time, no geo-block). A thin alt with no Coinbase feed returns no quote and that one job is skipped; keep alerts to universe tokens (all have Coinbase feeds).
 
 ## Running continuously
 

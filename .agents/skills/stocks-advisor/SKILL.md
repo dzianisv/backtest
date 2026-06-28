@@ -12,18 +12,18 @@ metadata:
 
 # Stocks Portfolio Manager
 
-Analyze a set of individual stocks **one at a time** → run a 5-seat analyst panel per stock → output a
-concrete **entry plan** (zone + trigger + stop) and a BUY / WATCH / SKIP decision. The stock list is
-either supplied by the user or **discovered live** from the market themes currently driving institutional
-flows. Nothing is hardcoded — no positions, no themes.
+Analyze individual stocks **one at a time** → run a 5-seat analyst panel per stock → output a concrete
+**entry plan** (zone + trigger + stop) and a BUY / WATCH / SKIP decision. The stock list is user-supplied
+or **discovered live** from the market themes currently driving institutional flows. Hardcode nothing — no
+positions, no themes.
 
 > Educational analysis, not financial advice. Single stocks are satellites; the index is the bar.
 
 ## The job is the ENTRY, not the company
 
-The primary question this skill answers is **not** "is this a good company" — it is **"is NOW a good time
-to enter, and where exactly?"** A great company at the wrong entry is still a wrong trade. Every output
-must end with a price zone, a bar-close trigger, and a market-based stop, or it is incomplete.
+The question is **not** "is this a good company" — it is **"is NOW a good time to enter, and where
+exactly?"** A great company at the wrong entry is a wrong trade. Every output ends with a price zone, a
+bar-close trigger, and a market-based stop, or it is incomplete.
 
 ## Quickstart
 
@@ -34,9 +34,9 @@ Holdings: https://docs.google.com/spreadsheets/d/1aunLbpNGo85WqrMHiIsy6nFUija4Ln
 Tab: IBKR
 Cash to deploy: $26,320
 ```
-The skill reads your positions from the sheet (ticker, qty, cost basis), then runs the 5-seat panel
-per position. Verdicts become **HOLD / ADD / TRIM / EXIT** (not BUY/WATCH/SKIP) because cost basis
-and P&L context are known. Output includes a tax-harvest table and cash deployment plan.
+Reads positions (ticker, qty, cost basis) from the sheet, runs the 5-seat panel per position. Verdicts
+become **HOLD / ADD / TRIM / EXIT** (not BUY/WATCH/SKIP) since cost basis and P&L are known. Output adds a
+tax-harvest table and cash-deployment plan.
 
 ### Analyze a supplied watchlist
 ```
@@ -47,8 +47,8 @@ Run stocks-advisor on: AVGO, MRVL, VRT, CEG
 ```
 Find stocks in the AI supply chain theme and run the stock panel
 ```
-The skill first **discovers the theme's constituents live** (web_fetch — §Theme discovery), then runs the
-full per-stock panel on the discovered names.
+Discovers the theme's constituents live (web_fetch — §Theme discovery), then runs the per-stock panel on
+the discovered names.
 
 **Full per-run loop:** see Step 1.5 (Sequential per-stock loop).
 
@@ -56,44 +56,40 @@ full per-stock panel on the discovered names.
 
 ## Hard constraints — read before running (these dictate the whole design)
 
-1. **TradingView MCP tools live ONLY in the orchestrator (you).** Subagents spawned via the task tool get
-   a fresh toolset with **no** `tradingview-*` tools and **no** yfinance — verified for crypto-PM, same
-   runtime here. So **YOU** pull every chart datum and run `fundamentals.py` yourself, assemble one data
-   package per stock, and **inject** it into each seat. Never tell a subagent to "pull TradingView data"
-   or "run yfinance" — it cannot. Subagents may only *receive* the package and reason; the narrative seat
-   may still `web_fetch` news.
-2. **The chart is a single shared symbol slot.** `chart_set_symbol` mutates the one global chart, so two
-   tickers cannot be pulled at once. **The data pull is strictly sequential, one ticker at a time.** Track
+1. **TradingView MCP + yfinance live ONLY in the orchestrator (you).** Subagents spawned via the task tool
+   get a fresh toolset with **no** `tradingview-*` tools and **no** yfinance. So YOU pull every chart datum,
+   run `fundamentals.py`, assemble one data package per stock, and **inject** it into each seat. Never tell
+   a subagent to "pull TradingView data" or "run yfinance" — it cannot. Seats only *receive* the package and
+   reason; the narrative seat may still `web_fetch` news.
+2. **The chart is a single shared symbol slot.** `chart_set_symbol` mutates the one global chart — two
+   tickers cannot be pulled at once. **Pull data strictly sequentially, one ticker at a time.** Track
    progress in the `todos` table so an interrupted run resumes cleanly.
-3. **Sequential data pull, parallel analysis.** The TradingView pull must be serial (single slot); the
-   five seats per stock share nothing, so spawn them **in parallel** once the package is assembled.
-4. **TradingView symbol mapping:** use `NASDAQ:{TICKER}` or `NYSE:{TICKER}` for US stocks. If the exchange
-   lookup fails, fall back to bare `{TICKER}`. When unsure of the exchange, call `tradingview-symbol_search`
-   to resolve it before `chart_set_symbol`.
-5. **Read indicators from TradingView; read fundamentals + MA levels from yfinance.**
-   `data_get_study_values` returns RSI(14), Bollinger(20,2), MACD(12,26,9) and Volume at standard lengths —
-   use them verbatim, do not recompute. Price levels (`ma50`, `ma200`, `52w_high/low`, `dd_from_52wh`,
-   `vs_200d_ma`) and all fundamentals come from `scripts/fundamentals.py` (yfinance). This sidesteps the
-   TradingView MA-length bug (its `chart_manage_indicator` ignores the MA `length` input) entirely.
-6. **This skill analyzes INDIVIDUAL STOCKS only.** ETF / sleeve allocation decisions belong in
-   `tradfi-portfolio-manager`. The portfolio-level synthesis across the analyzed names is the
-   `stock-chair` skill's job (§Step 4).
+3. **Sequential data pull, parallel analysis.** The five seats per stock share nothing — spawn them **in
+   parallel** once the package is assembled.
+4. **TradingView symbol mapping:** use `NASDAQ:{TICKER}` or `NYSE:{TICKER}` for US stocks. On exchange-lookup
+   failure, fall back to bare `{TICKER}`. When unsure of the exchange, call `tradingview-symbol_search` to
+   resolve it before `chart_set_symbol`.
+5. **Indicators from TradingView; fundamentals + MA levels from yfinance.** `data_get_study_values` returns
+   RSI(14), Bollinger(20,2), MACD(12,26,9), Volume at standard lengths — use them verbatim, do not recompute.
+   Price levels (`ma50`, `ma200`, `52w_high/low`, `dd_from_52wh`, `vs_200d_ma`) and all fundamentals come
+   from `scripts/fundamentals.py` (yfinance). This sidesteps the TradingView MA-length bug entirely (its
+   `chart_manage_indicator` ignores the MA `length` input).
+6. **Individual stocks only.** ETF / sleeve allocation belongs in `tradfi-portfolio-manager`. Portfolio-level
+   synthesis across the analyzed names is the `stock-chair` skill's job (§Step 4).
 
 ---
 
 ## CONFIG — optional Notion publish target
 
-Publishing the run to Notion is **OPT-IN**. The target lives in
-`.cache/stocks-advisor/notion.yaml`, a YAML file with two fields:
+Notion publishing is **opt-in**. The target lives in `.cache/stocks-advisor/notion.yaml`:
 
 ```yaml
 page_url: "https://app.notion.com/p/..."
 page_id: "<32-char hex id>"
 ```
 
-The skill reads `page_id` at publish time (§Step 5) — never hardcode a page id in this file. If the
-file is missing OR `page_id` is empty, the skill **skips publishing silently** and finishes the run;
-absence is NOT an error (unlike stocks-daily, which stopped — this skill continues).
+Read `page_id` at publish time (§Step 5) — never hardcode it here. If the file is missing OR `page_id` is
+empty, **skip publishing silently** and finish the run; absence is not an error.
 
 ---
 
@@ -104,22 +100,21 @@ vs SPY: **only 1 of 10 methods beat SPY on return (momentum); 0 of 10 beat it on
 that implements Morningstar's own stock-picking.** Single-stock selection is a low-base-rate bet. So:
 - Single names are **satellites**, the index is the **core and the bar**.
 - A passing panel is a **hypothesis**, not validated alpha. TA setups are **hypothesis generation** —
-  validate any mechanical rule with `strategy-discovery-backtest` (full costs, walk-forward) before
-  risking real capital.
-- yfinance fundamentals are **point-in-time UNSAFE** (today's numbers) — fine for *current* entry
-  analysis, never for backtesting a screen.
+  validate any mechanical rule with `strategy-discovery-backtest` (full costs, walk-forward) before risking
+  real capital.
+- yfinance fundamentals are **point-in-time UNSAFE** (today's numbers) — fine for *current* entry analysis,
+  never for backtesting a screen.
 
 ---
 
 ## Theme discovery — discovered live, never hardcoded
 
-Market narratives rotate; what leads flows this quarter may fade next. **Do not hardcode a theme list.**
-When the user asks to "find stocks in theme X" or "what should I look at this week", discover the live
-themes and their constituents by fetching, then reading, real pages:
+Market narratives rotate. **Do not hardcode a theme list.** When the user asks "find stocks in theme X" /
+"what should I look at this week", discover live themes and constituents by fetching and reading real pages:
 
 1. **Identify the live themes.** Pull WSJ + FT first via the **paywall-free feed scripts** (the
-   `wsj.com`/`ft.com` listing pages below are bot-blocked from agent IPs — the feed scripts return real
-   article URLs + a verbatim publisher teaser + date, no login needed):
+   `wsj.com`/`ft.com` listing pages are bot-blocked from agent IPs — the feed scripts return real article
+   URLs + a verbatim publisher teaser + date, no login):
    ```bash
    bun .agents/skills/read-news/scripts/feeds/wsj.ts --feed markets,business --days 5 --limit 25 --text
    bun .agents/skills/read-news/scripts/feeds/ft.ts  --section markets,companies,global-economy --days 5 --limit 25 --text
@@ -127,31 +122,32 @@ themes and their constituents by fetching, then reading, real pages:
    Then `web_fetch` 1–2 of the **non-paywalled** listings for breadth:
    - `https://www.bloomberg.com/markets`
    - `https://finance.yahoo.com/topic/latest-news/` (sector/thematic trend listings)
-2. **Map names to themes.** For each candidate ticker, tag it with one theme bucket:
-   `AI_SUPPLY_CHAIN | ROBOTICS | ENERGY | DEFENSE | FINTECH | HEALTHCARE | OTHER`. The buckets are a
-   classification convention, not a fixed universe — add a bucket if the evidence supports a new one.
-3. **Anti-hallucination rule (same as the narrative seat):** you may only name a theme or a constituent
-   you found this run in a page you actually `web_fetch`ed **or in feed-script output you actually ran**
+2. **Map names to themes.** Tag each candidate ticker with one bucket:
+   `AI_SUPPLY_CHAIN | ROBOTICS | ENERGY | DEFENSE | FINTECH | HEALTHCARE | OTHER`. Buckets are a
+   classification convention, not a fixed universe — add one if the evidence supports it.
+3. **Anti-hallucination rule (same as the narrative seat):** name a theme or constituent only if you found it
+   this run in a page you actually `web_fetch`ed **or** in feed-script output you actually ran
    (`feeds/wsj.ts`/`feeds/ft.ts` print real URLs + verbatim teasers — those count as fetched). No fetched
-   URL / no feed record = not a theme. Never list a "current narrative" from memory — narratives are
-   exactly the thing that goes stale.
+   URL / no feed record = not a theme. Never list a "current narrative" from memory.
 
-If the user supplies an explicit ticker list, skip discovery and analyze that list (still tag each name
-with a theme in the output).
+If the user supplies an explicit ticker list, skip discovery and analyze that list (still tag each name with
+a theme in the output).
 
 ---
 
 ## Step 0 — Classify the request, then route (do this first)
 
-Detect the user's intent from their ask and route BEFORE running any per-name panel. Do not run a full 5-seat panel on a question that is really an allocation/deployment question.
+Route BEFORE running any per-name panel. Do not run a full 5-seat panel on a question that is really an
+allocation/deployment question.
 
 | Intent (detect from the ask) | Route |
 |---|---|
-| "analyze these tickers / find entries / is now a good time to buy X" | This skill — per-name 5-seat panel (the rest of this doc) |
+| "analyze these tickers / find entries / is now a good time to buy X" | This skill — per-name 5-seat panel (rest of this doc) |
 | "review my portfolio" + holdings sheet | This skill per-name on the triaged subset → then hand to `stock-chair` for sizing/concentration |
-| "deploy $X / what ETFs should I buy / which big-caps to avoid / sleeve allocation" | This is an ALLOCATION question. Route to `tradfi-portfolio-manager` for the ETF/sleeve plan FIRST; use this skill only for the single-name satellite slice. Do NOT front-load a per-name panel. |
+| "deploy $X / what ETFs should I buy / which big-caps to avoid / sleeve allocation" | ALLOCATION question. Route to `tradfi-portfolio-manager` for the ETF/sleeve plan FIRST; use this skill only for the single-name satellite slice. Do NOT front-load a per-name panel. |
 
-Resolve routing up front. A portfolio review that asks "what to buy/sell" is BOTH: triage the book here, but the cash-deployment / ETF-allocation answer belongs in `tradfi-portfolio-manager` — say so and route, rather than improvising sleeve allocation inside this skill.
+A portfolio review asking "what to buy/sell" is BOTH: triage the book here, but route the cash-deployment /
+ETF-allocation answer to `tradfi-portfolio-manager` — do not improvise sleeve allocation here.
 
 ---
 
@@ -165,20 +161,21 @@ bun .agents/skills/portfolio-memory/recall.ts --desk stocks \
 ```
 
 Inject the printed `<prior_context>` block into EVERY seat's data package. It has two parts: the
-**canonical** current stance per ticker (evergreen — the latest verdict, which physically overwrote
-any older one, so you can never follow a stale call), and **episodic** dated history newest-first.
-This is how the agent remembers: COIN=HOLD (crypto bullish), prior entry zones, previous theme
-classifications, user preferences like "RSP over VOO". If there is no prior memory the script prints
-`[no prior memory for this run]` — continue normally. See `portfolio-memory` skill for the model.
+**canonical** current stance per ticker (the latest verdict, which physically overwrote any older one — you
+cannot follow a stale call) and **episodic** dated history newest-first. If there is no prior memory the
+script prints `[no prior memory for this run]` — continue normally. See `portfolio-memory` for the model.
 
-Inspect the printed `source=` attribute. If `source="grep-fallback"` (the structured portfolio-memory store was missed and it fell back to grepping daily logs), set **MEMORY_DEGRADED** and print: "Memory: DEGRADED (grep-fallback) — no canonical per-ticker stance; treat any recalled verdict as low-confidence, not an authoritative supersede." Continue the run, but do not present a grep-fallback stance as the canonical current call.
+Inspect the printed `source=` attribute. If `source="grep-fallback"` (the structured store was missed and it
+fell back to grepping daily logs), set **MEMORY_DEGRADED** and print: "Memory: DEGRADED (grep-fallback) — no
+canonical per-ticker stance; treat any recalled verdict as low-confidence, not an authoritative supersede."
+Continue the run, but do not present a grep-fallback stance as the canonical current call.
 
 ---
 
 ## Step 0.5 — Load holdings from Google Sheet (if provided)
 
-If the user passed a Google Sheet URL, read the holdings before seeding the todo list.
-Use the `gws-sheets-read` skill (https://www.skills.sh/googleworkspace/cli/gws-sheets-read):
+If the user passed a Google Sheet URL, read holdings before seeding the todo list. Use the `gws-sheets-read`
+skill (https://www.skills.sh/googleworkspace/cli/gws-sheets-read):
 
 ```bash
 gws sheets +read \
@@ -186,16 +183,16 @@ gws sheets +read \
   --range "<Tab>!A:E"
 ```
 
-Extract the spreadsheet ID from the URL (the long alphanumeric string between `/d/` and `/edit`).
-Parse the response into a holdings list: `[{ticker, qty, cost_basis, market_value, pnl_pct, cash}]`.
+Extract the spreadsheet ID from the URL (the long alphanumeric string between `/d/` and `/edit`). Parse the
+response into `[{ticker, qty, cost_basis, market_value, pnl_pct, cash}]`:
 - Rows where Type = "Cash" → set as `cash_to_deploy`
 - Rows where Type = "Stock" → build the ticker universe for this run
 
 When holdings are loaded:
 - Add `cost_basis`, `qty`, `pnl_pct`, `dd_from_cost` to each ticker's data package
 - Seat verdicts shift to **HOLD / ADD / TRIM / EXIT** (not BUY/WATCH/SKIP)
-- After the signal table, output a **tax-harvest section** (positions with largest unrealized losses)
-  and a **cash deployment section** (where to put `cash_to_deploy`)
+- After the signal table, output a **tax-harvest section** (positions with largest unrealized losses) and a
+  **cash deployment section** (where to put `cash_to_deploy`)
 
 If no sheet URL was provided, skip this step and use the user-supplied ticker list or theme discovery.
 
@@ -203,7 +200,8 @@ If no sheet URL was provided, skip this step and use the user-supplied ticker li
 
 ## Step 0.6 — Create the run artifact directory
 
-Run once before the per-ticker loop. All per-ticker data packages, seat results, and the final report land here.
+Run once before the per-ticker loop. All per-ticker data packages, seat results, and the final report land
+here.
 
 ```bash
 RUN_DIR=".cache/stocks-advisor/research/$(date +%Y-%m-%d_%H-%M)"
@@ -211,7 +209,7 @@ mkdir -p "$RUN_DIR"
 echo "Artifacts: $RUN_DIR"
 ```
 
-Every ticker gets its own subdirectory: `$RUN_DIR/{TICKER}/`. Directory layout after a complete run:
+Every ticker gets its own subdirectory `$RUN_DIR/{TICKER}/`. Layout after a complete run:
 ```
 .cache/stocks-advisor/research/2026-06-27_14-30/
 ├── report.md
@@ -232,12 +230,15 @@ Every ticker gets its own subdirectory: `$RUN_DIR/{TICKER}/`. Directory layout a
 
 ## Step 0.7 — Preflight: is TradingView alive? (run before the per-ticker loop)
 
-Call `tradingview-tv_health_check` ONCE before starting the loop.
+Call `tradingview-tv_health_check` ONCE before the loop.
 - PASS → normal mode (pull live charts per Step 1).
 - FAIL (CDP down, or `tv_launch` returns "not found") → enter **DEGRADED_TECH** for the whole run:
-  - Technical read comes from `fundamentals.py` ONLY: `ma50`, `ma200`, `vs_200d_ma`, `vs_50d_ma`, `52w_high/low`, `dd_from_52wh`.
-  - RSI / Bollinger / MACD = **UNAVAILABLE** — do not guess them. Technical STATE collapses to `{ABOVE_TREND, BELOW_TREND, UNKNOWN}` (above/below the 200d).
-  - No live bar-close trigger is computable → every name is **WATCH-only, never BUY**; entry zones come from MA levels.
+  - Technical read comes from `fundamentals.py` ONLY: `ma50`, `ma200`, `vs_200d_ma`, `vs_50d_ma`,
+    `52w_high/low`, `dd_from_52wh`.
+  - RSI / Bollinger / MACD = **UNAVAILABLE** — do not guess them. Technical STATE collapses to
+    `{ABOVE_TREND, BELOW_TREND, UNKNOWN}` (above/below the 200d).
+  - No live bar-close trigger is computable → every name is **WATCH-only, never BUY**; entry zones come from
+    MA levels.
   - Skip `capture_screenshot`; the screenshot self-check item does NOT apply in this mode.
   - Tag every output block: `DEGRADED: TradingView down — trend-only read, no live trigger.`
 
@@ -245,14 +246,63 @@ Call `tradingview-tv_health_check` ONCE before starting the loop.
 
 ## Step 0.8 — Screen every name with fundamentals.py; reserve TradingView for deep dives
 
-`fundamentals.py` (yfinance) is the DEFAULT data source for the WHOLE book — it is cheap, needs no chart slot, and runs for every name (price, ma50, ma200, vs_200d_ma, vs_50d_ma, 52w_high/low, dd_from_52wh, valuation, growth). TradingView (live RSI/BB/MACD + screenshot) is the single-chart-slot bottleneck — pulling it for every name does not scale (a 50-80 name book = thousands of MCP calls). So TradingView is SELECTIVE, not default: use it only when a name needs a deeper technical look. Not all names do.
+`fundamentals.py` (yfinance) is the DEFAULT source for the WHOLE book — cheap, no chart slot, runs for every
+name. TradingView (live RSI/BB/MACD + screenshot) is the single-chart-slot bottleneck — running it for every
+name does not scale (a 50-80 name book = thousands of MCP calls). So TradingView is SELECTIVE, not default.
 
-1. **Screen ALL names with `fundamentals.py` first.** This is the baseline for every holding/candidate — run it for the entire list (parallelizable; it is a plain script, not an MCP call). Produce a one-line read per name: trend (above/below 200d & 50d), valuation, growth, drawdown.
-2. **Rank by decision-relevance** from that screen: concentration weight (% of book), |unrealized P&L %|, cash-deploy candidate, proximity to a key level (near 50d/200d or a 52w extreme), or a fundamental/thesis break.
-3. **Select the deep-dive subset** — the names that actually warrant a chart: the top decision-relevant names (default K ≈ 10) PLUS any name the screen flags (sitting on a trigger level, a TRIM/EXIT candidate, or a deploy target). Everything else stays fundamentals-only.
-4. **Run TradingView (Step 1.5, sequential single slot) + the full 5-seat panel ONLY on the deep-dive subset.** Every other name gets its verdict from the fundamentals screen alone (HOLD/TRIM/EXIT, or WATCH for a watchlist) — no TradingView, no 5 seats.
-5. If TradingView is down (DEGRADED_TECH, Step 0.7), the deep-dive subset also falls back to fundamentals-only — the whole book is screen-level, nothing blocks.
-6. State explicitly in the output which names got the TradingView deep dive vs the fundamentals-only screen, and the K used. Never silently drop a name.
+1. **Screen ALL names with `fundamentals.py` first** — the baseline for every holding/candidate. Run it for
+   the entire list (parallelizable; it is a plain script, not an MCP call). Produce a one-line read per name:
+   trend (above/below 200d & 50d), valuation, growth, drawdown.
+2. **Rank by decision-relevance** from that screen: concentration weight (% of book), |unrealized P&L %|,
+   cash-deploy candidate, proximity to a key level (near 50d/200d or a 52w extreme), or a fundamental/thesis
+   break.
+3. **Select the deep-dive subset** — the names that warrant a chart: the top decision-relevant names (default
+   K ≈ 10) PLUS any name the screen flags (sitting on a trigger level, a TRIM/EXIT candidate, a deploy
+   target). Everything else stays fundamentals-only.
+4. **Run TradingView (Step 1.5, sequential single slot) + the full 5-seat panel ONLY on the deep-dive
+   subset.** Every other name gets its verdict from the fundamentals screen alone (HOLD/TRIM/EXIT, or WATCH
+   for a watchlist) — no TradingView, no 5 seats.
+5. If TradingView is down (DEGRADED_TECH, Step 0.7), the deep-dive subset also falls back to
+   fundamentals-only — the whole book is screen-level, nothing blocks.
+6. State explicitly which names got the TradingView deep dive vs the fundamentals-only screen, and the K
+   used. Never silently drop a name.
+
+---
+
+## Step 0.9 — Macro-regime synthesis (run ONCE before the per-stock loop)
+
+Produce a single shared macro-regime paragraph that all seats receive in their data package — the market
+context every per-stock decision is made inside.
+
+**Run the news feeds:**
+```bash
+bun .agents/skills/read-news/scripts/feeds/wsj.ts --feed markets,economy --days 3 --limit 15 --text
+bun .agents/skills/read-news/scripts/feeds/ft.ts  --section markets,global-economy --days 3 --limit 15 --text
+```
+Also fetch `https://finance.yahoo.com/topic/latest-news/` for breadth.
+
+**Produce a 5-sentence macro-regime paragraph** covering exactly these five dimensions, each grounded in a
+specific named fact from the feeds:
+
+```
+MACRO REGIME — {DATE}
+1. Fed/rates: [Fed stance + next meeting expectation + one named data point, e.g. "CME FedWatch: 62% for Sep cut"]
+2. Growth/earnings: [current earnings season signal or GDP read, specific number]
+3. Inflation: [latest CPI/PCE print with date, one sentence]
+4. Geopolitics/exogenous: [the single most market-relevant geopolitical fact this week, named]
+5. Liquidity/risk appetite: [equity market trend + vol signal, e.g. "VIX at 18, Nasdaq -3% week"]
+```
+
+**Anti-hallucination rule:** every sentence names a source and a specific, dateable fact — none from memory.
+If a dimension has no data from the feeds this run, write "No live signal for [dimension] this run."
+
+**Inject into every seat's data package** as `macro_regime: "..."` — shared context, identical for all seats,
+not per-seat research.
+
+**Save to run dir:**
+```bash
+echo "$MACRO_REGIME" > "$RUN_DIR/macro_regime.txt"
+```
 
 ---
 
@@ -285,14 +335,14 @@ sqlite3 "$DB" 'ALTER TABLE stock_analysis ADD COLUMN smartmoney TEXT;' 2>/dev/nu
 
 ## Step 1.5 — Sequential per-stock loop (orchestrator only; do NOT parallelize the data pull)
 
-This loop runs ONLY for the deep-dive subset selected in Step 0.8 — not every name. Names that stayed fundamentals-only never enter this loop. Pick the next `pending` todo and `UPDATE todos SET status='in_progress'`. Then, for that ticker:
+Runs ONLY for the deep-dive subset selected in Step 0.8 — names that stayed fundamentals-only never enter
+this loop. Pick the next `pending` todo, `UPDATE todos SET status='in_progress'`, then for that ticker:
 
-**1a. Pull TradingView data (MCP, in this session):**
-
-First call `tradingview-chart_get_state` and inspect the `studies` list. **Only add a study if its name is
-NOT already present** — a duplicate pushes a second identical series, inflates context, and produces
-duplicate rows. Required studies (add only if absent): **Relative Strength Index**, **Bollinger Bands**,
-**MACD**. Volume is always present. Do NOT add MA studies (length input is ignored — use yfinance MAs).
+**1a. Pull TradingView data (MCP, in this session).** First call `tradingview-chart_get_state` and inspect
+the `studies` list. **Add a study only if its name is NOT already present** — a duplicate pushes a second
+identical series, inflates context, and produces duplicate rows. Required studies (add only if absent):
+**Relative Strength Index**, **Bollinger Bands**, **MACD**. Volume is always present. Do NOT add MA studies
+(length input is ignored — use yfinance MAs).
 
 ```
 tradingview-symbol_search    query="{TICKER}"          → resolve NASDAQ:/NYSE: prefix if unknown
@@ -320,8 +370,8 @@ short_percent, institutional_pct, recommendation_mean, analyst_count, dd_from_52
 Any field yfinance lacks is `null` — never fill a null with a guess.
 
 **1c. Assemble the data package** by merging the TradingView study values (RSI, BB, MACD, Volume, 52w hi/lo
-from `summary=true`, the daily/weekly close arrays) with the full `fundamentals.py` JSON. This single
-package is what every seat receives — seats add nothing to it except the narrative seat's fetched news.
+from `summary=true`, the daily/weekly close arrays) with the full `fundamentals.py` JSON. This single package
+is what every seat receives — seats add nothing to it except the narrative seat's fetched news.
 
 **Cache the data package:**
 ```bash
@@ -341,9 +391,10 @@ reads ONE lens and returns the fixed shape below. Seats share nothing, so they r
 ## The 5-seat panel (subagent prompts — reuse verbatim, fill the blanks)
 
 > The data package is injected into every seat. Subagents are a **context firewall**: they reason over the
-> package only and never pull MCP/yfinance data. External calls allowed: the **narrative seat** may
-> web_fetch news + run paywall-free feed scripts (`feeds/wsj.ts`/`feeds/ft.ts`); the **smart-money seat**
-> may web_fetch disclosed-flow sources (openinsider.com, 13f.info, EDGAR, capitoltrades.com). All other seats: injected data only.
+> package only and never pull MCP/yfinance data. External calls allowed: the **narrative seat** may web_fetch
+> news + run paywall-free feed scripts (`feeds/wsj.ts`/`feeds/ft.ts`); the **smart-money seat** may web_fetch
+> disclosed-flow sources (openinsider.com, 13f.info, EDGAR, capitoltrades.com). All other seats: injected
+> data only.
 
 | Seat | Lens file (read ONLY this) | Output shape |
 |---|---|---|
@@ -353,7 +404,8 @@ reads ONE lens and returns the fixed shape below. Seats share nothing, so they r
 | 4 Sentiment | injected package only | READ / KEY / CONTRARIAN TILT / BLIND SPOT |
 | 5 Smart-Money | web_fetch openinsider/13f.info/EDGAR/capitoltrades | VERDICT / CONVICTION / Form4·13F·13D·PTR / SOURCES |
 
-**Full subagent prompts — copy verbatim from `references/seat-prompts.md`.** Each seat receives the same injected data package; only Seats 3 and 5 may make external calls.
+**Full subagent prompts — copy verbatim from `references/seat-prompts.md`.** Each seat receives the same
+injected data package; only Seats 3 and 5 may make external calls.
 
 **Cache seat results** — write each seat's output immediately after it returns:
 ```bash
@@ -363,7 +415,7 @@ echo '{narrative_macro_json}' > "$RUN_DIR/{TICKER}/seat_narrative_macro.json"
 echo '{sentiment_json}'       > "$RUN_DIR/{TICKER}/seat_sentiment.json"
 echo '{smart_money_json}'     > "$RUN_DIR/{TICKER}/seat_smart_money.json"
 ```
-Each seat JSON must include at minimum: `{verdict, conviction, key_metric, blind_spot, sources:[]}`.
+Each seat JSON must include at minimum `{verdict, conviction, key_metric, blind_spot, sources:[]}`.
 
 **1e. Persist the seat verdicts and decision:**
 ```sql
@@ -381,11 +433,9 @@ echo '{verdict_json}' > "$RUN_DIR/{TICKER}/verdict.json"
 
 **1f. Repeat** for the next `pending` todo until none remain.
 
-**1g. Write verdict to memory:**
-
-After each ticker completes, persist the verdict. This upserts the canonical one-line stance (the
-new verdict overwrites any prior one for this ticker — supersede is enforced here, not left to the
-agent) and appends to the dated episodic log:
+**1g. Write verdict to memory.** After each ticker completes, persist the verdict. This upserts the canonical
+one-line stance (the new verdict overwrites any prior one for this ticker — supersede is enforced here, not
+left to the agent) and appends to the dated episodic log:
 
 ```bash
 bun .agents/skills/portfolio-memory/remember.ts \
@@ -400,26 +450,24 @@ bun .agents/skills/portfolio-memory/remember.ts \
 
 | Decision | Condition |
 |---|---|
-| **BUY** | Fundamental ≥ GOOD **AND** Technical = SETUP_NAMED (has a named setup + live trigger) **AND** Narrative phase ∈ {EARLY_CYCLE, MID_CYCLE} **AND** Sentiment ≠ EXTREME |
+| **BUY** | Fundamental ≥ GOOD **AND** Technical = SETUP_NAMED (named setup + live trigger) **AND** Narrative phase ∈ {EARLY_CYCLE, MID_CYCLE} **AND** Sentiment ≠ EXTREME |
 | **WATCH** | Fundamental ≥ GOOD **but** Technical = NO_SETUP (no trigger yet) — the entry is not here yet; wait for the trigger |
-| **SKIP** | Fundamental = POOR **OR** Narrative phase ∈ {LATE_CYCLE, FADING} **OR** Technical = BROKEN (below 200d with no base, no setup) |
+| **SKIP** | Fundamental = POOR **OR** Narrative phase ∈ {LATE_CYCLE, FADING} **OR** Technical = BROKEN (below 200d, no base, no setup) |
 
-Tie-break / precedence: **SKIP dominates** (any single SKIP trigger forces SKIP). Then, between BUY and
-WATCH, the **technical trigger** decides — *no trigger, no trade* (Bernstein). A strong fundamental with no
-bar-close trigger is always a WATCH, never a BUY.
+Tie-break / precedence: **SKIP dominates** (any single SKIP trigger forces SKIP). Between BUY and WATCH, the
+**technical trigger** decides — *no trigger, no trade* (Bernstein). A strong fundamental with no bar-close
+trigger is always a WATCH, never a BUY.
 
 **Conviction (1–5):** start at 3. +1 if ≥3 seats align; +1 if EARLY_CYCLE with QUIET_ACCUM positioning;
-−1 if Sentiment CROWDED; −1 if PEG > 2 or negative FCF yield; −1 if LATE_CYCLE;
-+1 if Smart-money ACCUMULATING with ≥2 other seats aligned; −1 if Smart-money DISTRIBUTING (also caps
-any BUY conviction at 3/5 — insiders/institutions distributing is a hard ceiling). Clamp to 1–5.
+−1 if Sentiment CROWDED; −1 if PEG > 2 or negative FCF yield; −1 if LATE_CYCLE; +1 if Smart-money
+ACCUMULATING with ≥2 other seats aligned; −1 if Smart-money DISTRIBUTING (also caps any BUY conviction at 3/5
+— insiders/institutions distributing is a hard ceiling). Clamp to 1–5.
 
-**Smart-money as confirming/conflicting input:** Smart-money (Seat 5) is NOT a primary BUY/WATCH/SKIP
-driver — the verdict table above governs the decision. It is a conviction modifier: DISTRIBUTING caps
-a BUY conviction at 3/5; ACCUMULATING adds +1 conviction when ≥2 other seats agree; NEUTRAL has no effect.
+**Smart-money is a conviction modifier, not a primary driver.** Seat 5 never sets BUY/WATCH/SKIP — the table
+above governs the decision. Its only effect is on conviction (per the rules above).
 
-**A WATCH verdict is an alert trigger** — "good company, wrong price; buy near $X / when RSI < V"
-is exactly when to register a notify-me job carrying the entry thesis via the **`mkt`** skill, so
-the user is pinged when the zone/indicator fires. See *Set a buy-alert* below.
+**A WATCH verdict is an alert trigger** — "good company, wrong price; buy near $X / when RSI < V" is exactly
+when to register a notify-me job carrying the entry thesis via the **`mkt`** skill (see *Set a buy-alert*).
 
 ### Holdings decision table (when cost basis is known — Google-Sheet path)
 
@@ -429,23 +477,24 @@ When positions are loaded with cost basis, map seat votes to HOLD/ADD/TRIM/EXIT 
 |---|---|
 | **EXIT** | Fundamental POOR **OR** Narrative FADING **OR** Technical BROKEN **OR** thesis invalidated. Harvest the loss if underwater. (SKIP-equivalent.) |
 | **TRIM** | Position weight > concentration cap (default >15% of book) **OR** Sentiment EXTREME **OR** LATE_CYCLE while extended. Trim to target weight; thesis may still be intact. |
-| **ADD** | The BUY gate (Fundamental ≥ GOOD, Technical SETUP_NAMED with live trigger, Narrative EARLY/MID, Sentiment ≠ EXTREME) is met **AND** current weight < cap. (BUY-equivalent, sized as an add to an existing position.) |
+| **ADD** | The BUY gate (Fundamental ≥ GOOD, Technical SETUP_NAMED with live trigger, Narrative EARLY/MID, Sentiment ≠ EXTREME) is met **AND** current weight < cap. (BUY-equivalent, sized as an add.) |
 | **HOLD** | Thesis intact (Fundamental ≥ FAIR, not FADING) but no add trigger or already at target weight. |
 
-(LATE_CYCLE → TRIM here, not EXIT: with cost basis and an intact thesis, you reduce rather than fully exit — unlike the no-position SKIP.)
+(LATE_CYCLE → TRIM here, not EXIT: with cost basis and an intact thesis, reduce rather than fully exit —
+unlike the no-position SKIP.)
 
-Precedence: EXIT dominates, then TRIM (concentration is its own lever, independent of the entry signal), then ADD vs HOLD on the trigger. In DEGRADED_TECH mode (TradingView down), ADD is unavailable (no live trigger) — the holdings verdict is limited to HOLD/TRIM/EXIT.
+Precedence: EXIT dominates, then TRIM (concentration is its own lever, independent of the entry signal), then
+ADD vs HOLD on the trigger. In DEGRADED_TECH mode, ADD is unavailable (no live trigger) — the holdings
+verdict is limited to HOLD/TRIM/EXIT.
 
 ---
 
 ## Output format per stock
 
-> **TOP RECAP rule (MANDATORY — applies to BOTH the chat output and the Notion page).** EVERY run's
-> report MUST OPEN with a 2–3 sentence prose RECAP at the very top, before any per-stock block and
-> before the signal table. In plain English it states: (a) the highest-confidence STRONG BUY / SELL
-> actions to take right now, each with one-line reasoning; and (b) the current market narrative in one
-> sentence. This is a prose TL;DR — the first thing the reader sees — and is **distinct** from the
-> Step 3.6 high-confidence RECAP *table* printed at the end. Keep it tight.
+> **TOP RECAP rule (MANDATORY — chat output AND Notion page).** Every run's report OPENS with a 2–3 sentence
+> prose RECAP, before any per-stock block or the signal table, stating in plain English: (a) the
+> highest-confidence BUY/SELL actions to take now, each with one-line reasoning; (b) the current market
+> narrative in one sentence. This is a prose TL;DR — **distinct** from the Step 3.6 RECAP *table* at the end.
 
 ```
 ═══════════════════════════════════════════════════════
@@ -470,9 +519,9 @@ Precedence: EXIT dominates, then TRIM (concentration is its own lever, independe
 ═══════════════════════════════════════════════════════
 ```
 
-**Citation rule (per stock):** any narrative/news claim in the block must carry an inline
-`[source: https://exact-article-url]`. Technical indicators (RSI, MACD, MAs) computed from price data need
-no source; news facts, theme claims, and fund-flow figures DO. No URL = remove the claim.
+**Citation rule (per stock):** any narrative/news claim in the block carries an inline
+`[source: https://exact-article-url]`. Technical indicators (RSI, MACD, MAs) computed from price data need no
+source; news facts, theme claims, and fund-flow figures DO. No URL = remove the claim.
 
 ---
 
@@ -494,11 +543,16 @@ CEG     Constellation   SKIP      2/5   —              none (LATE_CYCLE)  ENER
 
 ## Step 3.5 — Sources & data provenance appendix (MANDATORY — always print)
 
-After the signal table, ALWAYS print a consolidated **SOURCES & DATA** block — non-negotiable transparency so every news claim and market-data point is traceable to its origin. Aggregate from every seat that fetched:
+After the signal table, ALWAYS print a consolidated **SOURCES & DATA** block so every news claim and
+market-data point is traceable. Aggregate from every seat that fetched:
 
-1. **News / narrative sources** — every URL the narrative seat web_fetched OR got from the feed scripts (`feeds/wsj.ts`, `feeds/ft.ts`, `read_news.ts`). One per line: `[Tn] https://url (date) — "verbatim teaser/quote"`.
-2. **Smart-money / filing sources** — every URL the smart-money seat actually web_fetched (openinsider, 13f.info, EDGAR, capitoltrades, finviz/marketbeat fallbacks — whatever was really used). One per line.
-3. **Market-data provenance** — state the origin of prices/indicators/fundamentals explicitly: `fundamentals.py (yfinance) per ticker: {tickers run}` and `Technicals: TradingView studies RSI/BB/MACD/Volume` (or, in DEGRADED_TECH mode: `Technicals: DEGRADED — MA levels from fundamentals.py only, no TradingView`).
+1. **News / narrative sources** — every URL the narrative seat web_fetched OR got from the feed scripts
+   (`feeds/wsj.ts`, `feeds/ft.ts`, `read_news.ts`). One per line: `[Tn] https://url (date) — "verbatim teaser/quote"`.
+2. **Smart-money / filing sources** — every URL the smart-money seat actually web_fetched (openinsider,
+   13f.info, EDGAR, capitoltrades, finviz/marketbeat fallbacks). One per line.
+3. **Market-data provenance** — state the origin of prices/indicators/fundamentals: `fundamentals.py
+   (yfinance) per ticker: {tickers run}` and `Technicals: TradingView studies RSI/BB/MACD/Volume` (or, in
+   DEGRADED_TECH mode: `Technicals: DEGRADED — MA levels from fundamentals.py only, no TradingView`).
 4. If any seat returned `INSUFFICIENT DATA`, list it here explicitly rather than omitting it.
 
 Format:
@@ -514,15 +568,19 @@ Market data:
   Technicals: {TradingView studies | DEGRADED MA-only}
 ```
 
-Rule: never print a verdict that depends on a source you cannot list here. No source listed = the claim must be removed. This appendix is required in BOTH normal and DEGRADED_TECH mode.
+Never print a verdict that depends on a source you cannot list here. No source listed = remove the claim.
+Required in BOTH normal and DEGRADED_TECH mode.
 
 ---
 
 ## Step 3.6 — High-confidence recap + setup-alerts table (MANDATORY — final output, print LAST)
 
-The per-stock blocks and the signal table are the full record. End EVERY run with a tight recap so the user sees the actionable subset at a glance. Print these two tables as the final output.
+End EVERY run with these two tables so the user sees the actionable subset at a glance.
 
-**RECAP — high-confidence only.** Include ONLY decisions with conviction ≥ 4/5 (or, for a holdings review, the unambiguous ADD / EXIT calls). Drop everything that is WATCH-without-a-trigger, NEUTRAL, or conviction ≤ 3 — those live in the full table above, not here. If nothing clears the bar, print "No high-confidence actions today — all names are WATCH (see table above)" rather than padding the list.
+**RECAP — high-confidence only.** Include ONLY decisions with conviction ≥ 4/5 (or, for a holdings review,
+the unambiguous ADD / EXIT calls). Drop everything WATCH-without-a-trigger, NEUTRAL, or conviction ≤ 3 —
+those live in the full table above. If nothing clears the bar, print "No high-confidence actions today — all
+names are WATCH (see table above)" rather than padding the list.
 
 ```
 RECAP — high-confidence ({DATE})
@@ -532,7 +590,10 @@ Asset   Action            Why (one line, plain English)
 ...
 ```
 
-**SETUP ALERTS — buy/sell only when a condition fires.** Every WATCH name that has a *defined* trigger (a price reclaim, a level, an indicator like RSI) goes here — not as a buy-now. State the exact condition and the action it unlocks. These are the names to register with the `mkt` skill so the user is pinged with the thesis when the condition hits (see "Set a buy-alert" section).
+**SETUP ALERTS — buy/sell only when a condition fires.** Every WATCH name with a *defined* trigger (a price
+reclaim, a level, an indicator like RSI) goes here — not as a buy-now. State the exact condition and the
+action it unlocks. Register these with the `mkt` skill so the user is pinged with the thesis when the
+condition hits (see *Set a buy-alert*).
 
 ```
 SETUP ALERTS ({DATE})
@@ -543,32 +604,78 @@ Asset   Condition (exact)               Then do        Thesis (one line)
 ...
 ```
 
-Rule: a name is in RECAP **or** SETUP ALERTS, never both — high-confidence-now vs buy-on-condition are mutually exclusive. After printing SETUP ALERTS, offer to register them via the `mkt` skill (the alert carries the thesis into the notification). This recap is required in BOTH normal and DEGRADED_TECH mode; in DEGRADED mode the alert conditions are MA/price levels (no live bar-close trigger).
+A name is in RECAP **or** SETUP ALERTS, never both — high-confidence-now and buy-on-condition are mutually
+exclusive. After printing SETUP ALERTS, offer to register them via the `mkt` skill. Required in BOTH normal
+and DEGRADED_TECH mode; in DEGRADED mode the alert conditions are MA/price levels (no live bar-close trigger).
 
 ---
 
-## Step 4 — Portfolio-level synthesis (hand off to `stock-chair`)
+## Step 4 — Portfolio-synthesis seat (run inline AFTER per-stock loop completes)
 
-The per-stock blocks answer "where do I enter each name." The **portfolio view** — concentration, hidden
-factor/sector correlation across the BUY/WATCH names, what to fund a new buy by trimming — is the
-`stock-chair` skill's job. After the signal table, if the user asked a portfolio-aware question ("what
-should I buy given what I hold"), invoke `stock-chair` with: the user's holdings, the per-stock decisions,
-and the theme map. `stock-chair` returns the buy-AND-sell, sizing, and concentration check. This skill
-stops at per-name entry plans; it never sizes the book.
+After all per-stock panels finish, run a dedicated **portfolio-synthesis seat** — a single subagent that
+receives ALL per-stock verdicts + the full holdings list and reasons across positions holistically. This is
+the step the per-stock loop structurally cannot do.
+
+**Input to the synthesis seat:**
+- Full holdings list (ticker, qty, cost_basis, market_value, weight_pct)
+- All per-stock verdicts from `$RUN_DIR/*/verdict.json`
+- The macro_regime paragraph from `$RUN_DIR/macro_regime.txt`
+- Theme map (how many names per theme bucket)
+
+**Synthesis seat prompt (spawn as a subagent `/model opus /effort xhigh`):**
+
+```
+Produce a portfolio synthesis with EXACTLY these five sections, in order:
+
+1. FACTOR CORRELATION MAP
+   Group all holdings by primary risk factor (Fed/rates, USD, oil, AI-capex, China exposure, etc.). Per
+   group: list holdings, total weight %, and the tail scenario ("if [factor] moves -20%, these all fall
+   together"). Flag any factor whose combined weight > 25% of book as a CONCENTRATION RISK.
+
+2. OVER-DIVERSIFICATION CRITIQUE
+   Count positions. If > 40, state: "N positions means individual-stock selection creates noise, not signal
+   — each name must earn its place or become index." List positions that are index-like (correlation > 0.85
+   to SPY, market cap > $500B) and could be replaced with VOO for lower cost and less monitoring overhead.
+
+3. CROSS-POSITION CONFLICTS
+   Identify pairs where one seat says ADD and another says TRIM on names sharing the same factor exposure —
+   these conflict at the portfolio level even if individually correct.
+
+4. PORTFOLIO STRUCTURE VERDICT
+   One paragraph: the biggest structural risk in this book right now, and the single action that reduces it
+   most. Name the risk, name the action.
+
+5. CASH DEPLOYMENT PRIORITY
+   Given the per-stock ADD verdicts and cash available ($CASH), rank ADD candidates by portfolio-level fit
+   (fills a gap, reduces concentration, best risk:reward). Maximum 3 names.
+
+Do NOT re-analyze individual stocks — the per-stock panels already did that. Reason ACROSS positions and
+surface what the per-stock loop structurally cannot see.
+
+Holdings: {HOLDINGS_JSON}
+Per-stock verdicts: {ALL_VERDICTS_JSON}
+Macro regime: {MACRO_REGIME}
+Theme map: {THEME_MAP}
+```
+
+This seat's output goes into the final report between the signal table and the SOURCES appendix.
+
+**After this step, if the user asked a portfolio-aware question, invoke `stock-chair`** with the synthesis
+seat's output for position sizing.
 
 ---
 
 ## Step 5 — Publish to Notion (if configured)
 
-This skill is the **single owner** of Notion publishing for stock research (`stocks-daily` delegates
-here). Publishing is opt-in and silent-skip — never fail the run because of it.
+This skill is the **single owner** of Notion publishing for stock research (`stocks-daily` delegates here).
+Publishing is opt-in and silent-skip — never fail the run because of it.
 
 1. **Read the publish target:**
    ```sh
    PAGE_ID=$(grep '^page_id:' .cache/stocks-advisor/notion.yaml 2>/dev/null | sed -E 's/.*"([a-f0-9]+)".*/\1/')
    ```
-   If `.cache/stocks-advisor/notion.yaml` is missing OR `PAGE_ID` is empty → **skip this step silently**
-   and finish the run. Publishing is opt-in; absence is not an error (do NOT stop, do NOT warn).
+   If `.cache/stocks-advisor/notion.yaml` is missing OR `PAGE_ID` is empty → **skip silently** and finish
+   the run (do NOT stop, do NOT warn).
 2. **Load Notion tools via ToolSearch:**
    `select:mcp__claude_ai_Notion__notion-create-pages,mcp__claude_ai_Notion__notion-fetch`
 3. **Save to local file** (always — even if `PAGE_ID` is empty):
@@ -585,15 +692,13 @@ here). Publishing is opt-in and silent-skip — never fail the run because of it
    " "$TITLE" "$CONTENT"
    ```
 4. **Create a NEW child page under `PAGE_ID`** (only if `PAGE_ID` non-empty):
-   - **Title format: `YYYY-MM-DD <narrative>`** — the run date followed by a short narrative descriptor
-     of the run's dominant theme (e.g. `2026-06-26 AI-bubble derisking — rotate to healthcare/defense`).
-     Not a generic title.
+   - **Title format `YYYY-MM-DD <narrative>`** — run date + a short narrative descriptor of the dominant
+     theme (e.g. `2026-06-26 AI-bubble derisking — rotate to healthcare/defense`). Not a generic title.
    - Content: the full run output as Notion-flavored Markdown — the 2–3 sentence TOP RECAP first (§Output
      format per stock), then the narrative, the per-name decision tables, the SOURCES & DATA appendix
-     (§Step 3.5), and the high-confidence RECAP + SETUP ALERTS (§Step 3.6). Use real Notion table blocks,
-     not code-fenced text.
-5. On any Notion error, report it to the user and **continue** — never fail the run because publishing
-   failed.
+     (§Step 3.5), and the high-confidence RECAP + SETUP ALERTS (§Step 3.6). Use real Notion table blocks, not
+     code-fenced text.
+5. On any Notion error, report it and **continue** — never fail the run because publishing failed.
 6. Print: `✅ Saved: .cache/stocks-advisor/research/<title>.md` and (if published) the Notion page URL.
 
 ---
@@ -627,32 +732,44 @@ $280 trigger rule must clear strategy-discovery-backtest before risking capital.
 
 ## Self-check before printing the signal table
 
-- [ ] The report **OPENS with the 2–3 sentence prose RECAP** (highest-confidence buy/sell to take now + one-line reasoning + the market narrative in one sentence) before any per-stock block or the signal table.
-- [ ] Every FULL-PANEL ticker has `status='done'` in `stock_analysis`; one-line-screened names (N>12 triage) carry a one-line note and are listed, not dropped.
-- [ ] Each stock block ends with a concrete **entry zone + bar-close trigger + market-based stop** — never
-      a vague "looks good". WATCH/SKIP names what would change it.
+- [ ] The report **OPENS with the 2–3 sentence prose RECAP** (highest-confidence buy/sell to take now +
+      one-line reasoning + the market narrative in one sentence) before any per-stock block or the signal table.
+- [ ] Every FULL-PANEL ticker has `status='done'` in `stock_analysis`; one-line-screened names (N>12 triage)
+      carry a one-line note and are listed, not dropped.
+- [ ] Each stock block ends with a concrete **entry zone + bar-close trigger + market-based stop** — never a
+      vague "looks good". WATCH/SKIP names what would change it.
 - [ ] The technical seat **named a setup or said there is none**; no BUY without a live trigger.
 - [ ] The narrative seat cited ≥2 real article URLs it **actually web_fetched or got from the feed scripts**
-      (`feeds/wsj.ts`/`feeds/ft.ts`); every news claim carries an inline `[source: https://...]`; no URL = the claim was removed.
+      (`feeds/wsj.ts`/`feeds/ft.ts`).
+- [ ] **Inline citations:** every material news/market claim in the report body carries `[source: https://url
+      (date)]` immediately after the claim — not appendix-only (the SOURCES appendix is in addition, not
+      instead). Any claim without an inline source was removed or marked "(unverified)".
+- [ ] **Macro regime paragraph** is present at the top of the report (Step 0.9) — 5 sentences, each with a
+      named source and dateable fact; not from memory.
+- [ ] **Portfolio-synthesis seat output** is present (Step 4) — factor correlation map, over-diversification
+      critique, cross-position conflicts, portfolio structure verdict, cash deployment priority.
 - [ ] Themes and constituents were **discovered live this run** (or the user supplied the list) — none
       asserted from memory.
-- [ ] The honest base-rate note is present: single names are satellites, index is the bar; passing panels
-      are hypotheses to be backtested in `strategy-discovery-backtest`.
-- [ ] A TradingView screenshot is embedded inline per stock — UNLESS in DEGRADED_TECH mode (TradingView down), where screenshots are skipped and each block is tagged DEGRADED.
+- [ ] The honest base-rate note is present: single names are satellites, index is the bar; passing panels are
+      hypotheses to be backtested in `strategy-discovery-backtest`.
+- [ ] A TradingView screenshot is embedded inline per stock — UNLESS DEGRADED_TECH mode, where screenshots
+      are skipped and each block is tagged DEGRADED.
 - [ ] The smart-money seat cited ≥1 real filing/trade URL it actually web_fetched (openinsider, 13f.info,
-      EDGAR, or capitoltrades), or returned `NEUTRAL — INSUFFICIENT DATA`; no filing is fabricated.
-- [ ] Portfolio sizing/concentration was deferred to `stock-chair`; ETF allocation was deferred to
+      EDGAR, capitoltrades), or returned `NEUTRAL — INSUFFICIENT DATA`; no filing is fabricated.
+- [ ] Portfolio sizing/concentration was deferred to `stock-chair`; ETF allocation to
       `tradfi-portfolio-manager`. This skill stayed on individual-stock entries only.
-- [ ] recall.ts `source` was checked; if `grep-fallback`, the run is tagged MEMORY_DEGRADED and recalled stances flagged low-confidence.
-- [ ] A consolidated **SOURCES & DATA** appendix is printed (Step 3.5) listing every web_fetched news/filing URL, every feed-script record, and the market-data provenance (fundamentals.py tickers + technicals mode) — required in normal AND DEGRADED mode.
-- [ ] A final **RECAP (high-confidence only)** + **SETUP ALERTS** table is printed (Step 3.6); high-conviction-now and buy-on-condition names are split, never duplicated; if nothing clears the bar, that is stated explicitly.
+- [ ] recall.ts `source` was checked; if `grep-fallback`, the run is tagged MEMORY_DEGRADED and recalled
+      stances flagged low-confidence.
+- [ ] A consolidated **SOURCES & DATA** appendix is printed (Step 3.5) listing every web_fetched news/filing
+      URL, every feed-script record, and the market-data provenance — required in normal AND DEGRADED mode.
+- [ ] A final **RECAP (high-confidence only)** + **SETUP ALERTS** table is printed (Step 3.6); high-conviction-
+      now and buy-on-condition names are split, never duplicated; if nothing clears the bar, that is stated.
 
 ## Set a buy-alert (notify-me-when) — for WATCH verdicts
 
-A WATCH verdict ("good company, wrong price — buy near $X / when RSI < V") is exactly when to
-register a durable alert so the user is pinged **with your entry thesis** when it triggers.
-Use the **`mkt`** skill — it carries the reasoning into the notification (mkt's native alert
-message cannot). Register the entry plan as a job:
+A WATCH verdict ("good company, wrong price — buy near $X / when RSI < V") is when to register a durable
+alert that pings the user **with your entry thesis** on trigger. Use the **`mkt`** skill — it carries the
+reasoning into the notification (mkt's native message cannot). Register the entry plan as a job:
 
 ```bash
 cd .agents/skills/mkt/scripts
@@ -663,14 +780,21 @@ bun mkt-alert.ts add --desk stocks --symbol NVDA \
 # oversold add: --condition rsi_below --value 30 --period 14 --cooldown 21600
 ```
 
-A scheduled `bun check.ts` (runtime cron) fires the notification with the reasoning when the
-zone/indicator is hit. See `.agents/skills/mkt/SKILL.md` for the trigger patterns and
-per-runtime scheduler cookbook. This stays recommend-only and backtest-gated — an alert is a
-reminder to re-evaluate, not an order.
+A scheduled `bun check.ts` (runtime cron) fires the notification with the reasoning when the zone/indicator
+hits. See `.agents/skills/mkt/SKILL.md` for trigger patterns and the per-runtime scheduler cookbook.
+Recommend-only and backtest-gated — an alert is a reminder to re-evaluate, not an order.
 
 ## Done when
 
-Each analyzed stock has a 5-seat panel, a BUY/WATCH/SKIP decision from the verdict table, and a concrete
-entry plan (zone + trigger + stop + conviction + invalidation); the signal table with the theme map is
-printed; every news claim is sourced; the consolidated SOURCES & DATA appendix (Step 3.5) is printed listing all web_fetched URLs, feed-script records, and market-data provenance; and the output is flagged as an educational, backtest-gated
-hypothesis — not advice; and a high-confidence RECAP + SETUP ALERTS table (Step 3.6) is printed last, splitting immediate high-conviction actions from buy-on-condition names. If `.cache/stocks-advisor/notion.yaml` is configured, a dated Notion page (title `YYYY-MM-DD <narrative>`, Step 5) was created and its URL returned to the user; if it is not configured, publishing was skipped silently (not an error).
+- Each analyzed stock has a 5-seat panel, a verdict-table decision, and a concrete entry plan (zone + trigger
+  + stop + conviction + invalidation).
+- The signal table with the theme map is printed; every news claim is sourced inline.
+- The SOURCES & DATA appendix (Step 3.5) lists all web_fetched URLs, feed-script records, and market-data
+  provenance.
+- The output is flagged as an educational, backtest-gated hypothesis — not advice.
+- The high-confidence RECAP + SETUP ALERTS table (Step 3.6) is printed last, splitting immediate
+  high-conviction actions from buy-on-condition names.
+- If `.cache/stocks-advisor/notion.yaml` is configured, a dated Notion page (title `YYYY-MM-DD <narrative>`,
+  Step 5) was created and its URL returned; if not configured, publishing was skipped silently (not an error).
+</content>
+</invoke>
