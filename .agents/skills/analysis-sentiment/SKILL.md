@@ -14,7 +14,7 @@ metadata:
 
 Apply this **sentiment-as-contrarian-modulator** lens to *how market psychology is read and how it biases
 the deployment decision*. This skill is a **focused specialist**; it sits inside the four-pillar stack
-managed by `analyst-crypto` and extends the sentiment pillar with full metric resolution.
+managed by `research-onchain` and extends the sentiment pillar with full metric resolution.
 Load `[[analyst-smartmoney-positioning]]` for live funding rates, OI, and options skew before any load-bearing
 claim. All outputs are educational — a lens, not financial advice.
 
@@ -47,7 +47,7 @@ cheap zone, and raises caution in a rich one.
 5. **Options 25-delta skew.** Positive skew (puts expensive) = fear and hedging demand; negative skew (calls
    expensive) = euphoria and upside-chase. Source via Deribit or `[[analyst-smartmoney-positioning]]`.
 6. **Sentiment is a modulator, not a timer.** Extreme readings can persist for weeks without resolving.
-   Combine with on-chain zone (`analyst-crypto` pillar 2) for higher-confidence signals.
+   Combine with on-chain zone (`research-onchain` pillar 2) for higher-confidence signals.
 7. **Divergence is the most powerful signal.** Price falling + Fear & Greed turning up from extreme-fear =
    likely bottom forming. Price rising + Greed near extreme = distribution risk. Divergence between metrics
    (e.g., funding positive but social volume flat) = mixed conviction, size down.
@@ -78,8 +78,8 @@ cheap zone, and raises caution in a rich one.
 | Long/short ratio, retail over-leverage, cross-exchange aggregate | CoinGlass long/short endpoint |
 | Options skew, put/call ratio, gamma exposure, max pain | `[[analyst-smartmoney-positioning]]` (Deribit/Laevitas) |
 | Social volume, Google Trends, retail attention spikes | LunarCrush social volume, Google Trends (manual fetch) |
-| How sentiment integrates into the full four-pillar deploy decision | `analyst-crypto` (the synthesis lens) |
-| On-chain valuation zone, MVRV-Z, realized price | `analyst-crypto` → `references/02-onchain-valuation.md` |
+| How sentiment integrates into the full four-pillar deploy decision | `research-onchain` (the synthesis lens) |
+| On-chain valuation zone, MVRV-Z, realized price | `research-onchain` → `references/02-onchain-valuation.md` |
 
 ## Output contract
 
@@ -100,7 +100,7 @@ Key divergences: Funding not yet negative despite extreme F&G — longs not full
 ```
 
 No buy/sell call. No price targets. Posture is a *tilt modifier* for a DCA schedule already governed by
-`analyst-crypto`; it does not override the liquidity governor.
+`research-onchain`; it does not override the liquidity governor.
 
 ## Citation rule — no URL = not a source
 
@@ -125,5 +125,5 @@ Format in output: `[TIER] https://exact-url (YYYY-MM-DD) — "verbatim quote"`
 The analysis (1) fetches and ages all five metric sources before drawing any conclusion, (2) scores each
 metric on the five-point scale, (3) derives a **composite posture** with an explicit **contrarian
 implication**, (4) flags all **divergences** between metrics as the primary actionable observation, (5)
-hands off to `analyst-crypto` for integration with on-chain valuation and the liquidity governor, and
+hands off to `research-onchain` for integration with on-chain valuation and the liquidity governor, and
 (6) makes no buy/sell call — only a tilt direction and confidence level.

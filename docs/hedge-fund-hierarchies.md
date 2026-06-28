@@ -104,45 +104,48 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    POD["INDEPENDENT POD PM
+    POD["POD PM
     Generates alpha idea
-    Entry/exit model
-    VaR within pod budget
+    Entry/exit model + VaR model
+    Must fit within pod risk budget
     Full P&L accountability
     Pods do NOT see each other's books"]
 
     PR["POD RISK CHECK
-    VaR impact within pod budget
+    VaR within pod limits
     Factor exposure within pod limits
     Output: APPROVED / REDUCE SIZE"]
 
-    CR["CENTRAL RISK (firm-wide)
-    Real-time across ALL pods simultaneously
-    Gross/net limits
+    CR["CENTRAL RISK (firm-wide, real-time)
+    Monitors ALL pods simultaneously
     Cross-pod correlation
+    Gross/net limits
     Sector concentration
     Can force reduction or exit INTRADAY
+    No PM recourse
     Output: GREEN / REDUCE / EXIT"]
 
     GR["GRIFFIN / CRO LAYER
     Quarterly capital reallocation
-    Underperforming pods get shrunk
-    No recourse for PM
+    Underperforming pods shrunk
+    No PM recourse
     Override any position at will"]
 
     OUT["TRADE
-    Executed — but Central Risk
+    Executed — Central Risk
     monitors continuously post-trade"]
 
-    POD --> PR --> CR --> GR
-    CR -->|real-time monitor| OUT
-    POD --> OUT
+    POD --> PR --> CR
+    CR -->|approved| OUT
+    CR -->|intraday force| OUT
+    PR --> GR
+    GR -.->|quarterly realloc| POD
 
     style CR fill:#e74c3c,color:#fff
     style GR fill:#8e44ad,color:#fff
 ```
 
-**Key principle:** Independent pods compete for capital. Central Risk sees everything; pods see nothing of each other. Griffin reallocates capital quarterly — chronic underperformers lose budget, not just positions.
+**Key principle:** Central Risk has unilateral intraday authority over every pod — no PM recourse. Pods compete for capital with zero visibility into each other's books. Griffin reallocates quarterly; chronic underperformers lose budget, not just positions.
 
 ---
 
@@ -375,6 +378,59 @@ flowchart TD
 
 ---
 
+## Millennium Management (Izzy Englander) — *Automated Risk + Low-Correlation Pods*
+
+```mermaid
+flowchart TD
+    PM["PM POD
+    Idea submission with mandatory thesis:
+    alpha source · catalyst · falsification
+    Max 10% of pod capital per position
+    Kelly fraction check
+    Equity L/S stop: max -8%"]
+
+    SH["STRATEGY HEAD
+    Redundancy check: same bet in another pod?
+    Macro conflict flag
+    PM track record check
+    First attempt → capped at 5%
+    Output: CLEAR / REDUNDANT / CONFLICT"]
+
+    RS["RISK SYSTEM (automated)
+    Continuous drawdown monitoring
+    AUTO-CUT at threshold (-5% to -15% pod capital)
+    Cross-pod correlation check
+    Firm-level limit: 10% in any single name
+    No override path
+    Output: HOLD / AUTO-CUT"]
+
+    EN["ENGLANDER CAPITAL ALLOCATION (quarterly)
+    Allocates capital by Sharpe / drawdown
+    Target < 0.3 pairwise pod correlation
+    Underperformers shrunk; top PMs scaled up"]
+
+    OUT["POSITION
+    Live — Risk System monitors continuously"]
+
+    REJECT["REDUNDANT / CONFLICTED
+    Idea rejected or sized down"]
+
+    PM --> SH
+    SH -->|CLEAR| RS
+    SH -->|REDUNDANT or CONFLICT| REJECT
+    RS -->|HOLD| OUT
+    RS -->|AUTO-CUT| OUT
+    EN -.->|quarterly realloc| PM
+
+    style RS fill:#e74c3c,color:#fff
+    style EN fill:#8e44ad,color:#fff
+    style REJECT fill:#95a5a6,color:#fff
+```
+
+**Key principle:** The risk system is fully automated with no override path — not even Englander can stop an AUTO-CUT in progress. Mandatory thesis submission (alpha source, catalyst, falsification) at entry, not just a trade idea. Portfolio construction targets sub-0.3 cross-pod correlation to preserve uncorrelated alpha.
+
+---
+
 ## Comparison Table
 
 | Fund | Seats | Key Gate | Alpha Source | Kill Mechanism | Speed |
@@ -382,7 +438,8 @@ flowchart TD
 | **Berkshire** | Moat→Munger→Margin of Safety | Munger Inversion (Charlie finds killer) | 20-yr permanent capital | Never sells / thesis break only | Years–decades |
 | **Bridgewater** | Analyst→Skeptic→CIO→Risk | Skeptic must be rebutted | Idea meritocracy | CIO denies on weak rebuttal | Days |
 | **Tiger** | Analyst→Sector Head→PM | PM sizing = conviction | 5-yr compound thesis | PM exits on thesis break instantly | Days–weeks |
-| **Citadel** | Pod PM→Central Risk→Griffin | Central Risk real-time | Multi-pod diversification | Central Risk intraday force-exit | Minutes–hours |
+| **Citadel** | Pod PM→Pod Risk→Central Risk→Griffin | Central Risk intraday override | Multi-pod uncorrelated alpha | Central Risk force-exit, no PM recourse | Minutes–hours |
+| **Millennium** | PM Pod→Strategy Head→Risk System→Englander | Automated Risk System AUTO-CUT | PM specialization + low cross-pod correlation | AUTO-CUT (no override path) | Seconds–minutes |
 | **RenTech** | Signal→Peer Review→Paper→Scale | Statistical OOS validation | Ensemble signal alpha | Live Sharpe gate — signal dropped | Milliseconds |
 | **Soros** | Macro→Expression→Monitor→Reflex | Soros unilateral override | Macro reflexivity | Soros calls the reflexive reversal | Hours–days |
 | **Point72** | Analyst→Edge→Conviction→Risk→Cohen | Edge score ≥ 3 required | Sector specialist + edge | Cohen capital pull from PM | Days |
@@ -398,5 +455,6 @@ flowchart TD
 | Point72 | ✅ High | Edge-articulation gate kills weak ideas early | **Next to test** |
 | Tiger | ✅ High | Thesis coherence check + concentration filter | **High value** |
 | Soros | 🟡 Medium | Reflexivity loop (needs market feedback) | Good for macro skill |
-| Citadel | 🟡 Medium | Multi-PM capital competition | Interesting but complex |
+| Citadel | 🟡 Medium | Central Risk override layer + pod capital competition | Multi-pod arbitration |
+| Millennium | 🟡 Medium | Mandatory thesis falsification + automated stop model | Strong risk discipline |
 | RenTech | ❌ Low | Pure quant — needs real backtested signals | Not applicable to qualitative skill |

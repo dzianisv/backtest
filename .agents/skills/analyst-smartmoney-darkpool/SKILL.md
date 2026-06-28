@@ -12,7 +12,7 @@ description: >-
   500 aggregate); single-name block prints are anonymous and un-attributable.
   Outputs ACCUMULATING / DISTRIBUTING / NEUTRAL. Tilt, not trigger -- treat as a
   lean over 1-3 months, not a standalone trade entry. Part of the
-  analyst-smartmoney family (market-implied tier); pair with GEX from
+  research-smartmoney family (market-implied tier); pair with GEX from
   analyst-smartmoney-positioning for regime. Educational, not advice; a lens, not
   gospel.
 license: MIT
@@ -26,7 +26,7 @@ metadata:
 
 # Analyst: Dark Pool / Off-Exchange Accumulation (is smart money buying in the shadows?)
 
-This is the **dark-pool / block-print seat** in the `analyst-smartmoney` family — one of several
+This is the **dark-pool / block-print seat** in the `research-smartmoney` family — one of several
 market-implied lenses available to a quorum or forecast. It reads the volume that never touches a lit
 exchange: FINRA Trade Reporting Facility (TRF) prints, large block crosses, and the Dark Pool Index (DIX).
 

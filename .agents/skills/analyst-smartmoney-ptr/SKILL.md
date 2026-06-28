@@ -12,7 +12,7 @@ metadata:
 
 # Congressional Stock Watch (propose new buys from STOCK Act filings)
 
-This skill is part of the `analyst-smartmoney` family; the parent `analyst-smartmoney` skill synthesizes its output with the other spokes.
+This skill is part of the `research-smartmoney` family; the parent `research-smartmoney` skill synthesizes its output with the other spokes.
 
 Scan recent House + Senate STOCK Act disclosures, surface what members of Congress newly **purchased**, and propose the un-proposed ones as buy-candidates. The point is a *standing watchlist that never repeats itself* — every ticker is deduped against the ledger before it's proposed.
 

@@ -57,18 +57,18 @@ method/conductor skills. The repo's available lens menu (`.agents/skills/`):
 | Lens skill | Brings (the seat) | Natural role in a quorum |
 |---|---|---|
 | `analyst-systematic-trading` | Carver — rules, vol-target, Half-Kelly, cost speed limit, overfit gate | The discipline/sizing seat; kills the narrative trade |
-| `analyst-technical-analysis` | Bernstein — setup→trigger→follow-through, "no trigger, no trade" | The timing/trigger seat (weak evidence — carry as hypothesis) |
-| `analyst-crypto` | Howell — global liquidity → on-chain → sentiment → tilted-DCA | The liquidity-tide seat (often the WAIT/dissent) |
+| `research-technical` | Bernstein — setup→trigger→follow-through, "no trigger, no trade" | The timing/trigger seat (weak evidence — carry as hypothesis) |
+| `research-onchain` | Howell — global liquidity → on-chain → sentiment → tilted-DCA | The liquidity-tide seat (often the WAIT/dissent) |
 | `analyst-smartmoney-positioning` | Funding/OI/basis + options skew/IV/max-pain/gamma; options-implied distribution (crypto + equities) | The positioning / market-implied seat — what leverage & options price |
-| `analytics-benjamin-graham` | Margin of safety, intrinsic value, Mr. Market | The value/"is this even an investment" dissent seat |
-| `analytics-morgan-housel` | Behavior > intelligence, tails, enough, room for error | The behavioral guardrail / "don't blow up" seat |
-| `analytics-warren-buffett` | Moats, circle of competence, cash-as-option, bubble-discipline | The quality/discipline / hold-cash seat |
-| `analytics-lyn-alden` | Fiscal dominance, debasement, BTC-as-hurdle | The structural-inflation / scarce-asset bull |
-| `analytics-ray-dalio` | Big debt cycle, world order, all-weather | The cycle-architect / balance-risk seat |
-| `analytics-stanley-druckenmiller` | Liquidity drives markets, bet big & rarely | The tactician / timing & sizing seat |
-| `analytics-lacy-hunt` | Debt → low velocity → disinflation, long bonds | The **designed deflation dissent** |
-| `analytics-michael-pettis` | S−I=CA, capital flows, China rebalancing | The trade/imbalances seat |
-| `analytics-russell-napier` | Financial repression, structural inflation by policy | The repression/inflationist-via-policy seat |
+| `investor-benjamin-graham` | Margin of safety, intrinsic value, Mr. Market | The value/"is this even an investment" dissent seat |
+| `research-morgan-housel` | Behavior > intelligence, tails, enough, room for error | The behavioral guardrail / "don't blow up" seat |
+| `investor-warren-buffett` | Moats, circle of competence, cash-as-option, bubble-discipline | The quality/discipline / hold-cash seat |
+| `investor-lyn-alden` | Fiscal dominance, debasement, BTC-as-hurdle | The structural-inflation / scarce-asset bull |
+| `investor-ray-dalio` | Big debt cycle, world order, all-weather | The cycle-architect / balance-risk seat |
+| `investor-stanley-druckenmiller` | Liquidity drives markets, bet big & rarely | The tactician / timing & sizing seat |
+| `research-lacy-hunt` | Debt → low velocity → disinflation, long bonds | The **designed deflation dissent** |
+| `research-michael-pettis` | S−I=CA, capital flows, China rebalancing | The trade/imbalances seat |
+| `research-russell-napier` | Financial repression, structural inflation by policy | The repression/inflationist-via-policy seat |
 | `macro-panel` | Convener of the macro seats specifically | Use that skill directly for a pure-macro question |
 
 If the question is **purely macro**, prefer `macro-panel` (it already routes the macro seats). Reach for
@@ -152,11 +152,11 @@ cadence should the $6k be deployed?*
 | Lens | Verdict | Conviction | One-line reasoning |
 |---|---|---|---|
 | `analyst-systematic-trading` (Carver) | Fewer, bigger clips | med | Cost speed limit — many tiny buys waste the budget on fees/spread; size to keep costs ≤⅓ of edge |
-| `analyst-technical-analysis` (Bernstein) | Calendar DCA, no timed entry | low | No trigger yet (below trend); "no trigger, no trade" — so don't time, just space it |
-| `analytics-benjamin-graham` | Slow, small, quarantined | high | No intrinsic value → no margin of safety; deploy slowly and cap exposure regardless |
-| `analytics-lyn-alden` | Steady DCA, don't overthink | high | Structural debasement; idle cash is the risk — get invested on a calendar, hold cycles |
-| `analytics-morgan-housel` | Automate it, remove yourself | med | Behavior is the weak link; a fixed schedule beats discretion under Extreme Fear |
-| `analyst-crypto` (Howell) | Deploy ~half now, gate the rest | med | Liquidity tide still out; commit a base, condition the remainder on liquidity turning |
+| `research-technical` (Bernstein) | Calendar DCA, no timed entry | low | No trigger yet (below trend); "no trigger, no trade" — so don't time, just space it |
+| `investor-benjamin-graham` | Slow, small, quarantined | high | No intrinsic value → no margin of safety; deploy slowly and cap exposure regardless |
+| `investor-lyn-alden` | Steady DCA, don't overthink | high | Structural debasement; idle cash is the risk — get invested on a calendar, hold cycles |
+| `research-morgan-housel` | Automate it, remove yourself | med | Behavior is the weak link; a fixed schedule beats discretion under Extreme Fear |
+| `research-onchain` (Howell) | Deploy ~half now, gate the rest | med | Liquidity tide still out; commit a base, condition the remainder on liquidity turning |
 
 **Consensus (the overlap, not the average):** **$1,000/week × 6 weeks, on the calendar.** Six lenses
 that barely share a vocabulary all land on *spaced, calendar-based, removed-from-emotion* deployment.

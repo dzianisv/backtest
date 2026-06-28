@@ -56,7 +56,7 @@ or a domain lens; or there's **no observable resolution** to score (then it's st
 
 Pick **outcome-relevant** seats — ones with a view on *where price goes by the date*:
 
-- **Crypto:** technical, macro/liquidity (`analyst-crypto`), on-chain/regime, derivatives-positioning,
+- **Crypto:** technical, macro/liquidity (`research-onchain`), on-chain/regime, derivatives-positioning,
   prediction-market, reflexivity, risk/skeptic.
 - **Equities/index:** technical, macro/liquidity (`macro-panel`), derivatives-positioning (COT/VIX/GEX),
   prediction-market, reflexivity, risk/skeptic.

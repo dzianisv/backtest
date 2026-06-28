@@ -53,8 +53,8 @@ must end by logging a heartbeat so a silent outage is detectable:
       analyst-smartmoney-ptr 90d, trend-stock-research themes, dip_screener.py --json, crypto-dip-scanner
       --json) — real evidence, mark [unverified], never fabricate. (2) AGGREGATE by ticker; n_sources =
       crowdedness NOT independence; flag flow_only (13F/congress-only = 30-45d lagged, down-weight); top 5.
-      (3) PANEL: each top-5 gets an INDEPENDENT verdict from analytics-warren-buffett, analytics-stanley-
-      druckenmiller, analytics-lacy-hunt (deflation/dissent), fundamental-analysis (verdict+conviction+
+      (3) PANEL: each top-5 gets an INDEPENDENT verdict from investor-warren-buffett, analytics-stanley-
+      druckenmiller, research-lacy-hunt (deflation/dissent), fundamental-analysis (verdict+conviction+
       reason+invalidation; no anchoring). (4) DISSENT: quote the strongest opposing vote per name verbatim;
       never average it away; unanimous = a flag. (5) RISK: risk-management VETO if RISK_OFF or >10% book;
       else PASS with a size CEILING (no portfolio supplied → never invent existing weights). (6) DM a RANKED

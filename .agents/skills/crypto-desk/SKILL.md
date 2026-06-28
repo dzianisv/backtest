@@ -47,7 +47,7 @@ run in parallel, return compact verdicts, and keep the main context clean.
 | Full market state ("is now good?", "comprehensive read") | **`analysis-comprehensive-crypto`** — spawns TradingView MCP data pull + all 5 analysis seats in parallel. This is the default for any timing or deploy question. |
 | On-chain only | **`analysis-onchain`** subagent |
 | Sentiment only | **`analysis-sentiment`** subagent |
-| Macro/liquidity only | **`analysis-macro`** subagent |
+| Macro/liquidity only | **`research-macro`** subagent |
 | Order flow / liquidations | **`analysis-orderflow`** subagent |
 | News / narrative | **`analysis-narrative`** subagent |
 | FOMC / Fed / rates | **`feed-fomc`** + **`analyst-smartmoney-polymarket`** subagents (parallel) |
@@ -70,13 +70,13 @@ needs the zone verdict from the analysis subagent first). Even then, batch what 
 
 | When | Load (as subagent) |
 |------|------|
-| Any timing / deploy / "is now good?" question | **`analysis-comprehensive-crypto`** — full panel: TradingView MCP data + on-chain + sentiment + macro + orderflow + narrative. Do NOT just load `analyst-crypto` inline — spawn the full panel. |
+| Any timing / deploy / "is now good?" question | **`analysis-comprehensive-crypto`** — full panel: TradingView MCP data + on-chain + sentiment + macro + orderflow + narrative. Do NOT just load `research-onchain` inline — spawn the full panel. |
 | Any FOMC / Fed / rates mention | **`feed-fomc`** → tone + language delta. Then **`analyst-smartmoney-polymarket`** → CME FedWatch rate path. Spawn both in parallel. |
 | Any "is the derivatives positioning bullish/bearish?" | **`analysis-orderflow`** — funding rates, OI, liquidation clusters, CVD, CME gap. |
 | Any alt selection | **`crypto-token-screener`** — 6-point BTC-hurdle filter before any tilt on an alt. |
 
 ## How to answer (route by question type)
-- **Timing ("buy the dip / buy today?")** → Load `analyst-crypto` liquidity pillar FIRST (is the global liquidity tide rising or falling?). Then REGIME (above/below 200d, death cross, risk-off?), then
+- **Timing ("buy the dip / buy today?")** → Load `research-onchain` liquidity pillar FIRST (is the global liquidity tide rising or falling?). Then REGIME (above/below 200d, death cross, risk-off?), then
   split the answer for the **trader** (trend says wait below 200d) vs the **long-term accumulator** (a deep
   drawdown is where you *start* nibbling). Give the concrete staged size + reserve ladder + "no leverage".
   Name the falling-knife tail (BTC has done −70/−80%).
@@ -111,7 +111,7 @@ Deploy the deep tiers into BTC/ETH only (not SOL/alts) — in a real crash, conc
 
 ## Wiring
 Market analysis: `analysis-comprehensive-crypto` (orchestrates all 5 seats + TradingView MCP).
-Individual seats: `analysis-onchain`, `analysis-sentiment`, `analysis-macro`, `analysis-orderflow`, `analysis-narrative`.
+Individual seats: `analysis-onchain`, `analysis-sentiment`, `research-macro`, `analysis-orderflow`, `analysis-narrative`.
 Regime: `regime-detection`. Dip ladder: `dip-tranches-strategy`. Binding size veto: `risk-management`.
 Backtest gate for any active strategy: `strategy-discovery-backtest`. Execution: `coinbase-cdp-connector`
 (notification-first). The long-term book lives at `crypto/GOAL.md` (a SEPARATE ledger from the $1M tradfi

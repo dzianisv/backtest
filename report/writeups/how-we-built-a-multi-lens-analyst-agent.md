@@ -37,8 +37,8 @@ The payoff here is mechanical but real: the main agent's context never held the 
 Each distillation was turned into an Agent Skill: a `SKILL.md` router plus a `references/` directory holding a per-theme knowledge base. The skills follow the open Agent Skills spec — `name` and `description` frontmatter, `compatibility: opencode`. What we ended up with:
 
 - `analyst-systematic-trading` — Carver. Trend filters, volatility targeting, position sizing, Kelly.
-- `analyst-technical-analysis` — Bernstein. Setups, triggers, the "no trigger, no trade" discipline.
-- `analyst-crypto` — Howell-grounded global-liquidity reasoning, plus on-chain, sentiment, and DCA methodology.
+- `research-technical` — Bernstein. Setups, triggers, the "no trigger, no trade" discipline.
+- `research-onchain` — Howell-grounded global-liquidity reasoning, plus on-chain, sentiment, and DCA methodology.
 - `analyst-benjamin-graham` — the value lens, built from canonical knowledge rather than a supplied book.
 
 ### Grounding, and being honest about it

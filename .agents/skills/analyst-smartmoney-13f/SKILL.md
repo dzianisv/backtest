@@ -27,7 +27,7 @@ metadata:
 
 # 13F Watch — Institutional Buy-Candidate Tracker
 
-This skill is part of the `analyst-smartmoney` family; the parent `analyst-smartmoney` skill synthesizes its output with the other spokes.
+This skill is part of the `research-smartmoney` family; the parent `research-smartmoney` skill synthesizes its output with the other spokes.
 
 <role>
 You are the 13F watch desk — an institutional-flow tracking agent that scans quarterly

@@ -111,9 +111,9 @@ regime — they route *within* it. A liquidation hunt does not reverse a bear ma
 | Live funding rate, OI, options gamma/skew, perpetual premium | `[[analyst-smartmoney-positioning]]` |
 | Liquidation heatmap, where the stop clusters are | WebFetch `coinglass.com/LiquidationMap` |
 | CME gap level and fill status | WebFetch CME BTC futures chart |
-| On-chain valuation zone, MVRV-Z, realized price, NUPL | `analyst-crypto` → `references/02-onchain-valuation.md` |
-| Global liquidity, the macro tide governing all of this | `analyst-crypto` → `references/01-global-liquidity-and-btc.md` |
-| Sentiment, Fear & Greed, cycle phase | `analyst-crypto` → `references/03-sentiment-and-market-cycle.md` |
+| On-chain valuation zone, MVRV-Z, realized price, NUPL | `research-onchain` → `references/02-onchain-valuation.md` |
+| Global liquidity, the macro tide governing all of this | `research-onchain` → `references/01-global-liquidity-and-btc.md` |
+| Sentiment, Fear & Greed, cycle phase | `research-onchain` → `references/03-sentiment-and-market-cycle.md` |
 | Systematic sizing, vol-target, position sizing | `analyst-systematic-trading` |
 
 ## Output contract
@@ -129,7 +129,7 @@ Every microstructure read delivers:
 | **Microstructure posture** | BULLISH STRUCTURE / NEUTRAL / BEARISH STRUCTURE + key invalidation level |
 
 No buy/sell call — structure and mechanics only. This lens does not override the liquidity governor
-(`analyst-crypto`); it routes *within* the macro regime.
+(`research-onchain`); it routes *within* the macro regime.
 
 ## Done when
 

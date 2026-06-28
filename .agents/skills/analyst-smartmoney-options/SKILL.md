@@ -27,7 +27,7 @@ metadata:
 
 # Analyst: Unusual Options Flow (ticker-level smart-money lens)
 
-One spoke in the `analyst-smartmoney` family. This seat reads the **options tape at the
+One spoke in the `research-smartmoney` family. This seat reads the **options tape at the
 single-name level** — who is hitting the ask on which strikes, how fast, and whether the size is
 new positioning or closing/hedging noise. Market-implied tier.
 
@@ -210,9 +210,9 @@ the correct read is "insufficient evidence." The skill's job is to not be fooled
    OPRA-level data (paid) or chain-level vol/OI proxies (free). If paywalled, say so and
    downgrade the verdict to TENTATIVE.
 
-## Fit in the analyst-smartmoney family
+## Fit in the research-smartmoney family
 
-- `analyst-smartmoney` — conductor; routes to spokes
+- `research-smartmoney` — conductor; routes to spokes
 - `analyst-smartmoney-positioning` — aggregate derivatives layer (put/call ratio, skew, GEX, max
   pain); feeds quorum with the market-level read
 - **`analyst-smartmoney-options` (this skill)** — ticker-level unusual flow; single-name sweep and

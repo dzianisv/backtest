@@ -199,7 +199,7 @@ Any agent can read these files directly — no MCP required.
 
 ## How downstream skills use the output
 
-**Trend seat (analytics-stanley-druckenmiller):**
+**Trend seat (investor-stanley-druckenmiller):**
 ```bash
 cat .cache/tradingview/{DATE}/{TOKEN}.json
 # receives the full technical package — MAs, RSI, death cross, zone

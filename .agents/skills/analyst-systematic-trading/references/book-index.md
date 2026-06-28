@@ -30,7 +30,7 @@ These are the standard adjacent texts on systematic/algorithmic trading. They ar
 
 ## Cross-references within this repo
 - **`trend-following`, `regime-detection`, `risk-management`, `portfolio-construction`** (and a future `backtesting` skill): this skill is their **how-to-build-and-validate** counterpart and shares the vocabulary (vol targeting, diversification, costs).
-- **`analyst-technical-analysis`:** the *discretionary / chart-pattern* counterpart with a **weak evidence base**; the systematic + backtested path here is the rigorous alternative (or, for a discretionary view, wrap it as a *semi-automatic* forecast, ref 01/03).
+- **`research-technical`:** the *discretionary / chart-pattern* counterpart with a **weak evidence base**; the systematic + backtested path here is the rigorous alternative (or, for a discretionary view, wrap it as a *semi-automatic* forecast, ref 01/03).
 - **GOAL.md mandate:** any strategy must be backtested with realistic costs before trading — Carver's **overfitting discipline + cost speed limit (ref 06)** *are* that gate.
 
 ## Honesty note

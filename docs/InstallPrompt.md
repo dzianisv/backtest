@@ -82,8 +82,8 @@ Daily 08:00 UTC (Mon–Fri) — run silently, DM ONLY if an alert fires:
 
 Weekly Monday 09:30 UTC — full brief, always DM:
 • Pool → top 5 tickers by signal count
-• multi-lens-quorum on each (analytics-lyn-alden, analytics-ray-dalio,
-  analytics-warren-buffett, analytics-stanley-druckenmiller, fundamental-analysis)
+• multi-lens-quorum on each (investor-lyn-alden, investor-ray-dalio,
+  investor-warren-buffett, investor-stanley-druckenmiller, fundamental-analysis)
 • risk-management VETO
 • feed-fomc → Fed tone
 

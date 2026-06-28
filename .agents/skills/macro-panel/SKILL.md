@@ -21,13 +21,13 @@ which hold the actual frameworks and primary sources.
 
 | Seat | Skill | The lens it brings | Bias / tell |
 |---|---|---|---|
-| Debasement / monetary-system | `analytics-lyn-alden` | Fiscal dominance, broad money, eurodollar, BTC-as-hurdle, energy | Structurally inflationist; pro scarce assets/BTC |
-| Cycle architect / portfolio | `analytics-ray-dalio` | Big debt cycle, changing world order, all-weather/risk-parity | Late-cycle; balance risk, hold gold; can be early |
-| Tactician / timing & sizing | `analytics-stanley-druckenmiller` | Liquidity drives markets; position 12-24mo out; bet big/rarely | Liquidity-first; turns views into trades |
-| **Deflation dissent** | `analytics-lacy-hunt` | Debt → low velocity → disinflation; long bonds | **The designed contrarian**; bond bull (reversed 2026) |
-| Trade / China | `analytics-michael-pettis` | S−I=CA, capital account drives trade, China rebalancing | Imbalances = distribution; China-bear, early |
-| Financial repression | `analytics-russell-napier` | Govts control money via bank credit; structural 4-6% inflation | Inflationist via repression; flips early |
-| Bubble-discipline / value | `analytics-warren-buffett` | Circle of competence, moats, margin of safety, cash-as-option | Bottom-up; hold cash when rich; ignores macro |
+| Debasement / monetary-system | `investor-lyn-alden` | Fiscal dominance, broad money, eurodollar, BTC-as-hurdle, energy | Structurally inflationist; pro scarce assets/BTC |
+| Cycle architect / portfolio | `investor-ray-dalio` | Big debt cycle, changing world order, all-weather/risk-parity | Late-cycle; balance risk, hold gold; can be early |
+| Tactician / timing & sizing | `investor-stanley-druckenmiller` | Liquidity drives markets; position 12-24mo out; bet big/rarely | Liquidity-first; turns views into trades |
+| **Deflation dissent** | `research-lacy-hunt` | Debt → low velocity → disinflation; long bonds | **The designed contrarian**; bond bull (reversed 2026) |
+| Trade / China | `research-michael-pettis` | S−I=CA, capital account drives trade, China rebalancing | Imbalances = distribution; China-bear, early |
+| Financial repression | `research-russell-napier` | Govts control money via bank credit; structural 4-6% inflation | Inflationist via repression; flips early |
+| Bubble-discipline / value | `investor-warren-buffett` | Circle of competence, moats, margin of safety, cash-as-option | Bottom-up; hold cash when rich; ignores macro |
 
 ## How to convene (procedure)
 

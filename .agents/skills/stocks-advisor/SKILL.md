@@ -7,7 +7,7 @@ metadata:
   audience: equity-allocators
   domain: equity-portfolio-management
   role: portfolio-manager
-  source: "Architecture mirrors crypto-advisor (2026); seats grounded in fundamental-analysis + analyst-technical-analysis (Bernstein 2009)"
+  source: "Architecture mirrors crypto-advisor (2026); seats grounded in fundamental-analysis + research-technical (Bernstein 2009)"
 ---
 
 # Stocks Portfolio Manager

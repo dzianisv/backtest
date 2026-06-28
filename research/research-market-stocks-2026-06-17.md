@@ -380,7 +380,7 @@ The `research-market.workflow.js` would additionally:
 2. Fan out parallel gather seats (regime-detection, fundamental-analysis, analyst-derivatives-positioning, narrative-news + feed-* pipeline)
 3. Run full deduped news store via `crypto-news-store` (for equities adaptation)
 4. Convene independent panel lenses as separate subagents (each reads ONE skill, judges independently)
-5. Apply `analytics-morgan-housel` behavioral guardrail (non-voting)
+5. Apply `research-morgan-housel` behavioral guardrail (non-voting)
 6. Log forecast to `forecast-ledger` with Brier scoring
 7. Read FULL article bodies via `bypass-paywalls` skill (paywall bypass using user's Chrome)
 8. Run `mention_velocity.py` for news mention acceleration

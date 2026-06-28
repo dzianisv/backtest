@@ -11,28 +11,28 @@ metadata:
 
 # Crypto Advisor
 
-Analyze every token in the universe **sequentially** (single shared chart slot) → assemble one data package per token → run a 5-seat quorum in parallel → decide BUY/SELL/HOLD → Verdict Critic → Citation Validator → print the report.
+Loop through the token universe **one token at a time** (TradingView has a single chart slot — the Trend seat holds it per token) → run all 5 seats in parallel per token → decide BUY/SELL/HOLD → Verdict Critic → Citation Validator → print the report.
 
 > Educational analysis, not financial advice. No leverage. Ever.
 
 ## Architecture
 
-Each seat owns its own data sources. The orchestrator fetches TradingView data only because
-subagents cannot access MCP tools — that package goes to the Trend seat only. All other seats
-independently fetch what they need via web_fetch / DeFiLlama / F&G APIs.
+Each seat owns its own data sources. The CIO passes only `{ token, price_usd }` — no shared data package. The Trend seat uses TradingView MCP directly (Agent subagents inherit MCP from the parent session). All other seats independently fetch what they need via web_fetch / DeFiLlama / F&G APIs.
+
+**Why tokens loop sequentially:** TradingView has a single chart slot (`chart_set_symbol` is a global mutation). The Trend seat occupies it for one token at a time — not because CIO pre-fetches TV data, but because two tokens cannot be charted simultaneously.
 
 ```mermaid
 flowchart TD
-    CIO["🎯 CIO Orchestrator\n11 tokens · sequential TV pull"]
+    CIO["🎯 CIO Orchestrator\n11 tokens · one at a time (chart slot)"]
 
     CIO -->|"token + price_usd"| SEATS
 
     subgraph SEATS["5 Seats — parallel per token, each owns its data"]
-        TREND["analyst-technical-analysis\nTrend\n📊 TradingView MCP (direct)\nOHLCV · RSI · BB · MACD · MAs"]
-        VALUE["analytics-benjamin-graham\nValue\n🌐 web_fetch: price · ATH\nzone · margin of safety"]
-        QUALITY["analytics-warren-buffett\nQuality\n🌐 web_fetch: DeFiLlama\nrevenue · moat · growth"]
-        CYCLE["analytics-ray-dalio\nCycle\n🌐 web_fetch: F&G index\nmacro headlines"]
-        ONCHAIN["analysis-onchain-defi\nOn-chain\n🌐 web_fetch: DeFiLlama\nfee distribution · TVL"]
+        TREND["research-technical\nTrend\n📊 TradingView MCP (direct)\nOHLCV · RSI · BB · MACD · MAs"]
+        VALUE["investor-benjamin-graham\nValue\n🌐 web_fetch: price · ATH\nzone · margin of safety"]
+        QUALITY["investor-warren-buffett\nQuality\n🌐 web_fetch: DeFiLlama\nrevenue · moat · growth"]
+        CYCLE["investor-ray-dalio\nCycle\n🌐 web_fetch: F&G index\nmacro headlines"]
+        ONCHAIN["research-defi\nOn-chain\n🌐 web_fetch: DeFiLlama\nfee distribution · TVL"]
     end
 
     TREND -->|"vote + reason"| QUORUM
@@ -162,11 +162,11 @@ Pick the next `pending` todo, `UPDATE todos SET status='in_progress'`, then for 
 
 | Seat | Skill | Data source (fetched by the seat itself) |
 |---|---|---|
-| **Trend** | `analyst-technical-analysis` | TradingView MCP — called directly by this seat (Agent tool subagents inherit MCP access) |
-| **Value** | `analytics-benjamin-graham` | `web_fetch` price history, ATH reference, zone computation |
-| **Quality** | `analytics-warren-buffett` | `web_fetch https://defillama.com/protocol/{slug}` — revenue, TVL, moat |
-| **Cycle** | `analytics-ray-dalio` | `web_fetch https://api.alternative.me/fng/?limit=1` + macro headlines |
-| **On-chain** | `analysis-onchain-defi` | `web_fetch https://defillama.com/protocol/{slug}` — fee distribution, accrual |
+| **Trend** | `research-technical` | TradingView MCP — called directly by this seat (Agent tool subagents inherit MCP access) |
+| **Value** | `investor-benjamin-graham` | `web_fetch` price history, ATH reference, zone computation |
+| **Quality** | `investor-warren-buffett` | `web_fetch https://defillama.com/protocol/{slug}` — revenue, TVL, moat |
+| **Cycle** | `investor-ray-dalio` | `web_fetch https://api.alternative.me/fng/?limit=1` + macro headlines |
+| **On-chain** | `research-defi` | `web_fetch https://defillama.com/protocol/{slug}` — fee distribution, accrual |
 
 Pass to each seat: `{ token: "{TOKEN}", price_usd: {PRICE} }`. Each seat fetches everything else itself.
 
@@ -174,11 +174,11 @@ Pass to each seat: `{ token: "{TOKEN}", price_usd: {PRICE} }`. Each seat fetches
 
 | Seat | Skill | Data it fetches itself |
 |---|---|---|
-| **Trend** | `analytics-stanley-druckenmiller` | Reads `.cache/tradingview/{date}/{TOKEN}.json` — no MCP needed. |
-| **Value** | `analytics-benjamin-graham` | Fetches price history + ATH reference to compute zone and margin of safety. |
-| **Quality** | `analytics-warren-buffett` | `web_fetch https://defillama.com/protocol/{slug}` — revenue, TVL, moat signals. |
-| **Cycle** | `analytics-ray-dalio` | `web_fetch https://api.alternative.me/fng/?limit=1` (F&G) + macro headlines. |
-| **On-chain** | `analysis-onchain-defi` | `web_fetch https://defillama.com/protocol/{slug}` — fee distribution, revenue accrual. |
+| **Trend** | `investor-stanley-druckenmiller` | Reads `.cache/tradingview/{date}/{TOKEN}.json` — no MCP needed. |
+| **Value** | `investor-benjamin-graham` | Fetches price history + ATH reference to compute zone and margin of safety. |
+| **Quality** | `investor-warren-buffett` | `web_fetch https://defillama.com/protocol/{slug}` — revenue, TVL, moat signals. |
+| **Cycle** | `investor-ray-dalio` | `web_fetch https://api.alternative.me/fng/?limit=1` (F&G) + macro headlines. |
+| **On-chain** | `research-defi` | `web_fetch https://defillama.com/protocol/{slug}` — fee distribution, revenue accrual. |
 
 Each seat returns: `{ vote: BULLISH|NEUTRAL|BEARISH, reason: "<School>: one-line citing own data" }`.
 

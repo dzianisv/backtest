@@ -271,11 +271,11 @@ Both adapters receive the same `data_package` and return the same `{ seat, vote,
 # Pseudo-code
 
 SEAT_SKILLS = {
-    "value":   "analytics-benjamin-graham",       # reuse existing
-    "quality": "analytics-warren-buffett",         # reuse existing
-    "cycle":   "analytics-ray-dalio",              # reuse existing
-    "trend":   "analytics-stanley-druckenmiller",  # reuse existing
-    "onchain": "analysis-onchain-defi",            # new — DeFiLlama value-accrual
+    "value":   "investor-benjamin-graham",       # reuse existing
+    "quality": "investor-warren-buffett",         # reuse existing
+    "cycle":   "investor-ray-dalio",              # reuse existing
+    "trend":   "investor-stanley-druckenmiller",  # reuse existing
+    "onchain": "research-defi",            # new — DeFiLlama value-accrual
 }
 
 MODEL_MAP = {
@@ -306,11 +306,11 @@ votes = parallel_map(run_seat, seats, data_package)
 # Pseudo-code
 
 SEAT_PLUGINS = {
-    "value":   "analytics-benjamin-graham",
-    "quality": "analytics-warren-buffett",
-    "cycle":   "analytics-ray-dalio",
-    "trend":   "analytics-stanley-druckenmiller",
-    "onchain": "analysis-onchain-defi",
+    "value":   "investor-benjamin-graham",
+    "quality": "investor-warren-buffett",
+    "cycle":   "investor-ray-dalio",
+    "trend":   "investor-stanley-druckenmiller",
+    "onchain": "research-defi",
 }
 
 MODEL_MAP = {
@@ -357,11 +357,11 @@ Four seats reuse existing analytics skills — no new files needed. Only the onc
 ```
 .agents/skills/
   crypto-advisor/SKILL.md          ← orchestrator — rewrite target
-  analytics-benjamin-graham/       ← REUSE as Value seat (exists)
-  analytics-warren-buffett/        ← REUSE as Quality seat (exists)
-  analytics-ray-dalio/             ← REUSE as Cycle seat (exists)
-  analytics-stanley-druckenmiller/ ← REUSE as Trend seat (exists)
-  analysis-onchain-defi/SKILL.md   ← NEW — Burniske DeFiLlama value-accrual (not BTC MVRV-Z)
+  investor-benjamin-graham/       ← REUSE as Value seat (exists)
+  investor-warren-buffett/        ← REUSE as Quality seat (exists)
+  investor-ray-dalio/             ← REUSE as Cycle seat (exists)
+  investor-stanley-druckenmiller/ ← REUSE as Trend seat (exists)
+  research-defi/SKILL.md   ← NEW — Burniske DeFiLlama value-accrual (not BTC MVRV-Z)
 ```
 
 Do not embed seat skills inside `crypto-advisor/`. They are panel-agnostic and reusable by `hedge-fund-committee` and other quorum skills.

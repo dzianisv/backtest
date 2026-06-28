@@ -34,7 +34,7 @@ HOLD NVDA, add nothing. Optional trim toward 8 to 10 percent only on a cap breac
 | Seat | Verdict | Confidence |
 |---|---|---|
 | Warren Buffett — bubble-discipline / quality-value / capital-allocation lens | **HOLD** | medium |
-| analytics-benjamin-graham (rules-based deep-value / margin-of-safety discipline) | **TRIM** | medium |
+| investor-benjamin-graham (rules-based deep-value / margin-of-safety discipline) | **TRIM** | medium |
 | Druckenmiller — tactician (timing & sizing) execution seat | **HOLD** | medium |
 | Lyn Alden macro lens (fiscal-dominance / scarce-asset / liquidity-cycle) | **HOLD** | medium |
 | Analyst — Systematic Trading lens (Robert Carver, Systematic Trading 2015) | **HOLD** | medium |
@@ -47,7 +47,7 @@ By Buffett's own metrics the name you already own is both the best business and 
 - **Sizing:** Add nothing today — do not initiate AMD or AVGO; adding either fails the moat/value gate and concentrates, not diversifies, the shared capex bet. Keep NVDA but cap single-name risk: if 12% sits above your position cap, a measured trim back toward ~8-10% (risk-capital sleeve only, never the $1.5M house reserve) is the only Buffett-consistent action, harvesting into strength rather than chasing a worse/pricier name. Hold the freed cash as a call option for a real dislocation. The ~40% off-low figure the user cited is unverified (§10.1; seats reproduce only +21% to +29% off spring lows) — do not let an inflated 'gain' rationalize a trade.
 - **Flips if:** Flip to ADD a second AI-semi only if Mr. Market hands a genuine margin of safety on the BETTER business — e.g., AVGO falls to a clearly discounted intrinsic-value range (toward a deeper dip, ~−30%, with its net-debt risk priced) OR a broad AI-capex/market panic puts quality on sale post-FOMC. Flip to a firmer TRIM if NVDA breaks the 20-bar swing-low stop ($199.34) / loses the 200d ($189), or if the next earnings (Aug 26) shows the capex cycle inflecting down. Re-run the macro read after the 6/17 FOMC statement before any add.
 
-### analytics-benjamin-graham (rules-based deep-value / margin-of-safety discipline) — TRIM (medium)
+### investor-benjamin-graham (rules-based deep-value / margin-of-safety discipline) — TRIM (medium)
 Through Graham's lens this is a choice between two speculations, not the discovery of a bargain. None of NVDA/AMD/AVGO offers a true margin of safety: NVDA's forward P/E 16.7 / PEG 0.63 looks 'cheap' only because it capitalizes +85% revenue growth (Graham distrusts paying for forecasts, and the P/B implied by 114% ROE blows out the P/E*P/B<=22.5 defensive test); AVGO carries -$45.3B net DEBT, failing the strong-financial-condition criterion; AMD is the richest multiple AND most extended at a fresh 52w high — the opposite of a statistical bargain. NVDA up ~40% off its low is Mr. Market in a manic mood — serve him, don't obey; a rising quote is no reason to add. The binding Graham issue is behavioral: 12% in one name is over-concentrated, and adding a second AI-semi does NOT diversify because all three ride the identical hyperscaler-capex cycle (brief sec.9) — it disguises doubling a thematic bet as risk-spreading. His mechanical rule (sell into strength, rebalance to policy weight) points to trimming the inflated single position, not chasing correlated exposure.
 
 - **Sizing:** Trim NVDA from ~12% back toward a policy single-name cap of ~6-8% of the risk-capital sleeve (sell roughly a third to a half of the position into this strength), mechanically not on a market call. Redeploy proceeds to bonds/cash or a non-correlated holding — NOT into AMD or AVGO, which add no diversification. Add zero AI-semi today: no name clears a margin-of-safety screen. All equity risk from the risk-capital sleeve only; never the $1.5M house reserve. If an enterprising AI-semi position is ever wanted, it must be a small, diversified, basket-sized sleeve — never a single concentrated bet.
@@ -138,7 +138,7 @@ Source: yfinance/dip_screener.py, 2026-06-15.
 - **NVDA:** $212.45 > 50d ($207.41) > 200d ($189.19), +12.3% above 200d; uptrend structure intact. RSI(14) 51.4 (neutral). **MACD 9/18 below signal** — near-term momentum softening. Stop ref: 20-bar swing low $199.34.
 - **AMD:** fresh 52w high, +113.9% above 200d — **most extended**; RSI 65.2; early **negative MACD divergence at the high**.
 - **AVGO:** only one of the three **below its 50d MA** ($408.04), above 200d (+10.1%); **lowest RSI 45.3**; only one with **negative Bernstein 28-momentum (−33.42)** — weakest short-term posture but cheapest vs its own recent high.
-Source: analyst-technical-analysis (Bernstein lens), yfinance daily close 2026-06-15. Caveat: TA is hypothesis-generation, weak empirical base.
+Source: research-technical (Bernstein lens), yfinance daily close 2026-06-15. Caveat: TA is hypothesis-generation, weak empirical base.
 
 ## 5. INSTITUTIONAL CONVICTION (13F, Q1'26, ~45-day lag, long-only)
 - **NVDA — contested/two-sided:** ADDS H&H/Duan +91%, Tiger +9%, Maverick +6%, Davis, Patient Capital; **TRIMS** Loeb −94%, Kahn sold 100%, Jensen −28%, Polen −23%, Tepper −13%. 18 super-investors hold; aggregate Q4'25 flow net-positive (2,920 buyers vs 2,375 sellers). Not a clean add or trim.

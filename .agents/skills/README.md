@@ -92,7 +92,7 @@ USER QUESTION
      │        → regime-detection (weighted signal ensemble → exposure dial)
      │
      ├── "manage my crypto/DeFi book"
-     │        → crypto-advisor (orchestrates analyst-crypto + regime + dip + risk)
+     │        → crypto-advisor (orchestrates research-onchain + regime + dip + risk)
      │        → defi-portfolio-manager (DeFi-native: yield + risk + protocol audit)
      │
      └── "find trending stocks / any convergence?"
@@ -202,12 +202,12 @@ USER QUESTION + PORTFOLIO + DATE
 
 ### 3. crypto-advisor (the crypto desk orchestrator)
 
-Routes any crypto buy/sell/allocation question through the right sub-skills. Loads `analyst-crypto` internally — do NOT run both in parallel (redundant).
+Routes any crypto buy/sell/allocation question through the right sub-skills. Loads `research-onchain` internally — do NOT run both in parallel (redundant).
 
 ```
 USER → crypto-advisor (classifier + invariant enforcer)
        │
-       ├── analyst-crypto (brain — 4-pillar methodology)
+       ├── research-onchain (brain — 4-pillar methodology)
        │   ├── pillar 1: global liquidity (Howell, Capital Wars)
        │   ├── pillar 2: on-chain valuation (MVRV-Z, realized price, NUPL, Puell)
        │   ├── pillar 3: sentiment/cycle (Fear & Greed, 4-phase cycle)
@@ -226,7 +226,7 @@ USER → crypto-advisor (classifier + invariant enforcer)
 ```
 
 **Efficient run pattern:** `crypto-advisor` + `macro-panel` = 2 calls, zero redundancy.
-Running `analyst-crypto` separately alongside `crypto-advisor` double-counts the same lens.
+Running `research-onchain` separately alongside `crypto-advisor` double-counts the same lens.
 
 ---
 
@@ -237,15 +237,15 @@ Convenes 7-9 independent thinker-personas on a macro/market question. Each reads
 ```
 macro-panel (conductor)
 │
-├── analytics-lyn-alden ──────── fiscal dominance / broad money / BTC-as-hurdle
-├── analytics-ray-dalio ──────── debt cycles / all-weather / changing world order
-├── analytics-stanley-druckenmiller  liquidity / timing / "go for the jugular"
-├── analytics-lacy-hunt ──────── deflation DISSENT seat (debt→low velocity→disinflation)
-├── analytics-michael-pettis ─── trade / capital flows / China / S-I=CA
-├── analytics-russell-napier ─── financial repression / structural inflation
-├── analytics-warren-buffett ─── bubble discipline / quality value / cash as option
-├── analytics-benjamin-graham ── margin of safety / Mr. Market / net-nets
-└── analytics-morgan-housel ─── behavioral guardrail (non-voting — "enough" / room for error)
+├── investor-lyn-alden ──────── fiscal dominance / broad money / BTC-as-hurdle
+├── investor-ray-dalio ──────── debt cycles / all-weather / changing world order
+├── investor-stanley-druckenmiller  liquidity / timing / "go for the jugular"
+├── research-lacy-hunt ──────── deflation DISSENT seat (debt→low velocity→disinflation)
+├── research-michael-pettis ─── trade / capital flows / China / S-I=CA
+├── research-russell-napier ─── financial repression / structural inflation
+├── investor-warren-buffett ─── bubble discipline / quality value / cash as option
+├── investor-benjamin-graham ── margin of safety / Mr. Market / net-nets
+└── research-morgan-housel ─── behavioral guardrail (non-voting — "enough" / room for error)
 │
 → structured output:
   ├── WHERE THEY AGREE (high conviction)
@@ -263,19 +263,19 @@ The GENERAL method for any buy/hold/sell/size call. Distinct from macro-panel (w
 multi-lens-quorum (method — not a fixed roster)
 │
 │  For a CRYPTO question, might convene:
-│  ├── analyst-crypto
-│  ├── analytics-lyn-alden
-│  ├── analytics-stanley-druckenmiller
+│  ├── research-onchain
+│  ├── investor-lyn-alden
+│  ├── investor-stanley-druckenmiller
 │  └── analyst-derivatives-positioning
 │
 │  For an EQUITY question, might convene:
-│  ├── analytics-warren-buffett
-│  ├── analytics-benjamin-graham
+│  ├── investor-warren-buffett
+│  ├── investor-benjamin-graham
 │  ├── analyst-systematic-trading
 │  └── fundamental-analysis
 │
 │  For a TIMING question, might convene:
-│  ├── analyst-technical-analysis
+│  ├── research-technical
 │  ├── analyst-derivatives-positioning
 │  ├── regime-detection
 │  └── trend-following
@@ -513,22 +513,22 @@ defi-portfolio-manager (PM — delegates to subagent team)
 
 ```
 ANALYTICAL LENSES (methodology-based):
-├── analyst-crypto ──────── 4-pillar: liquidity + on-chain + sentiment + execution
+├── research-onchain ──────── 4-pillar: liquidity + on-chain + sentiment + execution
 ├── analyst-systematic-trading  Carver: vol-target, forecast scalars, cost speed limit
-├── analyst-technical-analysis  Bernstein: set-up→trigger→follow-through, MACD/stoch/momentum
+├── research-technical  Bernstein: set-up→trigger→follow-through, MACD/stoch/momentum
 ├── analyst-derivatives-positioning  funding, basis, OI, skew, gamma, VIX, COT, max pain
 └── fundamental-analysis ── value/quality/FCF screens + backtest gate
 
 THINKER-PERSONA LENSES (worldview-based):
-├── analytics-lyn-alden ─── fiscal dominance / debasement / BTC-as-hurdle
-├── analytics-ray-dalio ─── big debt cycle / all-weather / holy grail of diversification
-├── analytics-stanley-druckenmiller  "earnings don't move the market, the Fed does"
-├── analytics-lacy-hunt ─── deflation dissent (debt→low velocity→disinflation)
-├── analytics-michael-pettis  S-I=CA / "trade wars are class wars" / China
-├── analytics-russell-napier  financial repression / credit guarantees / structural inflation
-├── analytics-warren-buffett  circle of competence / moat / margin of safety / Buffett Indicator
-├── analytics-benjamin-graham  Mr. Market / net-nets / Graham number / 7 criteria
-└── analytics-morgan-housel  behavioral guardrail (non-voting) — "enough" / room for error
+├── investor-lyn-alden ─── fiscal dominance / debasement / BTC-as-hurdle
+├── investor-ray-dalio ─── big debt cycle / all-weather / holy grail of diversification
+├── investor-stanley-druckenmiller  "earnings don't move the market, the Fed does"
+├── research-lacy-hunt ─── deflation dissent (debt→low velocity→disinflation)
+├── research-michael-pettis  S-I=CA / "trade wars are class wars" / China
+├── research-russell-napier  financial repression / credit guarantees / structural inflation
+├── investor-warren-buffett  circle of competence / moat / margin of safety / Buffett Indicator
+├── investor-benjamin-graham  Mr. Market / net-nets / Graham number / 7 criteria
+└── research-morgan-housel  behavioral guardrail (non-voting) — "enough" / room for error
 
 Each lens is a LENS, not gospel — carry per-skill Caveats.
 Consumed by: multi-lens-quorum, macro-panel, research-market workflow
@@ -577,7 +577,7 @@ robinhood-connector ───── Robinhood agentic MCP (notification → live
 
 | Skill | Role | Cadence |
 |-------|------|---------|
-| [analyst-smartmoney](analyst-smartmoney/SKILL.md) | Smart-money family orchestrator — runs all spokes and consolidates signals | on-demand |
+| [research-smartmoney](research-smartmoney/SKILL.md) | Smart-money family orchestrator — runs all spokes and consolidates signals | on-demand |
 | [analyst-smartmoney-13f](analyst-smartmoney-13f/SKILL.md) | Pull new institutional 13F buys; dedupe ledger | weekly |
 | [analyst-smartmoney-13d](analyst-smartmoney-13d/SKILL.md) | Real-time SEC 13D/13G activist filings (>5% stake) | weekly |
 | [analyst-smartmoney-ptr](analyst-smartmoney-ptr/SKILL.md) | Pull STOCK Act purchase disclosures; dedupe ledger | weekly |
@@ -628,29 +628,29 @@ robinhood-connector ───── Robinhood agentic MCP (notification → live
 | Skill | Thinker |
 |-------|---------|
 | [macro-panel](macro-panel/SKILL.md) | Conductor — convenes the panel, surfaces agreement vs disagreement |
-| [analytics-lyn-alden](analytics-lyn-alden/SKILL.md) | Fiscal dominance / broad-money / BTC-as-hurdle |
-| [analytics-ray-dalio](analytics-ray-dalio/SKILL.md) | Debt cycles / all-weather risk-parity |
-| [analytics-stanley-druckenmiller](analytics-stanley-druckenmiller/SKILL.md) | Liquidity / timing / position-sizing |
-| [analytics-lacy-hunt](analytics-lacy-hunt/SKILL.md) | Deflation dissent — debt→low-velocity→disinflation |
-| [analytics-michael-pettis](analytics-michael-pettis/SKILL.md) | Trade / capital-flows / China |
-| [analytics-russell-napier](analytics-russell-napier/SKILL.md) | Financial repression / structural-inflation |
-| [analytics-warren-buffett](analytics-warren-buffett/SKILL.md) | Bubble-discipline / quality-value / cash-as-option |
-| [analytics-benjamin-graham](analytics-benjamin-graham/SKILL.md) | Rules-based value origin — margin of safety, Mr. Market |
-| [analytics-morgan-housel](analytics-morgan-housel/SKILL.md) | Behavioral-finance / investor-psychology guardrail |
+| [investor-lyn-alden](investor-lyn-alden/SKILL.md) | Fiscal dominance / broad-money / BTC-as-hurdle |
+| [investor-ray-dalio](investor-ray-dalio/SKILL.md) | Debt cycles / all-weather risk-parity |
+| [investor-stanley-druckenmiller](investor-stanley-druckenmiller/SKILL.md) | Liquidity / timing / position-sizing |
+| [research-lacy-hunt](research-lacy-hunt/SKILL.md) | Deflation dissent — debt→low-velocity→disinflation |
+| [research-michael-pettis](research-michael-pettis/SKILL.md) | Trade / capital-flows / China |
+| [research-russell-napier](research-russell-napier/SKILL.md) | Financial repression / structural-inflation |
+| [investor-warren-buffett](investor-warren-buffett/SKILL.md) | Bubble-discipline / quality-value / cash-as-option |
+| [investor-benjamin-graham](investor-benjamin-graham/SKILL.md) | Rules-based value origin — margin of safety, Mr. Market |
+| [research-morgan-housel](research-morgan-housel/SKILL.md) | Behavioral-finance / investor-psychology guardrail |
 
 ### Analytics / book-grounded lenses
 
 | Skill | Source |
 |-------|--------|
 | [analyst-systematic-trading](analyst-systematic-trading/SKILL.md) | Robert Carver *Systematic Trading* |
-| [analyst-technical-analysis](analyst-technical-analysis/SKILL.md) | Jacob Bernstein *The Ultimate Day Trader* |
-| [analyst-crypto](analyst-crypto/SKILL.md) | Michael Howell *Capital Wars* + on-chain |
+| [research-technical](research-technical/SKILL.md) | Jacob Bernstein *The Ultimate Day Trader* |
+| [research-onchain](research-onchain/SKILL.md) | Michael Howell *Capital Wars* + on-chain |
 
 ### Crypto desk
 
 | Skill | Role |
 |-------|------|
-| [crypto-advisor](crypto-advisor/SKILL.md) | Crypto buy-the-dip / DCA orchestrator (loads analyst-crypto internally) |
+| [crypto-advisor](crypto-advisor/SKILL.md) | Crypto buy-the-dip / DCA orchestrator (loads research-onchain internally) |
 | [crypto-chair](crypto-chair/SKILL.md) | Final crypto decision synthesis (brief + panel → recommendation) |
 | [crypto-research-desk](crypto-research-desk/SKILL.md) | Consolidate crypto gather seats → one sourced brief |
 | [crypto-token-screener](crypto-token-screener/SKILL.md) | 6-point value-accrual filter + BTC hurdle rate |

@@ -22,10 +22,10 @@ Return ONLY this shape:
   BLIND SPOT: <one line — what fundamentals structurally cannot see here>
 ```
 
-### Seat 2 — Technical (grounded in `analyst-technical-analysis`, Bernstein Set-Up→Trigger→Follow-Through)
+### Seat 2 — Technical (grounded in `research-technical`, Bernstein Set-Up→Trigger→Follow-Through)
 ```
 You are the TECHNICAL seat. Read ONLY this lens:
-  /Users/engineer/workspace/backtest/.agents/skills/analyst-technical-analysis/SKILL.md
+  /Users/engineer/workspace/backtest/.agents/skills/research-technical/SKILL.md
 Judge ONE stock on the injected data package + the chart description — do not pull any data.
 
 DATA PACKAGE:
@@ -116,7 +116,7 @@ You are the SMART-MONEY seat. Fetch ONLY via web_fetch — NO TradingView, NO yf
 Cover 4 per-ticker disclosed-flow classes for a US equity: Form 4 insider buys, 13F institutional
 holders, 13D/13G activist stakes, congressional PTR buys. Skip market-implied spokes
 (options/dark-pool/polymarket — not per-equity queryable at this resolution; the full
-analyst-smartmoney lens covers them).
+research-smartmoney lens covers them).
 
 ⛔ HARD RULE: web_fetch a real URL before citing any filing, holder, or transaction.
 No fetched URL = not a source. Fabricated filing or transaction → verdict invalidated.
@@ -134,7 +134,7 @@ FETCH (web_fetch each URL; stop early if signal is clear):
   PTR:    https://www.capitoltrades.com/trades?ticker={TICKER}&txType=buy
      ≥3 different members buying → ACC | fewer → NEUTRAL
 
-SYNTHESIS (analyst-smartmoney verdict contract):
+SYNTHESIS (research-smartmoney verdict contract):
   ACCUMULATING if ≥2 classes ACC | DISTRIBUTING if ≥2 classes DIST | else NEUTRAL
   CONVICTION: HIGH ≥3 aligned | MED 2 aligned | LOW 1 | N/A on conflict or NEUTRAL
   Hedge-as-signal check: a 13F put or institutional put block is NOT a buy — never count as ACC.

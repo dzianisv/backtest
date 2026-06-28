@@ -28,7 +28,7 @@ Read the list. Group by convention (this is the discovery rule, not a fixed rost
 - **Panel lenses** — everything matching `analyst-*` and `analytics-*` (each is a thinker/analytic lens). Read each description to match the lens to the query.
 - **Consolidation desk** — `*-research-desk`.
 - **Chair** — `*-chair`.
-- **Behavioral guardrail (non-voting)** — `analytics-morgan-housel`.
+- **Behavioral guardrail (non-voting)** — `research-morgan-housel`.
 
 If new skills were added since this doc was written, you'll see them in the listing — use them. That's the point of discovering live.
 
@@ -51,10 +51,10 @@ Your job: decide the screening strategy + assemble the desk.
    macro, sentiment/regime, news). Pick the discovered skills that fill each; never silently skip a category.
 7. **feeds** — full `feed-*` names relevant to the assets/catalysts (crypto-native by default; add macro feeds when the query is rate/regulation-driven).
 8. **panel_skills** — full names of the VOTING lenses to convene, matched to the query. **Two hard rules**
-   (the workflow also enforces them): include a **bear/dissent** lens (e.g. `analytics-lacy-hunt`) — disagreement
+   (the workflow also enforces them): include a **bear/dissent** lens (e.g. `research-lacy-hunt`) — disagreement
    is never averaged away; and EXCLUDE a lens whose verdict is predetermined for the asset class
-   (`analytics-warren-buffett`/`analytics-benjamin-graham` cannot value a cashless crypto asset).
-9. **guardrail_skill** — the non-voting behavioral seat (`analytics-morgan-housel`).
+   (`investor-warren-buffett`/`investor-benjamin-graham` cannot value a cashless crypto asset).
+9. **guardrail_skill** — the non-voting behavioral seat (`research-morgan-housel`).
 10. **desk_skill** — the consolidation desk for this asset class (e.g. `crypto-research-desk` / `stock-research-desk`).
 11. **chair_skill** — the chair for this asset class (e.g. `crypto-chair` / `stock-chair`).
 12. **chair_framing** — 1–2 sentences on how the chair should frame the final call (the trade-off to resolve).

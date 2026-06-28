@@ -75,6 +75,6 @@ structural context of FINRA TRF reporting rules.
 | Skill | Relationship |
 |---|---|
 | `analyst-smartmoney-positioning` | GEX is also a SqueezeMetrics product; shares the same data source; must be read alongside DIX for regime context |
-| `analyst-smartmoney` | Parent conductor skill that routes across the full smart-money family |
+| `research-smartmoney` | Parent conductor skill that routes across the full smart-money family |
 | `analysis-orderflow` | Lit-market flow counterpart — tape reading, order-flow imbalance, volume-at-price; distinct from off-exchange dark-pool volume |
 | `analyst-smartmoney-13f` / `analyst-smartmoney-13d` | Public SEC disclosures of institutional positions; named-party attribution that dark-pool data cannot provide |

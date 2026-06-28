@@ -17,7 +17,7 @@ coded*. This skill is the **synthesis + router**; the detail lives in `reference
 **Carver, *Systematic Trading* (Harriman House, 2015)** — the book in this repo's `books/`. It is the
 **how-to-build-and-validate** counterpart to `trend-following`, `regime-detection`, `risk-management`,
 `portfolio-construction`, and a future `backtesting` skill, and the rigorous answer to the discretionary
-`analyst-technical-analysis` lens. It **operationalizes the repo mandate (GOAL.md): any strategy must be
+`research-technical` lens. It **operationalizes the repo mandate (GOAL.md): any strategy must be
 backtested with realistic costs before it trades** — Carver's overfitting discipline and cost "speed
 limit" *are* that gate. Load the relevant reference before a load-bearing claim or formula.
 
@@ -130,7 +130,7 @@ automated but not completely trusted is potentially lethal' — automate only on
   trading before a realistic-cost backtest clears. Don't hand-wave it.
 - **Ground load-bearing claims/formulas** in a specific reference (via `references/book-index.md`).
 - **Adjacent authors (Chan, Clenow, Kaufman) are NOT yet distilled** — cite them as pointers, not as
-  this skill's grounded content. `analyst-technical-analysis` is the discretionary counterpart with a
+  this skill's grounded content. `research-technical` is the discretionary counterpart with a
   weak evidence base; systematic + backtested is the rigorous path.
 
 ## Done when

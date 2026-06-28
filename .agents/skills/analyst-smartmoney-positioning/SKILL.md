@@ -12,7 +12,7 @@ metadata:
 
 # Analyst: Derivatives Positioning (how the market is positioned + what it prices)
 
-This skill is part of the `analyst-smartmoney` family; the parent `analyst-smartmoney` skill synthesizes its output with the other spokes.
+This skill is part of the `research-smartmoney` family; the parent `research-smartmoney` skill synthesizes its output with the other spokes.
 
 Read the market *beneath spot*: where leverage sits, what options price, who is offside. Two halves —
 **futures/flow** and **options/implied** — read **together** (funding without skew is half a picture).

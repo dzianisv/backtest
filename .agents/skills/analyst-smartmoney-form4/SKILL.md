@@ -1,7 +1,7 @@
 ---
 name: analyst-smartmoney-form4
 description: |
-  SEC Form 4 corporate-insider-buying tracker. Part of the analyst-smartmoney family — the "disclosed flows" spoke with the FASTEST lag (2-business-day filing requirement). Triggers on: "what are insiders buying", "Form 4 tracker", "insider cluster buys in TICKER", "are executives buying their own stock", "CEO/CFO purchases", "run the insider watcher", "is the CEO buying", or on a schedule.
+  SEC Form 4 corporate-insider-buying tracker. Part of the research-smartmoney family — the "disclosed flows" spoke with the FASTEST lag (2-business-day filing requirement). Triggers on: "what are insiders buying", "Form 4 tracker", "insider cluster buys in TICKER", "are executives buying their own stock", "CEO/CFO purchases", "run the insider watcher", "is the CEO buying", or on a schedule.
 
   Recommend-only, never trades. Buy-side signal only (sells are noise — diversification/taxes/10b5-1). Routes to multi-lens-quorum + superforecasting.
 
@@ -9,7 +9,7 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  family: analyst-smartmoney
+  family: research-smartmoney
   lag: 2 business days
   signal: insider-cluster-buy
 ---
@@ -176,7 +176,7 @@ XYZ: ACCUMULATING
 - **Routine traders must be filtered:** same-month-each-year buyers (Cohen-Malloy-Pomorski) are compensation noise. Always check historical filing dates before counting a buyer in the cluster. Report how many were filtered.
 - **No fabrication:** if data is unavailable from EDGAR or OpenInsider, mark `[UNAVAILABLE]` and state what would be needed to confirm.
 
-## Fit in the analyst-smartmoney Family
+## Fit in the research-smartmoney Family
 
 ```
 Form 4 (2-day lag) — fastest disclosed insider flow      ← this skill

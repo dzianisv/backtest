@@ -54,14 +54,14 @@ flowchart TD
 
     subgraph PANEL["Phase 3 · Panel  (parallel lenses)"]
         direction LR
-        P1[analytics-lyn-alden]
-        P2[analytics-ray-dalio]
+        P1[investor-lyn-alden]
+        P2[investor-ray-dalio]
         P3[analytics-druckenmiller]
-        P4[analytics-lacy-hunt]
-        P5[analytics-russell-napier]
+        P4[research-lacy-hunt]
+        P5[research-russell-napier]
         P6[fundamental-analysis]
-        P7[analyst-technical-analysis]
-        P8[analytics-warren-buffett]
+        P7[research-technical]
+        P8[investor-warren-buffett]
         GRD["`**guardrail**
         *(non-voting)*
         FOMO / sizing / drawdown check`"]

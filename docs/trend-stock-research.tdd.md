@@ -75,11 +75,11 @@ For equity research, typical lens set:
 | Seat | Skill | Focus |
 |---|---|---|
 | Fundamental | `fundamental-analysis` | valuation, FCF, moat, quality screen |
-| Macro | `analytics-lyn-alden` or `macro-panel` | regime fit, sector tailwind |
+| Macro | `investor-lyn-alden` or `macro-panel` | regime fit, sector tailwind |
 | Positioning | `analyst-derivatives-positioning` | how market is currently positioned |
 | Systematic | `analyst-systematic-trading` | whether the entry rule is systematic and testable |
-| Behavioral | `analytics-morgan-housel` | is this chasing, or is this a real opportunity? |
-| Sentiment | `analyst-technical-analysis` | chart setup, set-up→trigger→follow-through |
+| Behavioral | `research-morgan-housel` | is this chasing, or is this a real opportunity? |
+| Sentiment | `research-technical` | chart setup, set-up→trigger→follow-through |
 | Prediction | `superforecasting` (optional) | calibrated probability of the thesis playing out |
 
 **Synthesis rules:**

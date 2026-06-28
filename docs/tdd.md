@@ -143,9 +143,9 @@ same pipeline serially in-agent). Parallelism is the design: independent lenses 
         cross-ref:  bySources[ticker] → Set(source)   ──►  rank by n_sources  ──►  TOP 5            │
                     (ticker in ≥2 sources = elevated conviction)                                    ▼
  PHASE 2  QUORUM           parallel: 5 candidates × 4 lenses  (multi-lens-quorum)                   │
-   ┌ analytics-warren-buffett ┐                                                                     │
-   ┤ analytics-stanley-druckenmiller ├ each → VERDICT {verdict, conviction1-5, reason,              │
-   ┤ analytics-lyn-alden            │              invalidation, dissent}                           │
+   ┌ investor-warren-buffett ┐                                                                     │
+   ┤ investor-stanley-druckenmiller ├ each → VERDICT {verdict, conviction1-5, reason,              │
+   ┤ investor-lyn-alden            │              invalidation, dissent}                           │
    └ fundamental-analysis ──────────┘   (macro-panel = macro backdrop; dissent preserved)           ▼
  PHASE 3  SYNTHESIZE       per candidate → risk-management VETO  (name>10% book OR RISK_OFF → VETO)  │
         final agent writes INVESTMENT BRIEF:                                                        │

@@ -12,7 +12,7 @@ metadata:
 
 # Prediction-Market Odds (the crowd's priced probability)
 
-This skill is part of the `analyst-smartmoney` family; the parent `analyst-smartmoney` skill synthesizes its output with the other spokes.
+This skill is part of the `research-smartmoney` family; the parent `research-smartmoney` skill synthesizes its output with the other spokes.
 
 ## HARD TRIGGER — read this first (added after a real miss)
 

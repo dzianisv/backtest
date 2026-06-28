@@ -104,7 +104,7 @@ narrative noise: if narrative is bullish but flows are negative, the market is t
 | Regulatory news (SEC, CFTC, MiCA, Asia) | Mental model 3 (jurisdiction + clarity class) |
 | Corporate treasury / MicroStrategy / Metaplanet | Mental model 5 (rumor vs fact, telegraphed vs surprise) |
 | Halving, protocol upgrade, fork | Mental model 6 (lead time → priced_in check, social volume) |
-| Macro policy (FOMC, CPI, dollar) | `[[analyst-crypto]]` → liquidity governor; here note only direct crypto narrative overlap |
+| Macro policy (FOMC, CPI, dollar) | `[[research-onchain]]` → liquidity governor; here note only direct crypto narrative overlap |
 | Sentiment vs narrative divergence | Mental model 4 (flow check) + mental model 7 (disconfirmation) |
 | "What changed this week?" summary | Steps 1–6 full run; output the full contract block |
 

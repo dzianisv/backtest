@@ -41,7 +41,7 @@ QUESTION TYPE
      │          → crypto-daytrading or stock-daytrading (only on PASS + human approval)
      │
      └── "manage my crypto book"
-              → crypto-advisor  (loads analyst-crypto internally — don't double-call)
+              → crypto-advisor  (loads research-onchain internally — don't double-call)
 ```
 
 ---
@@ -75,7 +75,7 @@ QUESTION TYPE
 | superforecasting | "where does X go by date?" | logs to forecast-ledger |
 | tradfi-portfolio-manager | weekly note | REVIEW→ASSESS→RESEARCH→DECIDE→ORDER |
 | hedge-fund-manager | "run the fund" | PM/CIO that delegates all of the above |
-| crypto-advisor | "manage crypto book" | includes analyst-crypto internally |
+| crypto-advisor | "manage crypto book" | includes research-onchain internally |
 | defi-portfolio-manager | "manage DeFi positions" | separate from tradfi book |
 
 ### Always-first gate (invariant — never bypass)
@@ -88,14 +88,14 @@ QUESTION TYPE
 
 These are sub-skills. Call them via their orchestrator, not directly:
 
-`regime-detection` (inside hedge-fund-manager), `analyst-crypto` (inside crypto-advisor),
+`regime-detection` (inside hedge-fund-manager), `research-onchain` (inside crypto-advisor),
 `crypto-research-desk`, `stock-research-desk`, `crypto-chair`, `stock-chair`,
 `research-manager`, `portfolio-construction`, `risk-management`, `rebalancing`,
 `dip-tranches-strategy`, `tax-loss-harvesting`, `trend-following`, all `feed-*` adapters,
 all `analytics-*` lenses (consumed by macro-panel or multi-lens-quorum),
 all `analyst-*` lenses (consumed by multi-lens-quorum),
-`analyst-smartmoney` (family orchestrator — runs spokes; use directly or via hedge-fund-committee),
-`analyst-smartmoney-options`, `analyst-smartmoney-darkpool` (analytical — consumed by multi-lens-quorum or analyst-smartmoney).
+`research-smartmoney` (family orchestrator — runs spokes; use directly or via hedge-fund-committee),
+`analyst-smartmoney-options`, `analyst-smartmoney-darkpool` (analytical — consumed by multi-lens-quorum or research-smartmoney).
 
 ### Evaluation / quality (meta — not part of the fund loop)
 
@@ -148,5 +148,5 @@ Skills audited: 63 total.
 
 No consolidation needed beyond the 2 already-deprecated. Duplication risk is semantic, not structural:
 - `trend-stock-research` (WHO) vs `multi-lens-quorum` (WHETHER) vs `superforecasting` (WHEN) — non-overlapping.
-- `crypto-advisor` vs `analyst-crypto` — advisor LOADS analyst; never call both separately.
+- `crypto-advisor` vs `research-onchain` — advisor LOADS analyst; never call both separately.
 - `macro-panel` vs `multi-lens-quorum` — macro-panel = thinker personas on macro; quorum = any lens on any question.

@@ -15,7 +15,7 @@ metadata:
 Apply this lens to **interpret raw on-chain numbers** into a cycle-phase zone verdict with a confidence level.
 This skill is the **interpretation layer only**; raw metric fetching lives in `[[crypto-onchain-data]]`
 (`python3 .agents/skills/crypto-onchain-data/onchain_fetch.py`). It is the rigorous on-chain answer to
-"where is BTC in its cycle" — one structured pillar within the broader `analyst-crypto` lens-stack.
+"where is BTC in its cycle" — one structured pillar within the broader `research-onchain` lens-stack.
 
 ## The unifying worldview (everything connects to this)
 
@@ -96,8 +96,8 @@ stay patient.
 | LTH/STH supply split, long-term holder accumulation vs distribution | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
 | Exchange inflows/outflows, supply on exchanges, sell pressure | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
 | Overall zone verdict, confidence, "is BTC cheap or expensive" | This skill — run all metrics, score, output verdict |
-| How to size deployment, DCA schedule, vol target | `analyst-crypto` → `references/04-execution-dca-and-sizing.md` |
-| Liquidity governor, global liquidity cycle, Howell phases | `analyst-crypto` → `references/01-global-liquidity-and-btc.md` |
+| How to size deployment, DCA schedule, vol target | `research-onchain` → `references/04-execution-dca-and-sizing.md` |
+| Liquidity governor, global liquidity cycle, Howell phases | `research-onchain` → `references/01-global-liquidity-and-btc.md` |
 
 ## Output contract
 
@@ -142,7 +142,7 @@ SIGNAL COUNT: 3 ACCUMULATE, 0 TRIM, 3 NEUTRAL
 ZONE VERDICT: FAIR VALUE leaning DEEP VALUE — signals are constructive but MVRV-Z and NUPL show no extreme cheapness
 CONFIDENCE: MED (3 of 6 metrics aligned ACCUMULATE; the two headline metrics are neutral)
 INVALIDATION: Verdict flips to ELEVATED if MVRV-Z crosses 4.0 or NUPL enters belief phase (>0.5) with exchange inflows turning positive.
-NOTE: On-chain alone is one pillar. Route through `analyst-crypto` for the liquidity governor (Howell phases) before sizing a deploy decision."
+NOTE: On-chain alone is one pillar. Route through `research-onchain` for the liquidity governor (Howell phases) before sizing a deploy decision."
 </example>
 
 ## Honesty rules (non-negotiable)
@@ -155,7 +155,7 @@ NOTE: On-chain alone is one pillar. Route through `analyst-crypto` for the liqui
   FAIR VALUE / LOW confidence, not a cherry-picked bullish read.
 - **Every metric decays — re-pull live** (Glassnode, LookIntoBitcoin, CryptoQuant) before any deploy
   decision. The `asof` field is mandatory; do not interpret a reading without it.
-- **This is one pillar.** On-chain valuation is the *level* in the `analyst-crypto` lens-stack — it does
+- **This is one pillar.** On-chain valuation is the *level* in the `research-onchain` lens-stack — it does
   not replace the liquidity governor (the tide) or sentiment (the modulator). Always note whether on-chain
   and liquidity are aligned or in tension.
 - **Educational only.** This is not financial advice. Zone calls are analytical outputs, not instructions.
@@ -166,4 +166,4 @@ The analysis (1) fetches **all six metrics** via `[[crypto-onchain-data]]` with 
 (2) scores each metric independently as ACCUMULATE / NEUTRAL / TRIM / [UNAVAILABLE], (3) counts signal
 alignment and resolves to one of the four **zone verdicts** with a **confidence level**, (4) states a clear
 **invalidation condition**, and (5) notes any conflicts honestly and reminds that on-chain is one pillar —
-the liquidity governor in `analyst-crypto` sits above it.
+the liquidity governor in `research-onchain` sits above it.

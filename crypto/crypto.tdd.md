@@ -81,8 +81,8 @@ The dedup/store/embed boundary lives in **"Hybrid news store"** (above), not her
 ### Phase 3 — Panel (each lens reads the SAME brief; structured verdict)
 Voting lenses and the non-voting guardrail are **manager-selected at runtime** by reading the live skill catalog — not frozen here. Hard rules the manager enforces (also enforced by the workflow as a fallback):
 - A **bear/dissent** seat is always on the panel (never averaged away).
-- Lenses with predetermined verdicts for the asset class are excluded (`analytics-warren-buffett` / `analytics-benjamin-graham` for cashless crypto assets).
-- Non-voting guardrail: `analytics-morgan-housel` (process + survivable sizing; can veto sizing, not the asset call).
+- Lenses with predetermined verdicts for the asset class are excluded (`investor-warren-buffett` / `investor-benjamin-graham` for cashless crypto assets).
+- Non-voting guardrail: `research-morgan-housel` (process + survivable sizing; can veto sizing, not the asset call).
 
 ### Phase 4 — Decide
 Chair: agreement / disagreement (preserved) / tally / decision / tranche plan / key risks / invalidation.

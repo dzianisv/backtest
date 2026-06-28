@@ -8,9 +8,9 @@ public repository.
 
 | Title | Author | Year | Why it matters |
 | --- | --- | --- | --- |
-| *The Psychology of Money* | Morgan Housel | 2020 | Primary source for the `analytics-morgan-housel` behavioral-finance lens. |
-| *The Ultimate Day Trader* | Jacob Bernstein | 2009 | Primary source for the `analyst-technical-analysis` trading-discipline lens. |
-| *Capital Wars* | Michael J. Howell | 2024 | Primary source for the `analyst-crypto` liquidity-and-crypto lens. |
+| *The Psychology of Money* | Morgan Housel | 2020 | Primary source for the `research-morgan-housel` behavioral-finance lens. |
+| *The Ultimate Day Trader* | Jacob Bernstein | 2009 | Primary source for the `research-technical` trading-discipline lens. |
+| *Capital Wars* | Michael J. Howell | 2024 | Primary source for the `research-onchain` liquidity-and-crypto lens. |
 | *Systematic Trading* | Robert Carver | 2015 | Primary source for the `analyst-systematic-trading` backtest-and-sizing lens. |
 
 ## Repo policy

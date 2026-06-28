@@ -161,8 +161,8 @@ After collecting all signals above, do the following synthesis:
    - State the question: "Should I BUY / ADD / HOLD / TRIM / SELL [TICKER] given the current
      macro backdrop and what I already own?"
    - Convene 4-6 independent lenses: choose from analyst-systematic-trading,
-     analytics-lyn-alden, analytics-ray-dalio, analytics-warren-buffett,
-     analytics-stanley-druckenmiller, fundamental-analysis, analyst-technical-analysis.
+     investor-lyn-alden, investor-ray-dalio, investor-warren-buffett,
+     investor-stanley-druckenmiller, fundamental-analysis, research-technical.
    - Each lens reads the question + the signal evidence, then gives:
      VERDICT (BUY/HOLD/SELL) + CONVICTION (1-5) + ONE REASON + WHAT WOULD CHANGE MY MIND.
    - Synthesize the quorum. Preserve dissent.

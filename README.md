@@ -192,62 +192,62 @@ Six-phase dynamic workflow. **`research-manager`** (intake/triage desk head) rea
 -->
 
 <!-- ROW 1 (top=510) -->
-<!-- analytics-lyn-alden -->
+<!-- investor-lyn-alden -->
 <circle cx="185" cy="523" r="11" fill="#6366f1"/>
 <rect x="173" y="534" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="185" y="567" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Lyn Alden</text>
-<text x="185" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-lyn-alden</text>
+<text x="185" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">investor-lyn-alden</text>
 <text x="185" y="590" text-anchor="middle" fill="#888" font-size="9">macro-monetary</text>
 
-<!-- analytics-ray-dalio -->
+<!-- investor-ray-dalio -->
 <circle cx="410" cy="523" r="11" fill="#6366f1"/>
 <rect x="398" y="534" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="410" y="567" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Ray Dalio</text>
-<text x="410" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-ray-dalio</text>
+<text x="410" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">investor-ray-dalio</text>
 <text x="410" y="590" text-anchor="middle" fill="#888" font-size="9">debt cycle</text>
 
-<!-- analytics-stanley-druckenmiller -->
+<!-- investor-stanley-druckenmiller -->
 <circle cx="635" cy="523" r="11" fill="#6366f1"/>
 <rect x="623" y="534" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="635" y="567" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Druckenmiller</text>
-<text x="635" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-stanley-druckenmiller</text>
+<text x="635" y="579" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">investor-stanley-druckenmiller</text>
 <text x="635" y="590" text-anchor="middle" fill="#888" font-size="9">momentum / risk</text>
 
 <!-- ROW 2 (top=614) -->
-<!-- analytics-lacy-hunt -->
+<!-- research-lacy-hunt -->
 <circle cx="185" cy="627" r="11" fill="#6366f1"/>
 <rect x="173" y="638" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="185" y="671" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Lacy Hunt</text>
-<text x="185" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-lacy-hunt</text>
+<text x="185" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">research-lacy-hunt</text>
 <text x="185" y="694" text-anchor="middle" fill="#888" font-size="9">deflation dissent</text>
 
-<!-- analytics-warren-buffett -->
+<!-- investor-warren-buffett -->
 <circle cx="410" cy="627" r="11" fill="#6366f1"/>
 <rect x="398" y="638" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="410" y="671" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Buffett / Graham</text>
-<text x="410" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-warren-buffett</text>
+<text x="410" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">investor-warren-buffett</text>
 <text x="410" y="694" text-anchor="middle" fill="#888" font-size="9">value + margin of safety</text>
 
-<!-- analytics-michael-pettis -->
+<!-- research-michael-pettis -->
 <circle cx="635" cy="627" r="11" fill="#6366f1"/>
 <rect x="623" y="638" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="635" y="671" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Pettis</text>
-<text x="635" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-michael-pettis</text>
+<text x="635" y="683" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">research-michael-pettis</text>
 <text x="635" y="694" text-anchor="middle" fill="#888" font-size="9">global imbalances</text>
 
 <!-- ROW 3 (top=718) -->
-<!-- analytics-russell-napier -->
+<!-- research-russell-napier -->
 <circle cx="185" cy="731" r="11" fill="#6366f1"/>
 <rect x="173" y="742" width="24" height="18" rx="6" fill="#6366f1"/>
 <text x="185" y="775" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Russell Napier</text>
-<text x="185" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-russell-napier</text>
+<text x="185" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">research-russell-napier</text>
 <text x="185" y="798" text-anchor="middle" fill="#888" font-size="9">financial repression</text>
 
-<!-- analytics-morgan-housel — NON-VOTING, slate gray -->
+<!-- research-morgan-housel — NON-VOTING, slate gray -->
 <circle cx="410" cy="731" r="11" fill="#94a3b8"/>
 <rect x="398" y="742" width="24" height="18" rx="6" fill="#94a3b8"/>
 <text x="410" y="775" text-anchor="middle" fill="#111" font-weight="600" font-size="11">Morgan Housel</text>
-<text x="410" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">analytics-morgan-housel</text>
+<text x="410" y="787" text-anchor="middle" fill="#555" font-size="7.5" font-family="monospace">research-morgan-housel</text>
 <text x="410" y="798" text-anchor="middle" fill="#888" font-size="9">behavioral guard · non-voting</text>
 
 <!-- superforecasting -->
@@ -491,11 +491,11 @@ npx skills add dzianisv/financial-advisor-agents
 That's the whole setup. **You don't run a workflow or type a slash command** — the skills route themselves from what you say. After install, just ask:
 
 ```
-"Should I buy the dip on BTC today?"          → crypto-dip-scanner / analyst-crypto
+"Should I buy the dip on BTC today?"          → crypto-dip-scanner / research-onchain
 "What did Buffett just buy?"                   → analyst-smartmoney-13f
 "Run the weekly committee."                    → agentic-fund-orchestration
 "What's the market regime right now?"          → regime-detection
-"What would Lyn Alden think of this?"          → analytics-lyn-alden
+"What would Lyn Alden think of this?"          → investor-lyn-alden
 "Is there a multi-source convergence signal?"  → signal-convergence-alert
 ```
 
@@ -556,7 +556,19 @@ Manages a **~$177k crypto book** with a BTC-as-hurdle filter — only deploy int
 
 Full spec: [`crypto/`](crypto/) — `crypto.goal.md` · `crypto.prd.md` · `crypto.tdd.md` · `crypto.loop.md`
 
-**Status:** skill tree designed + specced; G-Eval harness baselined (85/100); crypto.loop.md orchestrates daily dip-scan + weekly research desk cycle.
+**Panel architecture:** 5 school-based analyst seats run in parallel per token. Each seat owns its own data source — the technical seat uses TradingView MCP directly; others independently fetch DeFiLlama, F&G index, and news. The orchestrator (`crypto-advisor`) only passes `{ token, price_usd }` — no shared data package.
+
+| Seat | School | Data source |
+|---|---|---|
+| Trend | Druckenmiller / Carver | TradingView MCP (direct) |
+| Value | Graham / Klarman | web_fetch: price history, ATH |
+| Quality | Buffett / Fisher | web_fetch: DeFiLlama revenue + TVL |
+| Cycle | Dalio / Templeton | web_fetch: F&G index + macro news |
+| On-chain | Burniske | web_fetch: DeFiLlama fee distribution |
+
+Full spec: [`docs/crypto-advisor-panel.prd.md`](docs/crypto-advisor-panel.prd.md) · [`docs/crypto-advisor-panel.tdd.md`](docs/crypto-advisor-panel.tdd.md)
+
+**Status:** Panel redesign complete (PRD + TDD shipped). Skill rewrite in progress. G-Eval baseline: 3.5/5 (signal_correctness and source_discipline are the gaps).
 
 ---
 
@@ -626,18 +638,20 @@ Full spec: [`crypto/`](crypto/) — `crypto.goal.md` · `crypto.prd.md` · `cryp
 
 | Skill | Description |
 |---|---|
-| `analyst-crypto` | Crypto analyst lens |
+| `research-onchain` | Crypto analyst lens |
 | `analyst-systematic-trading` | Systematic/quant trading lens |
-| `analyst-technical-analysis` | Technical analysis lens |
-| `analytics-benjamin-graham` | Value investing (Graham) lens |
-| `analytics-lacy-hunt` | Deflationary/rates dissent lens (bear seat) |
-| `analytics-lyn-alden` | Lyn Alden macro/monetary lens |
-| `analytics-michael-pettis` | Global imbalances / trade lens (Pettis) |
-| `analytics-morgan-housel` | Behavioral/sizing guardrail (non-voting) |
-| `analytics-ray-dalio` | Macro cycles lens (Dalio) |
-| `analytics-russell-napier` | Credit/financial repression lens (Napier) |
-| `analytics-stanley-druckenmiller` | Macro momentum lens (Druckenmiller) |
-| `analytics-warren-buffett` | Business quality / intrinsic value lens (equity only) |
+| `research-technical` | Technical analysis lens |
+| `investor-benjamin-graham` | Value investing (Graham) lens |
+| `research-lacy-hunt` | Deflationary/rates dissent lens (bear seat) |
+| `investor-lyn-alden` | Lyn Alden macro/monetary lens |
+| `research-michael-pettis` | Global imbalances / trade lens (Pettis) |
+| `research-morgan-housel` | Behavioral/sizing guardrail (non-voting) |
+| `investor-ray-dalio` | Macro cycles lens (Dalio) |
+| `research-russell-napier` | Credit/financial repression lens (Napier) |
+| `investor-stanley-druckenmiller` | Macro momentum lens (Druckenmiller) |
+| `investor-warren-buffett` | Business quality / intrinsic value lens (equity only) |
+| `research-defi` | DeFi on-chain seat (Burniske value-accrual) — DeFiLlama protocol revenue + fee distribution |
+| `tradingview-fetch` | Fetches TradingView OHLCV + indicators for a token list, writes to .cache/tradingview/{date}/ |
 | `macro-panel` | Multi-thinker macro panel conductor |
 | `fundamental-analysis` | Equity fundamentals analysis |
 | `superforecasting` | Tetlock-style probabilistic forecasting |
