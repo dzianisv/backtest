@@ -243,9 +243,9 @@ phase('Committee')
 // Lyn-Alden overlaps Hunt — excluded. fundamental-analysis overlapped Buffett — replaced by superforecasting.)
 const LENSES = [
   { key: 'pm-advocate',                     skill: null },                            // OFFENSE: builds the bull case + staged entry
-  { key: 'analytics-warren-buffett',        skill: 'analytics-warren-buffett' },      // quality / business-value
-  { key: 'analytics-stanley-druckenmiller', skill: 'analytics-stanley-druckenmiller' }, // timing / liquidity / tape
-  { key: 'analytics-lacy-hunt',             skill: 'analytics-lacy-hunt' },           // PROTECTED deflation / macro-dissent seat
+  { key: 'investor-warren-buffett',        skill: 'investor-warren-buffett' },      // quality / business-value
+  { key: 'investor-stanley-druckenmiller', skill: 'investor-stanley-druckenmiller' }, // timing / liquidity / tape
+  { key: 'research-lacy-hunt',             skill: 'research-lacy-hunt' },           // PROTECTED deflation / macro-dissent seat
   { key: 'superforecasting',                skill: 'superforecasting' },              // outside view / base rates
 ]
 const TWO_Q = `Answer TWO SEPARATE questions and DO NOT let one bleed into the other:\n` +
@@ -265,7 +265,7 @@ const lensPrompt = (cand, lens) => {
 const judged = await parallel(TOP.map(cand => () =>
   parallel(LENSES.map(lens => () =>
     agent(lensPrompt(cand, lens),
-      { label: `vote:${cand.ticker}:${lens.key.replace('analytics-', '')}`, phase: 'Committee', schema: VOTE, model: MODEL })
+      { label: `vote:${cand.ticker}:${lens.key.replace(/^(analytics|investor|research)-/, '')}`, phase: 'Committee', schema: VOTE, model: MODEL })
       .then(v => ({ lens: lens.key, ...v }))
   )).then(votes => ({ ...cand, votes: votes.filter(Boolean) }))
 ))

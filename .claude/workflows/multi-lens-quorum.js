@@ -23,10 +23,10 @@ const date = A.date || 'undated'
 // Default 5-lens set chosen to DISAGREE across return-drivers, incl. a value-dissent seat (Graham).
 const DEFAULT_LENSES = [
   'analyst-systematic-trading', // Carver — discipline/sizing/cost speed limit
-  'analytics-benjamin-graham',  // value / "is this even an investment" DISSENT seat
-  'analytics-lyn-alden',        // structural-inflation / scarce-asset bull
-  'analytics-morgan-housel',    // behavioral guardrail / don't-blow-up
-  'analytics-stanley-druckenmiller', // liquidity-driven tactician / timing & sizing
+  'investor-benjamin-graham',  // value / "is this even an investment" DISSENT seat
+  'investor-lyn-alden',        // structural-inflation / scarce-asset bull
+  'research-morgan-housel',    // behavioral guardrail / don't-blow-up
+  'investor-stanley-druckenmiller', // liquidity-driven tactician / timing & sizing
 ]
 let lenses = (Array.isArray(A.lenses) && A.lenses.length) ? A.lenses : DEFAULT_LENSES
 if (lenses.length < 4) throw new Error(`quorum needs >=4 divergent lenses; got ${lenses.length}`)

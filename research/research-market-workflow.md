@@ -56,7 +56,7 @@ flowchart TD
         direction LR
         P1[investor-lyn-alden]
         P2[investor-ray-dalio]
-        P3[analytics-druckenmiller]
+        P3[investor-stanley-druckenmiller]
         P4[research-lacy-hunt]
         P5[research-russell-napier]
         P6[fundamental-analysis]

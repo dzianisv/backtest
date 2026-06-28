@@ -361,8 +361,8 @@ const quorumResults = await parallel(quorumCandidates.map(s => () => {
     `- Does the demand-inflection thesis hold from your framework's perspective?\n` +
     `- Is the invalidator (what_would_change_mind) likely or unlikely in your view?\n` +
     `- Given the catalyst + timeline, is the timing right or premature?\n\n` +
-    `Use 4-5 lenses from: analytics-warren-buffett, analytics-stanley-druckenmiller, ` +
-    `analyst-systematic-trading, analyst-technical-analysis, analytics-lyn-alden.\n` +
+    `Use 4-5 lenses from: investor-warren-buffett, investor-stanley-druckenmiller, ` +
+    `analyst-systematic-trading, research-technical, investor-lyn-alden.\n` +
     `Return: ticker, verdict (BUY/SCALE_IN/WATCHLIST/PASS), consensus, dissent, sizing, invalidation, confidence.`,
     { label: `quorum-${ticker}`, phase: 'Quorum', schema: QUORUM_SCHEMA, model: MODEL }
   )
