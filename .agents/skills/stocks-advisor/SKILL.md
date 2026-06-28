@@ -277,6 +277,26 @@ name does not scale (a 50-80 name book = thousands of MCP calls). So TradingView
 
 ---
 
+## Step 0.85 — Edge Articulation Gate (Cohen mechanism — applies to deep-dive subset only)
+
+Before spawning the full 5-seat panel for a name, state the **EDGE HYPOTHESIS** in one sentence:
+
+> "We believe {TICKER} is mispriced because [specific information or analytical insight] that the market has not yet priced."
+
+Name the edge type:
+- **INFORMATION EDGE** — data point not yet reflected (unreported earnings trend, filing detail, supply-chain signal from a web_fetch source)
+- **ANALYTICAL EDGE** — correct interpretation of public data the consensus has misread (sector rotation, EPS quality, segment mix)
+- **TIMING EDGE** — catalyst visible from feeds but not yet priced (specific date/event ≤ 2 quarters out)
+- **STRUCTURAL EDGE** — index/ETF flow, spinoff, forced-seller, or spread compression creating a temporary mispricing
+
+**Hard gate: if no edge can be stated → skip the full 5-seat panel for this name.** Keep it in the fundamentals-only screen (Step 0.8) and add it to WATCH with note `NO_EDGE — no identifiable information/analytical advantage; pass this run.`
+
+No edge = no deep-dive. This is structural, not advisory. The edge statement goes into the output block header and must be re-checked at the CIO step — if the CIO cannot confirm the edge, PASS is the correct verdict.
+
+> Source: Point72/SAC Capital operating model — "edge articulation" is the mandatory first check before any position research begins; ideas without a named edge are rejected before consuming analytical resources. Prevents narrative-driven trading and forces analysts to commit to WHY before HOW.
+
+---
+
 ## Step 0.9 — Macro-regime synthesis (run ONCE before the per-stock loop)
 
 Produce a single shared macro-regime paragraph that all seats receive in their data package — the market
@@ -497,6 +517,17 @@ INVALIDATION CONDITIONS (all three required before any BUY advances):
   (b) {falsifiable condition 2}
   (c) {falsifiable condition 3}
 
+PORTFOLIO TAIL STRESS (required — both numbers, no omissions):
+  (a) -30% drawdown in {TICKER}: dollar impact on book at current weight = ${amount} ({weight}% × book × 0.30)
+  (b) -50% worst-case: dollar impact at current + proposed add size = ${amount}
+  State: "At {weight}% of a ${book_size} book, a -30% move costs ${x}; -50% costs ${y}."
+
+CITATION AUDIT — tag every factual claim you make:
+  [LIVE] = verified this run via web_fetch, feed script, fundamentals.py, or TradingView
+  [FILED] = specific SEC filing (name it: 10-Q Q1'26, Form 4 2026-05-15, etc.)
+  [MEM] = training-data recall (undated, not confirmed this run)
+  Rule: if TAIL RISK or HISTORICAL ANALOG rests solely on [MEM] → add ⚠️[MEM-only] flag; CIO must address it in DISSENT LOGGED.
+
 SKEPTIC VERDICT: {SKIP | WATCH | BUY} — {one sentence explaining the controlling factor}
 Inputs: {ALL_5_SEAT_VERDICTS_JSON} | {MACRO_REGIME}
 ```
@@ -700,6 +731,31 @@ A name is in RECAP **or** SETUP ALERTS, never both — high-confidence-now and b
 exclusive. After printing SETUP ALERTS, offer to register them via the `mkt` skill. Required in BOTH normal
 and DEGRADED_TECH mode; in DEGRADED mode the alert conditions are MA/price levels (no live bar-close trigger).
 
+**EXECUTION TABLE — P0/P1/P2/P3 (Soros format — cross-portfolio priority, runs after SETUP ALERTS)**
+
+Rank all BUY/ADD/EXIT/TRIM verdicts by portfolio urgency, with exact share counts and triggers. This is the
+actionable to-do list — one row per decision, ordered from most-urgent to watchlist:
+
+```
+EXECUTION TABLE ({DATE})
+Priority  Ticker  Action    Shares  Entry zone    Trigger                  Port %   Falsification
+--------  ------  ------    ------  ----------    -------                  ------   -------------
+P0        {TICK}  EXIT      all     market open   immediately — thesis broken (state the break)
+P1        {TICK}  ADD       N shr   $X–$Y         close > $Z on D ({date})   +X%    {specific condition that kills the add}
+P2        {TICK}  ADD       N shr   $X–$Y         pullback to $W + RSI<40    +X%    {specific condition}
+P3        {TICK}  WATCH     —       —             RSI<30 / close > $Z        —      {alert registered via mkt}
+```
+
+Priority tiers:
+- **P0** — act at open, no conditions. Triggered by a thesis break already confirmed (disclosed earnings miss, management departure, position limit breach). No P0 without a named trigger already fired.
+- **P1** — act this week if trigger fires. Conviction ≥ 4/5, setup named, Risk Manager APPROVED.
+- **P2** — act this quarter if condition met. Conviction 3/5, waiting for a cleaner entry level.
+- **P3** — watchlist, alert registered via `mkt` skill. Conviction ≤ 2/5 or condition is multi-week away.
+
+**Share count rule:** use Risk Manager's APPROVED size ($amount) ÷ entry_high. Round to nearest 5 shares. State the dollar amount alongside the share count.
+
+> Source: Soros/Druckenmiller Quantum Fund operating model — explicit P0/P1/P2/P3 execution table forces ranking of actions by urgency; prevents the common failure mode where all BUY signals are treated as equally urgent and nothing gets executed. Adding to winners (P1 = market confirms thesis) is systematic, not discretionary. Bridgewater All Weather allocation principle: cash deployment priority is determined by portfolio-level fit (fills a gap, reduces concentration) rather than ticker-level conviction alone.
+
 ---
 
 ## Step 4 — Portfolio-synthesis seat (run inline AFTER per-stock loop completes)
@@ -869,6 +925,10 @@ $280 trigger rule must clear strategy-discovery-backtest before risking capital.
       output block. BUY/ADD verdicts without a Risk Manager result are invalid. Risk JSON at `seat_risk.json`.
 - [ ] **Circle of Competence check passed** — the CIO stated the revenue model in 2 sentences before proceeding;
       PASS verdicts list "circle of competence: unclear" as the block reason, not a score.
+- [ ] **Edge Articulation Gate ran** (Step 0.85) — every deep-dive ticker has a named edge (INFORMATION/ANALYTICAL/TIMING/STRUCTURAL) in its output block header. Tickers with NO_EDGE stayed fundamentals-only and are listed as WATCH in the signal table with the NO_EDGE note.
+- [ ] **Citation audit tags present** — Skeptic's TAIL RISK and HISTORICAL ANALOG carry [LIVE]/[FILED]/[MEM] tags. Any [MEM]-only claim is flagged ⚠️[MEM-only] and the CIO addressed it in DISSENT LOGGED.
+- [ ] **Portfolio tail stress numbers present** — Skeptic output includes explicit -30% and -50% dollar impact at current weight for every BUY/ADD ticker (Step 2 Skeptic prompt).
+- [ ] **P0/P1/P2/P3 Execution Table present** — printed after SETUP ALERTS (Step 3.6); all BUY/ADD/EXIT/TRIM verdicts appear in the table with share counts, entry zones, triggers, and falsification conditions. No P0 without a named trigger already fired.
 
 ## Set a buy-alert (notify-me-when) — for WATCH verdicts
 
