@@ -2,6 +2,8 @@
 
 Analyzes individual stocks one at a time — runs a **5-seat analyst panel** (fundamental / technical / narrative / sentiment / smart-money) per stock and outputs a concrete **entry plan** (price zone + bar-close trigger + market-based stop) with a **BUY / WATCH / SKIP** decision.
 
+For portfolio reviews: outputs HOLD / ADD / TRIM / EXIT per position with a tax-harvest table, cash deployment plan, and a cross-portfolio synthesis seat.
+
 Input: user-supplied ticker list, a Google Sheet of holdings, or stocks discovered live from a named market theme.
 
 > Educational analysis, not financial advice. Single stocks are satellites; the index is the bar.
@@ -19,6 +21,16 @@ gws sheets +read
 ticker, qty, cost_basis, pnl_pct"]
     SEED["Step 1 · Seed todo list
 INSERT INTO todos per ticker"]
+
+    MACRO["Step 0.9 · Macro-regime synthesis — run ONCE
+WSJ feeds/wsj.ts --feed markets,economy
+FT feeds/ft.ts --section markets,global-economy
+Yahoo Finance breadth
+→ 5-sentence paragraph:
+  Fed/rates · Growth · Inflation · Geopolitics · Liquidity
+Anti-hallucination: every sentence = named dateable fact
+Save to RUN_DIR/macro_regime.txt
+Inject into ALL seat data packages as macro_regime"]
 
     subgraph SEQ ["Sequential per-stock loop — ONE ticker at a time (shared TradingView slot)"]
         direction TB
@@ -40,6 +52,7 @@ short pct, inst pct, rec_mean"]
 
         PKG["Assemble data package
 TradingView + yfinance merged
++ macro_regime injected
 + prior_context injected"]
 
         subgraph SEATS ["5 seats — PARALLEL subagents"]
@@ -63,7 +76,7 @@ QUIET_ACCUM / NEUTRAL / CROWDED / EXTREME"]
 
             subgraph NARR ["Seat 3 · Narrative — reads live news"]
                 direction TB
-                SN_DATA["Receives injected data package"]
+                SN_DATA["Receives injected data + macro_regime"]
                 NEWS["read_news.ts --source ft,wsj (discovery)
 feeds/wsj.ts + feeds/ft.ts (citation)
 web_fetch Bloomberg/Reuters (breadth)
@@ -76,7 +89,7 @@ theme durability verdict"]
 
             subgraph SM ["Seat 5 · Smart-Money — disclosed flows"]
                 direction TB
-                SM_IN["Receives injected data package"]
+                SM_IN["Receives injected data + macro_regime"]
                 SM_FETCH["web_fetch per-ticker:
 openinsider.com Form 4 (code P)
 13f.info stock page (net adds/trims)
@@ -105,13 +118,27 @@ bun portfolio-memory/remember.ts"]
         VDT --> PERSIST
     end
 
+    SYNTH["Step 4 · Portfolio-synthesis seat — run ONCE after per-stock loop
+/model opus /effort xhigh — single subagent, cross-position reasoning
+
+Input: all per-stock verdicts + holdings + macro_regime + theme map
+
+Output (5 sections):
+1. FACTOR CORRELATION MAP — group by Fed/USD/oil/AI-capex/China;
+   flag any factor > 25% book weight as CONCENTRATION RISK
+2. OVER-DIVERSIFICATION CRITIQUE — if > 40 names, list index-like
+   positions replaceable by VOO (Carver: marginal benefit falls past ~20)
+3. CROSS-POSITION CONFLICTS — ADD + TRIM pairs sharing same factor
+4. PORTFOLIO STRUCTURE VERDICT — biggest structural risk + single action
+5. CASH DEPLOYMENT PRIORITY — top 3 ADD candidates ranked by portfolio fit"]
+
     SIGNAL["Signal table
 Ticker, Decision, Conv, Entry zone, Trigger, Theme"]
     CHAIR[["stock-chair
 portfolio synthesis, sizing, concentration"]]
 
-    USER --> MEM --> SHEET --> SEED --> SEQ
-    PERSIST --> SIGNAL --> CHAIR
+    USER --> MEM --> SHEET --> MACRO --> SEED --> SEQ
+    PERSIST --> SYNTH --> SIGNAL --> CHAIR
 ```
 
 ## Two input modes
@@ -119,17 +146,41 @@ portfolio synthesis, sizing, concentration"]]
 | Mode | Input | Verdicts |
 |---|---|---|
 | **Watchlist / Theme discovery** | Explicit tickers or live theme discovery | BUY / WATCH / SKIP |
-| **Portfolio review** | Google Sheet URL (holdings + cost basis) | HOLD / ADD / TRIM / EXIT + tax-harvest table |
+| **Portfolio review** | Google Sheet URL (holdings + cost basis) | HOLD / ADD / TRIM / EXIT + tax-harvest table + portfolio synthesis |
 
 ## The 5 seats
 
-| Seat | Lens | Output |
-|---|---|---|
-| **Fundamental** | FCF yield, PE, PEG, margins, moat — margin of safety at current price? | STRONG / GOOD / FAIR / POOR |
-| **Technical** (Bernstein) | Set-Up → Trigger → Follow-Through. Named setup + bar-close trigger + market-based stop. No trigger = no trade. | SETUP_NAMED / NO_SETUP / BROKEN |
-| **Narrative / Macro** | `read_news.ts --source ft,wsj` for event discovery; feed scripts for verbatim citation; `web_fetch` for breadth. Theme phase classification. No fabrication. | EARLY / MID / LATE / FADING |
-| **Sentiment** | Contrarian read: short%, institutional%, analyst consensus, RSI extension | QUIET_ACCUM / NEUTRAL / CROWDED / EXTREME |
-| **Smart-Money** | `web_fetch` disclosed flows: Form 4 (openinsider), 13F (13f.info), 13D (EDGAR), PTR (capitoltrades). ≥2 classes agreeing → verdict. No fabrication. | ACCUMULATING / DISTRIBUTING / NEUTRAL |
+| Seat | Lens | Data source | Output |
+|---|---|---|---|
+| **Fundamental** | FCF yield, PE, PEG, margins, moat — margin of safety at current price? | Injected (yfinance) | STRONG / GOOD / FAIR / POOR |
+| **Technical** (Bernstein STF) | Set-Up → Trigger → Follow-Through. Named setup + bar-close trigger + market-based stop. No trigger = no trade. | Injected (TradingView) | SETUP_NAMED / NO_SETUP / BROKEN |
+| **Narrative / Macro** | Theme phase + macro-regime context. `read_news.ts` for discovery; feed scripts for verbatim citation. No fabrication. | Injected + live news | EARLY / MID / LATE / FADING |
+| **Sentiment** | Contrarian read: short%, institutional%, analyst consensus, RSI extension | Injected (yfinance) | QUIET_ACCUM / NEUTRAL / CROWDED / EXTREME |
+| **Smart-Money** | Disclosed flows: Form 4 (openinsider), 13F (13f.info), 13D (EDGAR), PTR (capitoltrades). ≥2 classes agreeing → verdict. | Live web_fetch | ACCUMULATING / DISTRIBUTING / NEUTRAL |
+
+## Step 0.9 — Macro-regime synthesis
+
+Runs **once** before the per-stock loop. Produces a shared 5-sentence paragraph injected into every seat's data package:
+
+| Dimension | Content |
+|---|---|
+| Fed/rates | Fed stance + next meeting expectation + one named CME/FOMC data point |
+| Growth/earnings | Current earnings season signal or GDP read, specific number |
+| Inflation | Latest CPI/PCE print with date |
+| Geopolitics | Single most market-relevant geopolitical fact this week |
+| Liquidity/risk appetite | Equity trend + vol signal (VIX level, index weekly move) |
+
+Anti-hallucination rule: every sentence names a source and a specific, dateable fact. No training-memory claims.
+
+## Step 4 — Portfolio-synthesis seat
+
+Runs **once** after the per-stock loop completes. A single `/model opus /effort xhigh` subagent that reasons across all positions simultaneously — the cross-portfolio view the per-stock loop structurally cannot produce:
+
+1. **Factor correlation map** — groups holdings by shared risk factor; flags >25% concentration
+2. **Over-diversification critique** — if >40 names, identifies index-like positions (Carver: marginal diversification benefit falls past ~20 uncorrelated instruments)
+3. **Cross-position conflicts** — ADD/TRIM pairs sharing the same factor exposure
+4. **Portfolio structure verdict** — biggest structural risk + single highest-impact action
+5. **Cash deployment priority** — top 3 ADD candidates ranked by portfolio-level fit
 
 ## Verdict rules
 
@@ -149,11 +200,12 @@ Smart-money is a conviction modifier (not a primary driver):
 - **TradingView MCP lives only in the orchestrator** — subagents receive injected data, cannot call MCP.
 - **One chart slot** — data pull is strictly sequential, one ticker at a time.
 - **ETF / sleeve allocation** → `tradfi-portfolio-manager`. This skill is individual stocks only.
-- **Portfolio synthesis** → `stock-chair`. This skill stops at per-name entry plans.
+- **Portfolio synthesis** → `stock-chair`. This skill provides the synthesis input; `stock-chair` owns sizing decisions.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `SKILL.md` | Full operating instructions |
+| `SKILL.md` | Full operating instructions with source citations |
 | `scripts/fundamentals.py` | yfinance data helper — writes `{TICKER}.json.out.json` |
+| `references/seat-prompts.md` | Per-seat subagent prompt templates |
