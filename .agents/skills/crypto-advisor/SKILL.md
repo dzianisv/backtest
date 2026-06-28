@@ -25,16 +25,11 @@ independently fetch what they need via web_fetch / DeFiLlama / F&G APIs.
 flowchart TD
     CIO["🎯 CIO Orchestrator\n11 tokens · sequential TV pull"]
 
-    CIO -->|"OHLCV · RSI · BB · MACD\n+ indicators.py MAs"| TREND
+    CIO -->|"token + price_usd"| SEATS
 
-    CIO -->|"token + price\n(minimal)"| VALUE
-    CIO -->|"token + price\n(minimal)"| QUALITY
-    CIO -->|"token + price\n(minimal)"| CYCLE
-    CIO -->|"token + price\n(minimal)"| ONCHAIN
-
-    subgraph SEATS["5 Seats — parallel per token"]
-        TREND["analytics-stanley-druckenmiller\nTrend\n📊 TradingView package\nMA alignment · death cross · RSI"]
-        VALUE["analytics-benjamin-graham\nValue\n🌐 web_fetch: price history\nzone · % below ATH"]
+    subgraph SEATS["5 Seats — parallel per token, each owns its data"]
+        TREND["analyst-technical-analysis\nTrend\n📊 TradingView MCP (direct)\nOHLCV · RSI · BB · MACD · MAs"]
+        VALUE["analytics-benjamin-graham\nValue\n🌐 web_fetch: price · ATH\nzone · margin of safety"]
         QUALITY["analytics-warren-buffett\nQuality\n🌐 web_fetch: DeFiLlama\nrevenue · moat · growth"]
         CYCLE["analytics-ray-dalio\nCycle\n🌐 web_fetch: F&G index\nmacro headlines"]
         ONCHAIN["analysis-onchain-defi\nOn-chain\n🌐 web_fetch: DeFiLlama\nfee distribution · TVL"]
@@ -157,43 +152,25 @@ echo "Artifacts: $RUN_DIR"
 
 ---
 
-## Step 1 — Pre-fetch TradingView data via tradingview-fetch skill
-
-**Before the quorum loop**, run the `tradingview-fetch` skill for all tokens at once:
-
-```
-Run tradingview-fetch for: BTC ETH SOL TON HYPE AAVE JUP UNI AERO PUMP LINK
-```
-
-This writes `.cache/tradingview/{today}/{TOKEN}.json` for every token. Once complete, the quorum loop reads from disk — no MCP calls needed inside the loop or inside any seat.
-
-```bash
-CACHE_DIR=".cache/tradingview/$(date +%F)"
-# After tradingview-fetch completes, verify:
-ls "$CACHE_DIR"/*.json | wc -l   # should equal token count
-```
-
-> **Why a separate skill:** TradingView has a single chart slot. `tradingview-fetch` owns that constraint internally (sequential fetch, one symbol at a time). Once data is on disk, any agent, subagent, or runtime reads plain JSON — no browser, no MCP, no session dependency.
-
----
-
-## Step 1 (quorum loop) — Per-token analysis
+## Step 1 — Sequential per-token quorum
 
 Pick the next `pending` todo, `UPDATE todos SET status='in_progress'`, then for that token:
 
-**1a. Read the Trend seat package from cache.**
+> **Why sequential:** TradingView has a single shared chart slot. The Trend seat uses it directly — two tokens cannot be analyzed in parallel without conflicting on the chart. Other seats (value/quality/cycle/onchain) use their own data sources and could run in parallel across tokens, but for simplicity the loop stays sequential per token.
 
-```bash
-CACHE_DIR=".cache/tradingview/$(date +%F)"
-TREND_PKG=$(cat "$CACHE_DIR/{TOKEN}.json")
-SCREENSHOT="$CACHE_DIR/{TOKEN}.png"
-```
+**1a. Spawn the 5 seats.** Each seat is an independent subagent that owns its own data fetch. Spawn all five in parallel for this token:
 
-View the screenshot inline: `view "$SCREENSHOT"`
+| Seat | Skill | Data source (fetched by the seat itself) |
+|---|---|---|
+| **Trend** | `analyst-technical-analysis` | TradingView MCP — called directly by this seat (Agent tool subagents inherit MCP access) |
+| **Value** | `analytics-benjamin-graham` | `web_fetch` price history, ATH reference, zone computation |
+| **Quality** | `analytics-warren-buffett` | `web_fetch https://defillama.com/protocol/{slug}` — revenue, TVL, moat |
+| **Cycle** | `analytics-ray-dalio` | `web_fetch https://api.alternative.me/fng/?limit=1` + macro headlines |
+| **On-chain** | `analysis-onchain-defi` | `web_fetch https://defillama.com/protocol/{slug}` — fee distribution, accrual |
 
-If the file is missing, run `tradingview-fetch` for that token before continuing.
+Pass to each seat: `{ token: "{TOKEN}", price_usd: {PRICE} }`. Each seat fetches everything else itself.
 
-**1b. Run the 5-seat quorum — each seat owns its own data.** Spawn all five seats **in parallel** (seats share nothing). Trend seat reads from the pre-fetched cache file. All other seats receive only `{ token, price_usd }` and fetch their own data independently.
+> **Single chart slot:** the Trend seat uses TradingView directly. Because only one token can be on the chart at a time, the Trend seat for the NEXT token cannot start until this token's Trend seat completes. The other 4 seats are unconstrained.
 
 | Seat | Skill | Data it fetches itself |
 |---|---|---|
