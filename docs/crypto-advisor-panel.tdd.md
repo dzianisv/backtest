@@ -270,7 +270,13 @@ Both adapters receive the same `data_package` and return the same `{ seat, vote,
 ```python
 # Pseudo-code
 
-seats = ["value", "quality", "cycle", "trend", "onchain"]
+SEAT_SKILLS = {
+    "value":   "analytics-benjamin-graham",       # reuse existing
+    "quality": "analytics-warren-buffett",         # reuse existing
+    "cycle":   "analytics-ray-dalio",              # reuse existing
+    "trend":   "analytics-stanley-druckenmiller",  # reuse existing
+    "onchain": "analysis-onchain-defi",            # new — DeFiLlama value-accrual
+}
 
 MODEL_MAP = {
     "trend":   "claude-haiku-4-5-20251001",   # mechanical/fast
@@ -281,12 +287,12 @@ MODEL_MAP = {
 }
 
 def run_seat(seat_name, data_package):
-    skill_path = f"~/.agents/skills/analysis-{seat_name}/SKILL.md"
+    skill_path = f"~/.agents/skills/{SEAT_SKILLS[seat_name]}/SKILL.md"
     system_prompt = read(skill_path)
     result = Agent(
         model=MODEL_MAP[seat_name],
         system=system_prompt,
-        prompt=json.dumps(data_package),
+        prompt=json.dumps(data_package) + "\n\nReturn ONLY: {\"vote\": \"BULLISH|NEUTRAL|BEARISH\", \"reason\": \"<school>: <one line>\"}",
     )
     return { "seat": seat_name, **parse_vote(result) }
 
@@ -299,19 +305,27 @@ votes = parallel_map(run_seat, seats, data_package)
 ```python
 # Pseudo-code
 
+SEAT_PLUGINS = {
+    "value":   "analytics-benjamin-graham",
+    "quality": "analytics-warren-buffett",
+    "cycle":   "analytics-ray-dalio",
+    "trend":   "analytics-stanley-druckenmiller",
+    "onchain": "analysis-onchain-defi",
+}
+
 MODEL_MAP = {
-    "value":   "gpt-5",          # strong valuation math
+    "value":   "gpt-5",            # strong valuation math
     "quality": "claude-sonnet-4-6",
-    "cycle":   "gemini-pro",     # macro/news corpus
-    "trend":   "claude-haiku",   # fast, deterministic
+    "cycle":   "gemini-pro",       # macro/news corpus
+    "trend":   "claude-haiku",     # fast, deterministic
     "onchain": "claude-sonnet-4-6",
 }
 
 def run_seat(seat_name, data_package):
     result = invoke(
-        plugin=f"analysis-{seat_name}",
+        plugin=SEAT_PLUGINS[seat_name],
         data=data_package,
-        model=MODEL_MAP[seat_name],   # per-seat model override via plugin config
+        model=MODEL_MAP[seat_name],
     )
     return { "seat": seat_name, "vote": result.vote, "reason": result.reason }
 
@@ -337,17 +351,20 @@ Both adapters return to core:
 
 ## 8. File Layout
 
+Four seats reuse existing analytics skills — no new files needed. Only the onchain seat is new
+(the existing `analysis-onchain` is Bitcoin MVRV-Z only; not applicable to multi-token DeFiLlama data).
+
 ```
 .agents/skills/
   crypto-advisor/SKILL.md          ← orchestrator — rewrite target
-  analysis-value/SKILL.md          ← new (Graham/Klarman)
-  analysis-quality/SKILL.md        ← new (Fisher/Lynch)
-  analysis-cycle/SKILL.md          ← new (Marks/Templeton)
-  analysis-trend/SKILL.md          ← new (Druckenmiller/Carver)
-  analysis-onchain/SKILL.md        ← new (Burniske)
+  analytics-benjamin-graham/       ← REUSE as Value seat (exists)
+  analytics-warren-buffett/        ← REUSE as Quality seat (exists)
+  analytics-ray-dalio/             ← REUSE as Cycle seat (exists)
+  analytics-stanley-druckenmiller/ ← REUSE as Trend seat (exists)
+  analysis-onchain-defi/SKILL.md   ← NEW — Burniske DeFiLlama value-accrual (not BTC MVRV-Z)
 ```
 
-`analysis-{school}` skills are global — shared across `crypto-advisor`, `hedge-fund-committee`, and any future panel skill. Do not embed them inside `crypto-advisor/`.
+Do not embed seat skills inside `crypto-advisor/`. They are panel-agnostic and reusable by `hedge-fund-committee` and other quorum skills.
 
 ---
 
