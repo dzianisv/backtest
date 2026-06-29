@@ -138,7 +138,7 @@ CONFLUENCE:  weekly trend AGREES with the daily setup
 VERDICT:     ACCUMULATE 63800.00
 ENTRY ZONE:  63200.00–64800.00
 INVALIDATION:62400.00 — sustained close beyond = thesis wrong
-NOTES:       funding +0.01%/8h, OI rising
+NOTES:       funding 0.0100%, OI rising
 HONESTY:     Lens, not gospel. TA evidence base is weak/mixed; validate via analyst-systematic-trading before sizing.
 DATA:        coinbase/ccxt | asof 2026-06-29
 ```

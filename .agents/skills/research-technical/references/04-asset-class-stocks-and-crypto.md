@@ -197,7 +197,8 @@ before trading it live.
     - OI↑ + price↑ (new capital, not short-covering)
     - Funding neutral-to-low (<+0.02% per 8h)
     - Price breaks above a recognized base or weekly resistance on above-average daily volume
-    Any one factor missing: reduce conviction one tier. Two missing: **WAIT** — do not enter.
+    Any one factor missing: reduce conviction one tier. Two missing: do not enter — hold for a
+    cleaner setup (the engine resolves this to **WAIT-PULLBACK** or **WAIT-BREAKOUT** by stage).
 
 ---
 

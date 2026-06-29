@@ -98,7 +98,7 @@ Technical analysis is **the measurement of crowd behavior over time** — not fu
 
 9. **For crypto assets: layer on the halving-cycle prior.** If the halving-cycle clock suggests Stage 1–early Stage 2 (12–30 months post-ATH trough), raise confidence. If it suggests late Stage 3 (18+ months into a bull run, MAs already flattening), cut size and add on-chain distribution check via `analysis-onchain`.
 
-10. **Golden/Death cross — treat as context only.** If a Golden Cross fired recently AND Stage 2 structural criteria pass → add as a confirming signal (+1 to conviction score). If a Death Cross fired AND Stage 4 criteria hold → adds confirmation to AVOID. Never use a cross as the *sole* trigger.
+10. **Golden/Death cross — treat as context only.** If a Golden Cross fired recently AND Stage 2 structural criteria pass → add as a confirming signal (not a standalone trigger). If a Death Cross fired AND Stage 4 criteria hold → adds confirmation to the **AVOID-DOWNTREND** read. Never use a cross as the *sole* trigger.
 
 11. **The stage→verdict mapping (engine rules):**
     - Stage 4 (declining) → **AVOID-DOWNTREND**; level = resistance.
