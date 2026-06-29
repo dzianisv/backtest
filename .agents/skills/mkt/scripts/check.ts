@@ -192,6 +192,24 @@ async function notify(channel: string, message: string): Promise<void> {
     });
     return;
   }
+  if (channel.startsWith("email:")) {
+    const to = channel.slice("email:".length);
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.warn("⚠️  RESEND_API_KEY not set — falling back to stdout");
+      console.log(message);
+      return;
+    }
+    const from = process.env.EMAIL_FROM ?? "alerts@resend.dev";
+    const subjectMatch = message.match(/^🔔 mkt alert — (\S+)/);
+    const subject = subjectMatch ? `🔔 mkt alert — ${subjectMatch[1]}` : "🔔 mkt alert";
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject, text: message }),
+    });
+    return;
+  }
   console.log(`[channel:${channel}] ${message}`);
 }
 
@@ -250,7 +268,8 @@ async function main() {
       const msg =
         `🔔 mkt alert — ${job.symbol} fired @ ${data.price} (${ts})\n` +
         `Conditions: ${detail}\n` +
-        `WHY: ${job.reasoning}`;
+        `WHY: ${job.reasoning}` +
+        (job.analysisLink ? `\n📊 Analysis: ${job.analysisLink}` : "");
 
       console.log(`[${job.id}] FIRED — ${detail}`);
 

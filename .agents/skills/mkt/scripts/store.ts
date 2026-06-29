@@ -34,6 +34,7 @@ export type AlertJob = {
   cooldownSec?: number;
   lastFired?: string;
   fired?: boolean;
+  analysisLink?: string;
 };
 
 export function loadJobs(): AlertJob[] {

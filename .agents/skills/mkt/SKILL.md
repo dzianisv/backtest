@@ -52,10 +52,11 @@ Job shape (stored in `.cache/mkt/agent-alerts.json` in the repo):
   "conditions": [{ "condition": "below", "value": 73 }],
   "match": "all",                   // only when >1 condition
   "reasoning": "Denied Kraken-rumor pop fading; $73 = EMA20 reclaim + pre-pop base. Buy-zone tranche 1.",
-  "channel": "telegram:@CryptoAiInvestor",  // telegram:<target> | ntfy:<topic> | stdout
+  "channel": "telegram:@CryptoAiInvestor",  // telegram:<target> | ntfy:<topic> | email:<addr> | stdout
   "created": "2026-06-25T23:50:00Z",
   "expiry": "2026-07-31",           // optional; job inactive after
-  "cooldownSec": 0                  // 0 = one-shot (fire once, then disable)
+  "cooldownSec": 0,                 // 0 = one-shot (fire once, then disable)
+  "analysisLink": "https://telegra.ph/..."  // optional; attached to notification
 }
 ```
 
@@ -66,7 +67,8 @@ cd .agents/skills/mkt/scripts
 bun mkt-alert.ts add --desk crypto --symbol AAVE-USD \
   --condition below --value 73 \
   --reason "Denied Kraken-rumor pop fading; \$73 = EMA20 reclaim. Buy tranche 1." \
-  --channel telegram:@CryptoAiInvestor --expiry 2026-07-31
+  --channel telegram:@CryptoAiInvestor --expiry 2026-07-31 \
+  --link https://telegra.ph/AAVE-analysis-2026-06-26
 
 # Oversold indicator alert (stocks), repeatable every 6h:
 bun mkt-alert.ts add --desk stocks --symbol NVDA \
@@ -98,13 +100,24 @@ Notification text:
 🔔 mkt alert — AAVE-USD fired @ 72.84 (2026-06-26T07:02:47.501Z)
 Conditions: below:73=✓(price=72.84)
 WHY: Denied Kraken-rumor pop fading; $73 = EMA20 reclaim. Buy tranche 1.
+📊 Analysis: https://telegra.ph/AAVE-analysis-2026-06-26
 ```
+(The `📊 Analysis:` line is omitted when no `--link` was provided.)
 
 **check.ts coverage:** price (`above`/`below`) and indicators (`rsi_above`/`rsi_below`/
 `macd_cross`/`sma_cross_*`, computed from `mkt mcp query_history` closes) work in the
 one-shot path. `pct_up`/`pct_down`/`volume_above`/`stddev_above` need change%/volume that the
 one-shot quote doesn't carry — use the **daemon (Pattern B)** for those, which evaluates them
 natively.
+
+---
+
+## Free notification services
+| Service | Free tier | Setup | Already supported |
+|---|---|---|---|
+| Telegram | Free | Bot token in `~/.agents/skills/telegram-cli/` | ✅ `telegram:@handle` |
+| ntfy.sh | Unlimited, zero signup | None — just pick a topic | ✅ `ntfy:topic` |
+| Email (Resend) | 100/day | `RESEND_API_KEY` env var (resend.com free) | ✅ `email:you@example.com` |
 
 ---
 

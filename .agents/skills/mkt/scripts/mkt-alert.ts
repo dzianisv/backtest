@@ -60,6 +60,7 @@ if (sub === "add") {
     channel: flag("channel") ?? "stdout",
     ...(flag("expiry") ? { expiry: flag("expiry") } : {}),
     ...(flag("cooldown") ? { cooldownSec: parseInt(flag("cooldown")!) } : {}),
+    ...(flag("link") ? { analysisLink: flag("link") } : {}),
   });
 
   console.log(JSON.stringify(job, null, 2));
@@ -91,6 +92,9 @@ if (sub === "add") {
       status.padEnd(8) + " " +
       reason
     );
+    if (j.analysisLink) {
+      console.log(" ".repeat(37) + "📊 " + j.analysisLink);
+    }
   }
 
 } else if (sub === "remove") {
@@ -107,11 +111,12 @@ add:
   --value      <num>         required; one per --condition
   --reason     <text>        required
   --desk       <desk>        default: crypto
-  --channel    <channel>     default: stdout  (telegram:@handle | ntfy:topic | stdout)
+  --channel    <channel>     default: stdout  (telegram:@handle | ntfy:topic | email:to@addr | stdout)
   --period     <int>         optional; per-condition indicator period
   --match      all|any|sequence  default: all (when >1 condition)
   --expiry     <ISO date>    optional
   --cooldown   <seconds>     optional; 0/omit = one-shot
+  --link       <url>         optional; attach analysis report URL to the notification
 
 remove:
   --id <id>
