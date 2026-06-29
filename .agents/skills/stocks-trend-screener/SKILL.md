@@ -114,6 +114,7 @@ ORCHESTRATOR (you)
   └─ Step 5-CONVICTION: Output MAX 3 names, ranked by conviction.
      No intermediate steps shown. No killed list. No process narrative.
      Print ONLY the final table + 2-sentence thesis per survivor + "Routing to multi-lens-quorum."
+     Then Step 6 (below) pulls a TradingView 1Y chart per finalist, saves the report, and publishes to Notion.
 ```
 
 **Feed stack — verified status (2026-06-25):**
@@ -178,6 +179,7 @@ ORCHESTRATOR (you)
   │   - Apply skeptic filter to every candidate
   │
   └─ Step 5: Route finalists to multi-lens-quorum
+     Then Step 6 (below) pulls a TradingView 1Y chart per finalist, saves the report, and publishes to Notion.
 ```
 
 ### Subagent prompt template
@@ -478,6 +480,65 @@ Route top names to `multi-lens-quorum` in both modes. This skill only NOMINATES 
 **IMPORTANT: Do NOT execute the quorum yourself.** Your job ends at nomination. State:
 "Routing [tickers] to multi-lens-quorum with [confidence] flags."
 </step_5_actions>
+
+## Step 6 — Save report + publish to Notion (opt-in)
+
+### 6a — Pull TradingView 1Y chart for each finalist (orchestrator only)
+
+Before building the report, for each finalist that passed the skeptic filter:
+1. Run `tradingview-tv_health_check` (once). If FAIL → set DEGRADED_CHARTS, skip screenshots for all finalists.
+2. If PASS: for each finalist ticker (sequential, one at a time — single TradingView chart slot):
+   - Resolve exchange: `tradingview-symbol_search` → use NASDAQ:{TICKER} or NYSE:{TICKER}
+   - `tradingview-chart_set_symbol` → `tradingview-chart_set_timeframe("W")` (weekly = ~2yr view, 52 bars)
+   - `tradingview-capture_screenshot` → save PNG to `.cache/stocks-trend-screener/reports/{DATE}/{TICKER}_1y.png`
+3. In DEGRADED_CHARTS mode: append `[CHART UNAVAILABLE — TradingView down]` under each finalist.
+4. Charts are ONLY for finalists that survived Step 4 (skeptic filter) — do NOT pull charts for killed candidates.
+
+### 6b — Save report to disk (always)
+
+Run date for this session: `DATE=$(date +%Y-%m-%d)`.
+
+Assemble the full report:
+- CONVICTION_MODE: top recap (2–3 sentences: dominant theme, top pick, one risk) + HIGH-CONVICTION PICKS table + per-finalist thesis + sources
+- RESEARCH_MODE: theme radar + full survivors table + killed list + sources
+
+Write to: `.cache/stocks-trend-screener/reports/{DATE}.md`
+```python
+import os, datetime
+date = datetime.date.today().isoformat()
+os.makedirs(f'.cache/stocks-trend-screener/reports', exist_ok=True)
+with open(f'.cache/stocks-trend-screener/reports/{date}.md', 'w') as f:
+    f.write(report_content)
+```
+
+### 6c — Publish to Notion (opt-in)
+
+1. Read config:
+```bash
+PAGE_ID=$(python3 -c "
+import yaml, sys
+try:
+    c = yaml.safe_load(open('.cache/stocks-trend-screener/notion.yaml'))
+    if c.get('enabled', False): print(c.get('page_id',''))
+except: pass
+" 2>/dev/null)
+```
+2. If `PAGE_ID` is empty or file missing → skip publishing silently (not an error).
+3. Build page title from `title_template` in notion.yaml: replace `{date}`, `{themes}` (top 2 hot themes from Step 1), `{picks}` (surviving finalist tickers joined by space).
+4. Create Notion child page via `notion-API-post-page`:
+   - parent: `{"type": "page_id", "page_id": "<PAGE_ID>"}`
+   - properties.title: computed title
+   - Content: full report markdown — top recap + CONVICTION or RESEARCH table + TradingView chart screenshots embedded as images (use the saved PNG path)
+5. For each finalist screenshot that was successfully saved, add it to the Notion page as an image block (if Notion API supports direct image attach) — or embed as a linked image using the local path notation.
+6. On any Notion error: print the error, continue — never fail the run for a publishing error.
+7. Print: `✅ Saved: .cache/stocks-trend-screener/reports/{date}.md` and (if published) the Notion page URL.
+
+### Self-check before finishing
+
+- [ ] Reports dir exists: `.cache/stocks-trend-screener/reports/`
+- [ ] Report file saved: `.cache/stocks-trend-screener/reports/{date}.md`
+- [ ] If notion.yaml exists + enabled: Notion page created (or error printed)
+- [ ] Screenshots attempted per finalist (or DEGRADED_CHARTS noted)
 </instructions>
 
 <output_format>
@@ -492,6 +553,7 @@ HIGH-CONVICTION PICKS — [DATE] — [N names]
   Risk: [the one thing that kills it]
   Source (BODY): [resolved-publisher-url] (YYYY-MM-DD) — "[verbatim body sentence — not a headline]"
   Source (DATA): [how revenue-accel was verified — filing/fundamentals.py/EDGAR — or state BODY_NOT_REACHED]
+  Chart: [.cache/stocks-trend-screener/reports/{DATE}/{TICKER}_1y.png | CHART UNAVAILABLE]
 
 [repeat for each survivor, max 3]
 
@@ -657,6 +719,7 @@ The task is complete when:
 5. Surviving finalists have the output table with confidence levels and source citations
 6. Top finalists are routed to multi-lens-quorum with confidence flags
 7. You did NOT speculate about any company without having read a source about it
+8. A report was saved to `.cache/stocks-trend-screener/reports/{DATE}.md` with all finalist data.
 </success_criteria>
 
 <eval_tracking>

@@ -1,0 +1,12 @@
+enabled: true
+
+# Notion page where stocks-trend-screener runs are published.
+# page_id is the 32-char hex from the URL (dashes stripped).
+page_url: "https://app.notion.com/p/stocsk-screener-38eac25eb49f8040b4f1d758ee052145"
+page_id: "38eac25eb49f8040b4f1d758ee052145"
+
+# Title format for child pages: YYYY-MM-DD + short screener narrative
+# {date}    → YYYY-MM-DD of the run
+# {themes}  → top 1-2 hot themes from the scan
+# {picks}   → top ticker(s) that survived e.g. "CLF RMBS"
+title_template: "{date} {themes} {picks}"

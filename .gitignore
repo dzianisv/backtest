@@ -82,7 +82,8 @@ logs/
 .cache/mkt/
 .cache/dip-scanner/
 .cache/read-news/
-.cache/stocks-trend-screener/
+.cache/stocks-trend-screener/*
+!.cache/stocks-trend-screener/notion.yaml
 
 # stocks-advisor: yfinance fundamentals cache (runtime, re-fetched each run)
 .agents/skills/stocks-advisor/scripts/*.json
