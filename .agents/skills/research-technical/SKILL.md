@@ -1,6 +1,6 @@
 ---
 name: research-technical
-description: Read price action, chart patterns, indicators, and intraday setups through a disciplined technical-analysis lens — classify the set-up, wait for a bar-close trigger, place a market-based stop, scale out across multiple units, and size on risk. Grounded in Jacob Bernstein's *The Ultimate Day Trader* (2009) with its Set-Up→Trigger→Follow-Through framework and exact indicator parameters (10/8 Moving Average Channel, 28-period Momentum, MACD 9/18, 9-period slow stochastic 30/70, 16-bar breakout). Use when the user asks to "apply technical analysis", "read this chart", "is this a good entry", "where do I put my stop", "what does this RSI/MACD/moving-average signal mean", "support and resistance", "day trading setup", "momentum divergence", "should I buy this breakout", "what's the trigger", or "how do I size and scale out of this trade". Names the canonical TA reference works (Murphy, Edwards & Magee, Kirkpatrick & Dahlquist). Educational, not advice; a lens, not gospel — TA has a weak/mixed empirical base, validate with backtests.
+description: Read price action, chart patterns, indicators, and intraday setups through a disciplined technical-analysis lens — classify the set-up, wait for a bar-close trigger, place a market-based stop, scale out across multiple units, and size on risk. Grounded in Jacob Bernstein's *The Ultimate Day Trader* (2009) with its Set-Up→Trigger→Follow-Through framework and exact indicator parameters (10/8 Moving Average Channel, 28-period Momentum, MACD 9/18, 9-period slow stochastic 30/70, 16-bar breakout). Use when the user asks to "apply technical analysis", "read this chart", "is this a good entry", "where do I put my stop", "what does this RSI/MACD/moving-average signal mean", "support and resistance", "day trading setup", "momentum divergence", "should I buy this breakout", "what's the trigger", or "how do I size and scale out of this trade". Fetches live OHLCV + indicator values from the TradingView MCP (stocks AND crypto, intraday AND daily/weekly) and computes Bernstein's exact non-standard parameters from the bars, then emits a structured set-up/trigger/stop/target/size read. Names the canonical TA reference works (Murphy, Edwards & Magee, Kirkpatrick & Dahlquist). Educational, not advice; a lens, not gospel — TA has a weak/mixed empirical base, validate with backtests.
 license: MIT
 compatibility: opencode
 metadata:
@@ -57,8 +57,115 @@ weakest link in the chain." Realism rules: day trading is "a low-accuracy ventur
 10. **Discipline + honest evidence.** Ten cardinal rules — and TA's weak/mixed empirical base.
     → `references/05-psychology-and-honest-assessment.md`
 
+## Data Retrieval — fetch the chart FIRST (TradingView MCP)
+
+**Never analyze recalled or stale prices. Pull live data first**, then run the framework on it. The
+set-ups below are computed from real OHLCV bars and indicator values fetched through the TradingView MCP.
+
+### 0. Prerequisite & graceful degradation
+The TradingView MCP needs Chrome running with CDP on port 9222. Probe with `tradingview-tv_health_check`
+(or `tradingview-chart_get_state`). If it fails, launch Chrome, then retry:
+```bash
+mkdir -p .cache/chrome-cdp-profile && nohup /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 --user-data-dir=.cache/chrome-cdp-profile --no-first-run \
+  "https://www.tradingview.com/chart/?symbol=BTCUSDT" > .cache/chrome-cdp.log 2>&1 &
+sleep 10
+```
+If the MCP is still unavailable: **degrade loudly** — apply the framework only to values the user
+supplies, mark every missing field `[UNAVAILABLE]`, set `DATA: DEGRADED` in the output, and **never
+fabricate a price or indicator value.**
+
+### 1. Map the symbol
+- **Crypto:** `BINANCE:{TOKEN}USDT` (fallback `OKX:{TOKEN}USDT`)
+- **US stocks:** `NASDAQ:{TICKER}` or `NYSE:{TICKER}`
+- Unsure → `tradingview-symbol_search query="{name}"` and take the most-liquid match.
+
+### 2. Pick the timeframe by analysis type — and always pull a higher TF for confluence
+| Analysis | Primary TF (trigger fires here) | Confluence TF (trend/context) | Notes |
+|---|---|---|---|
+| Day-trade / intraday | `10` (10-min) or `30` | `60` / `240` | Volume spikes → `10`; 30-min opening-range breakout → `30` |
+| Swing | `D` (daily) | `W` (weekly) | Daily MAC trigger = 57-period Momentum-MA *or* Williams A/D + 57-MA |
+| Position | `W` (weekly) | `M` (monthly) | |
+
+Name the set-up using the **higher TF for context**; the **bar-close trigger fires on the primary TF**.
+Reset the chart to `D` after any intraday pull.
+
+### 3. Fetch the bars (sequential — there is one chart slot)
+```
+tradingview-chart_get_state                               → current symbol + existing studies
+tradingview-chart_set_symbol     symbol="{TV_SYMBOL}"
+tradingview-chart_set_timeframe  timeframe="{PRIMARY_TF}"
+tradingview-data_get_ohlcv       count=300 summary=false  → highs[], lows[], closes[], volume[]
+tradingview-quote_get                                     → live last price (for entry/stop/target math)
+# repeat chart_set_timeframe + data_get_ohlcv on the confluence TF, then reset to "D"
+```
+`count` must be **≥ 2× the longest lookback** (daily 57-period Momentum-MA → ≥ 150 bars; intraday
+28-Momentum + 28-MA → ≥ 80). `count=300` is safe for every set-up.
+
+### 4. Get Bernstein's EXACT indicators — they are NON-STANDARD; TradingView defaults will NOT match
+> TradingView's built-in MACD is 12/26/9 and its Stochastic is 14 — Bernstein uses a **9/18 MACD
+> line-only** and a **9-period** stochastic, and his MAC is SMAs of **highs and lows**, not closes.
+> **Do not accept defaults — an unconfigured study returns the WRONG signal.**
+
+**Route A — compute from OHLCV (preferred: exact params, no UI-state to fight).** Run on the fetched bars:
+```python
+import numpy as np
+def sma(x, n): x = np.asarray(x, float); return np.convolve(x, np.ones(n)/n, "valid")
+def ema(x, n):
+    x = np.asarray(x, float); k = 2/(n+1); out = [x[0]]
+    for v in x[1:]: out.append(out[-1] + k*(v - out[-1]))
+    return np.array(out)
+def mom(c, n): c = np.asarray(c, float); return c[n:] - c[:-n]   # Momentum(N) = close - close N bars ago
+
+# 10/8 MAC — 10-SMA of HIGHS (upper), 8-SMA of LOWS (lower). NOT closes, NOT EMA.
+mac_up, mac_lo = sma(high, 10), sma(low, 8)
+# Momentum trigger — 28 intraday (MA 28), 57-period MA on daily; 14/14 for the trend filter
+mom28, mom28_ma = mom(close, 28), sma(mom(close, 28), 28)
+# MACD(9,18) SINGLE LINE only — difference of EMAs; ignore signal line and histogram
+macd_line = ema(close, 9) - ema(close, 18)
+# 9-period SLOW stochastic %K, 3-bar smoothing, bands at 30/70
+def slow_k(h, l, c, n=9, s=3):
+    h, l, c = (np.asarray(z, float) for z in (h, l, c)); k = []
+    for i in range(n-1, len(c)):
+        hh, ll = h[i-n+1:i+1].max(), l[i-n+1:i+1].min()
+        k.append(100*(c[i]-ll)/(hh-ll) if hh > ll else 50.0)
+    return sma(k, s)
+k9 = slow_k(high, low, close)
+# 16-bar breakout — buy on a new prior-16 high, sell on a new prior-16 low
+buy_lvl, sell_lvl = max(high[-17:-1]), min(low[-17:-1])
+# 14-Momentum trend filter — take BUYS only when mom14 is above its 14-MA (mirror for sells)
+mom14 = mom(close, 14); filter_up = mom14[-1] > sma(mom14, 14)[-1]
+# Volume spike (10-min chart) — current bar ≥ 4× the avg of the prior ~4 bars
+vspike = volume[-1] >= 4*np.mean(volume[-5:-1])
+```
+
+**Route B — configure studies on the chart, then read** (use when a rendered chart/screenshot is the deliverable):
+```
+tradingview-chart_manage_indicator action=add name="MACD"           → indicator_set_inputs fast=9  slow=18      (read LINE only)
+tradingview-chart_manage_indicator action=add name="Stochastic"     → indicator_set_inputs k=9  smooth=3        (bands 30/70)
+tradingview-chart_manage_indicator action=add name="Momentum"       → indicator_set_inputs length=28            (14 for trend filter)
+tradingview-chart_manage_indicator action=add name="Moving Average" → indicator_set_inputs type=SMA source=high length=10
+tradingview-chart_manage_indicator action=add name="Moving Average" → indicator_set_inputs type=SMA source=low  length=8     (this pair = the MAC)
+tradingview-data_get_study_values         → current values for every visible study
+tradingview-data_get_indicator   id=...   → one study's series
+tradingview-data_get_pine_tables / data_get_pine_labels → read any Pine-script study outputs
+```
+Dedup first via `chart_get_state` — do not add a study that is already present. **Override every
+default input.** Prefer Route A for analysis rigor; use Route B only when the on-chart render or a
+`tradingview-capture_screenshot` is the actual output.
+
+### 5. Asset class — stocks vs crypto
+Asset-agnostic set-ups (work for both): **10/8 MAC, Momentum/MACD divergence, stochastic POP, 16-bar
+breakout, volume spikes.** The session-bound set-ups Bernstein built for the cash equity S&P — **the
+gap/Oops, the 30-minute opening-range breakout, and the day-of-week pattern** — assume a daily
+open/close session and **do NOT map cleanly to 24/7 crypto.** For crypto, anchor "the open" to the UTC
+daily boundary and treat these three as weak/low-confidence; say so when asked for a gap or
+opening-range read on a 24/7 market.
+
 ## How to apply the lens (decision procedure)
 
+0. **Fetch the data (see Data Retrieval above).** Map the symbol, pull OHLCV + quote on the primary and
+   one higher timeframe, compute Bernstein's exact indicators. No live bars → degrade loudly, don't fabricate.
 1. **Classify the set-up.** Name which of the ~7 historically verifiable patterns (if any) the chart
    shows. No recognizable set-up → no trade. A pattern alone is *not* a signal.
 2. **Wait for the bar-close trigger.** Act only when a *completed* price bar confirms (close beyond the
@@ -77,6 +184,7 @@ weakest link in the chain." Realism rules: day trading is "a low-accuracy ventur
 
 | Question is about… | Load |
 |---|---|
+| **How to fetch chart data — which TradingView MCP tool, timeframe, indicator params** | **`## Data Retrieval` above (this file)** |
 | What TA *is*, the STF framework, leading/lagging, debunked myths, backtesting limits | `01-philosophy-and-stf.md` |
 | Which set-up is this, indicator settings, gaps, MAC, divergence, stochastic POP, breakouts | `02-setups-and-indicators.md` |
 | The entry trigger, where to put the stop, profit targets, free-trade, time-of-day | `03-entry-trigger-and-exit.md` |
@@ -102,6 +210,28 @@ backtested edge here. Treat this as a *hypothesis*: validate it with full costs 
 `analyst-systematic-trading` before trading, because net of costs most day traders lose."
 </example>
 
+## Output format
+
+Emit this fixed-shape block (omit nothing; use `[UNAVAILABLE]` for any field you could not fetch):
+
+```
+=== TECHNICAL READ — {SYMBOL} ({stock|crypto}) — {YYYY-MM-DD} ===
+Timeframe:   {primary} (trigger)  +  {confluence} (context)
+Price:       {last}            (tradingview-quote_get)
+
+SET-UP:      {named set-up | NONE}  — {why it qualifies, with the exact indicator readings}
+TRIGGER:     {TRIGGERED on bar-close | NOT YET: waiting for {condition} | INVALID}
+             {the precise bar-close condition required — e.g. "Momentum closes back up to E"}
+STOP:        {market-based level}   ({structure/volatility basis — NEVER an arbitrary $ figure})
+TARGETS:     T1 {level} → take 1/3, move stop to break-even (free trade) → trail the remainder
+SIZE:        {units, sized so a stop-out risks ≤ X% of capital; capital must survive 6 losses}
+CONFLUENCE:  {higher-TF trend up/down/flat — AGREES / CONFLICTS with the set-up}
+INDICATORS:  MAC[10/8]={up}/{lo}  Mom28={}  Mom28MA={}  MACD(9,18)line={}  %K9slow={}  16bar hi/lo={}/{}  vol×avg={}
+HONESTY:     Hypothesis only — {e.g. divergence hits ~60–70% of turns; params untested for overfit/costs}.
+             Backtest in analyst-systematic-trading before risking capital.
+DATA:        {LIVE (TradingView MCP) | DEGRADED — {which fields [UNAVAILABLE] and why}}
+```
+
 ## Honesty rules (non-negotiable) — the big one
 
 - **It's a lens, not gospel.** Present it as "TA / Bernstein's approach says…", never as fact.
@@ -121,7 +251,9 @@ backtested edge here. Treat this as a *hypothesis*: validate it with full costs 
 
 ## Done when
 
-The analysis (1) names the set-up (or says there is none), (2) specifies the **bar-close trigger** and
-won't act before it, (3) places a **market-based stop** and sizes on risk with capital-adequacy
-(survive-6-losses), (4) lays out the **multi-unit / free-trade Follow-Through**, and (5) flags it as an
-unvalidated hypothesis to be backtested in `analyst-systematic-trading`, net of costs.
+The analysis (0) **fetched live OHLCV + indicators from the TradingView MCP** (or marked `DATA: DEGRADED`
+without fabricating), (1) names the set-up (or says there is none), (2) specifies the **bar-close trigger**
+and won't act before it, (3) places a **market-based stop** and sizes on risk with capital-adequacy
+(survive-6-losses), (4) lays out the **multi-unit / free-trade Follow-Through**, and (5) emits the
+**structured output block** and flags it as an unvalidated hypothesis to be backtested in
+`analyst-systematic-trading`, net of costs.
