@@ -56,6 +56,35 @@ weakest link in the chain." Realism rules: day trading is "a low-accuracy ventur
    → `references/04-risk-and-money-management.md`
 10. **Discipline + honest evidence.** Ten cardinal rules — and TA's weak/mixed empirical base.
     → `references/05-psychology-and-honest-assessment.md`
+11. **Two-layer read: Context (Layer 1) gates Trigger (Layer 2).** Standard RSI/MACD/Volume/OBV set the
+    regime; Bernstein's exact params are the entry mechanic. → `## The two-layer read` below.
+
+## The two-layer read — Market Context (Layer 1) gates the Bernstein Trigger (Layer 2)
+
+Run the two layers **in order.** Layer 1 says whether the environment favors a trade at all; Layer 2 is
+the precise entry mechanic. The same Bernstein divergence reads very differently at RSI 78 with falling
+OBV than at RSI 45 with rising OBV — **establish context before hunting a trigger.**
+
+**Layer 1 — Market Context (universal indicators, check FIRST):**
+- **RSI(14)** — overbought **>70** / oversold **<30** (crypto trends harder: tighten to **>80 / <20**).
+  **Centerline 50** = trend filter (above → bull regime, below → bear). **RSI/price divergence** is the
+  same logic as Bernstein's Momentum divergence and often fires earlier.
+- **MACD(12,26,9) standard** — the TradingView default, *distinct* from Bernstein's 9/18 line-only in
+  Layer 2: **histogram expanding** = momentum accelerating, **contracting** = fading; **signal-line
+  cross** = momentum trigger; **zero-line cross** = trend confirmation.
+- **Volume vs 20-period average** — a breakout / close beyond a level is valid only on **above-average
+  volume**; on below-average volume it is suspect (likely a fakeout).
+- **OBV (On-Balance Volume)** — its direction confirms the trend; **price new high + OBV/volume
+  declining = exhaustion** (bearish divergence), and the mirror at bottoms.
+
+**Layer 2 — Bernstein Set-Up / Trigger (exact params, the entry mechanic):**
+28-period Momentum, 10/8 MAC, 9-period Stochastic POP (30/70), 16-bar breakout, MACD(9,18) single-line
+divergence, 4× volume spikes. → `references/02-setups-and-indicators.md`.
+
+**Interaction rule:** act on a Layer-2 trigger **only when Layer 1 does not contradict its direction.**
+Long trigger + RSI<30 + rising OBV + above-avg volume = high-confidence. Long trigger + RSI>75 + falling
+OBV + thin volume = low-confidence → stand aside or halve size. **Report the Layer-1 context with every
+Layer-2 call.**
 
 ## Data Retrieval — fetch the chart FIRST (TradingView MCP)
 
@@ -102,10 +131,11 @@ tradingview-quote_get                                     → live last price (f
 `count` must be **≥ 2× the longest lookback** (daily 57-period Momentum-MA → ≥ 150 bars; intraday
 28-Momentum + 28-MA → ≥ 80). `count=300` is safe for every set-up.
 
-### 4. Get Bernstein's EXACT indicators — they are NON-STANDARD; TradingView defaults will NOT match
-> TradingView's built-in MACD is 12/26/9 and its Stochastic is 14 — Bernstein uses a **9/18 MACD
-> line-only** and a **9-period** stochastic, and his MAC is SMAs of **highs and lows**, not closes.
-> **Do not accept defaults — an unconfigured study returns the WRONG signal.**
+### 4. Compute BOTH layers' indicators — Layer 1 is standard, Layer 2 (Bernstein) is NON-STANDARD
+> **Layer 1** (RSI 14, MACD 12/26/9, Volume vs 20-avg, OBV) are TradingView defaults. **Layer 2** is
+> Bernstein's custom set: TradingView's built-in MACD is 12/26/9 and its Stochastic is 14, but Bernstein
+> uses a **9/18 MACD line-only** and a **9-period** stochastic, and his MAC is SMAs of **highs and lows**,
+> not closes. **Fetch both layers. Do not accept defaults for Layer 2 — an unconfigured study is WRONG.**
 
 **Route A — compute from OHLCV (preferred: exact params, no UI-state to fight).** Run on the fetched bars:
 ```python
@@ -117,6 +147,22 @@ def ema(x, n):
     return np.array(out)
 def mom(c, n): c = np.asarray(c, float); return c[n:] - c[:-n]   # Momentum(N) = close - close N bars ago
 
+# === Layer 1 — standard market context (check FIRST) ===
+def rsi(c, n=14):                                        # Wilder RSI(14)
+    c = np.asarray(c, float); d = np.diff(c)
+    up, dn = np.where(d > 0, d, 0.0), np.where(d < 0, -d, 0.0)
+    au, ad = [up[:n].mean()], [dn[:n].mean()]
+    for i in range(n, len(d)):
+        au.append((au[-1]*(n-1) + up[i])/n); ad.append((ad[-1]*(n-1) + dn[i])/n)
+    rs = np.array(au) / np.where(np.array(ad) == 0, 1e-9, ad)
+    return 100 - 100/(1 + rs)                            # OB>70/<30 (crypto >80/<20); 50 = trend filter
+rsi14 = rsi(close)
+macd_std = ema(close, 12) - ema(close, 26)               # standard MACD(12,26,9): line / signal / hist
+macd_sig = ema(macd_std, 9); macd_hist = macd_std - macd_sig
+vol_avg20 = sma(volume, 20); vol_ratio = volume[-1] / vol_avg20[-1]   # breakout needs vol_ratio > 1
+obv = np.concatenate([[0.0], np.cumsum(np.sign(np.diff(close)) * np.asarray(volume, float)[1:])])  # OBV
+
+# === Layer 2 — Bernstein's exact (non-standard) params ===
 # 10/8 MAC — 10-SMA of HIGHS (upper), 8-SMA of LOWS (lower). NOT closes, NOT EMA.
 mac_up, mac_lo = sma(high, 10), sma(low, 8)
 # Momentum trigger — 28 intraday (MA 28), 57-period MA on daily; 14/14 for the trend filter
@@ -141,15 +187,23 @@ vspike = volume[-1] >= 4*np.mean(volume[-5:-1])
 
 **Route B — configure studies on the chart, then read** (use when a rendered chart/screenshot is the deliverable):
 ```
+# --- Layer 1: standard context (TradingView defaults are already correct) ---
+tradingview-chart_manage_indicator action=add name="Relative Strength Index"  → length=14
+tradingview-chart_manage_indicator action=add name="MACD"           → indicator_set_inputs fast=12 slow=26 signal=9  (line+signal+hist)
+tradingview-chart_manage_indicator action=add name="Volume"         → reads vol; compare to its 20-period MA
+tradingview-chart_manage_indicator action=add name="On Balance Volume"
+# --- Layer 2: Bernstein's exact params (MUST override defaults) ---
 tradingview-chart_manage_indicator action=add name="MACD"           → indicator_set_inputs fast=9  slow=18      (read LINE only)
 tradingview-chart_manage_indicator action=add name="Stochastic"     → indicator_set_inputs k=9  smooth=3        (bands 30/70)
 tradingview-chart_manage_indicator action=add name="Momentum"       → indicator_set_inputs length=28            (14 for trend filter)
 tradingview-chart_manage_indicator action=add name="Moving Average" → indicator_set_inputs type=SMA source=high length=10
 tradingview-chart_manage_indicator action=add name="Moving Average" → indicator_set_inputs type=SMA source=low  length=8     (this pair = the MAC)
 tradingview-data_get_study_values         → current values for every visible study
-tradingview-data_get_indicator   id=...   → one study's series
+tradingview-data_get_indicator   id=...   → one study's series (e.g. fetch RSI or OBV directly)
 tradingview-data_get_pine_tables / data_get_pine_labels → read any Pine-script study outputs
 ```
+Two MACDs coexist — the 12/26/9 (Layer 1) and the 9/18 line-only (Layer 2); label them so you don't
+confuse the signals.
 Dedup first via `chart_get_state` — do not add a study that is already present. **Override every
 default input.** Prefer Route A for analysis rigor; use Route B only when the on-chart render or a
 `tradingview-capture_screenshot` is the actual output.
@@ -165,18 +219,22 @@ opening-range read on a 24/7 market.
 ## How to apply the lens (decision procedure)
 
 0. **Fetch the data (see Data Retrieval above).** Map the symbol, pull OHLCV + quote on the primary and
-   one higher timeframe, compute Bernstein's exact indicators. No live bars → degrade loudly, don't fabricate.
-1. **Classify the set-up.** Name which of the ~7 historically verifiable patterns (if any) the chart
-   shows. No recognizable set-up → no trade. A pattern alone is *not* a signal.
-2. **Wait for the bar-close trigger.** Act only when a *completed* price bar confirms (close beyond the
-   level, %K cross, Momentum reaching the breakout point). "No trigger, no trade. Do not anticipate."
-3. **Set a market-based stop** *before* entering — opposite side of the set-up, a range/volatility level,
+   one higher timeframe, compute **both layers'** indicators. No live bars → degrade loudly, don't fabricate.
+1. **Read Layer-1 context FIRST.** RSI(14) regime + OB/OS (crypto >80/<20), MACD(12,26,9) histogram +
+   signal + zero-line, volume vs 20-avg, OBV direction. This fixes the bias and whether a trigger is even
+   worth hunting — a set-up that fights the context is low-confidence.
+2. **Classify the Layer-2 set-up.** Name which of the ~7 historically verifiable Bernstein patterns (if
+   any) the chart shows. No recognizable set-up → no trade. A pattern alone is *not* a signal.
+3. **Wait for the bar-close trigger.** Act only when a *completed* price bar confirms (close beyond the
+   level, %K cross, Momentum reaching the breakout point) **and Layer 1 does not contradict it**. "No
+   trigger, no trade. Do not anticipate."
+4. **Set a market-based stop** *before* entering — opposite side of the set-up, a range/volatility level,
    never an arbitrary dollar amount: "the market has no respect for such stops."
-4. **Size on risk, not reward**, and check capital adequacy: be prepared to take **6 consecutive
-   losses**. Trade 2 — preferably 3 — units so you can scale out.
-5. **Manage Follow-Through (the hard part).** Hit first target → take a partial, move the stop to
+5. **Size on risk, not reward**, and check capital adequacy: be prepared to take **6 consecutive
+   losses**. Trade 2 — preferably 3 — units so you can scale out. Halve size when Layer 1 is mixed.
+6. **Manage Follow-Through (the hard part).** Hit first target → take a partial, move the stop to
    break-even (the **free trade**), ride the remainder with a trailing stop. Big money is in the big move.
-6. **Apply the honesty overlay.** State that this is a *hypothesis*, not validated alpha; flag costs,
+7. **Apply the honesty overlay.** State that this is a *hypothesis*, not validated alpha; flag costs,
    overfitting, and that net of costs most day traders lose. Route to `analyst-systematic-trading` to
    backtest before risking capital.
 
@@ -219,14 +277,16 @@ Emit this fixed-shape block (omit nothing; use `[UNAVAILABLE]` for any field you
 Timeframe:   {primary} (trigger)  +  {confluence} (context)
 Price:       {last}            (tradingview-quote_get)
 
-SET-UP:      {named set-up | NONE}  — {why it qualifies, with the exact indicator readings}
+CONTEXT(L1): RSI14={} ({OB|OS|neutral}, {above|below} 50)  MACD(12,26,9) hist={} ({rising|falling}, {above|below} zero)  Vol={}×20avg  OBV={rising|falling}  → bias {BULL|BEAR|NEUTRAL}
+SET-UP:      {named Bernstein set-up | NONE}  — {why it qualifies, with the exact indicator readings}
 TRIGGER:     {TRIGGERED on bar-close | NOT YET: waiting for {condition} | INVALID}
              {the precise bar-close condition required — e.g. "Momentum closes back up to E"}
+ALIGNMENT:   {Layer-1 context AGREES / CONTRADICTS the set-up direction → full size / halve / stand aside}
 STOP:        {market-based level}   ({structure/volatility basis — NEVER an arbitrary $ figure})
 TARGETS:     T1 {level} → take 1/3, move stop to break-even (free trade) → trail the remainder
 SIZE:        {units, sized so a stop-out risks ≤ X% of capital; capital must survive 6 losses}
 CONFLUENCE:  {higher-TF trend up/down/flat — AGREES / CONFLICTS with the set-up}
-INDICATORS:  MAC[10/8]={up}/{lo}  Mom28={}  Mom28MA={}  MACD(9,18)line={}  %K9slow={}  16bar hi/lo={}/{}  vol×avg={}
+SETUP(L2):   MAC[10/8]={up}/{lo}  Mom28={}  Mom28MA={}  MACD(9,18)line={}  %K9slow={}  16bar hi/lo={}/{}  vol-spike={}
 HONESTY:     Hypothesis only — {e.g. divergence hits ~60–70% of turns; params untested for overfit/costs}.
              Backtest in analyst-systematic-trading before risking capital.
 DATA:        {LIVE (TradingView MCP) | DEGRADED — {which fields [UNAVAILABLE] and why}}
@@ -252,8 +312,9 @@ DATA:        {LIVE (TradingView MCP) | DEGRADED — {which fields [UNAVAILABLE] 
 ## Done when
 
 The analysis (0) **fetched live OHLCV + indicators from the TradingView MCP** (or marked `DATA: DEGRADED`
-without fabricating), (1) names the set-up (or says there is none), (2) specifies the **bar-close trigger**
-and won't act before it, (3) places a **market-based stop** and sizes on risk with capital-adequacy
-(survive-6-losses), (4) lays out the **multi-unit / free-trade Follow-Through**, and (5) emits the
-**structured output block** and flags it as an unvalidated hypothesis to be backtested in
-`analyst-systematic-trading`, net of costs.
+without fabricating), (1) **reads Layer-1 context** (RSI/MACD-12-26-9/Volume/OBV) to fix the bias,
+(2) names the Layer-2 Bernstein set-up (or says there is none), (3) specifies the **bar-close trigger**,
+won't act before it, and checks Layer 1 doesn't contradict it, (4) places a **market-based stop** and
+sizes on risk with capital-adequacy (survive-6-losses), (5) lays out the **multi-unit / free-trade
+Follow-Through**, and (6) emits the **structured output block** and flags it as an unvalidated hypothesis
+to be backtested in `analyst-systematic-trading`, net of costs.
