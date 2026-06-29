@@ -1,0 +1,21 @@
+{
+  "symbol": "ETH",
+  "price_usd": 1562.89,
+  "fetched_at": "2026-06-28",
+  "tv_symbol": "BINANCE:ETHUSDT",
+  "ath_52w": 4956.78,
+  "low_52w": 1505.68,
+  "pct_below_ath": 68.5,
+  "ema20": 1685.37,
+  "sma50": 1892.43,
+  "sma200": 2311.37,
+  "wma200": 2470.47,
+  "pct_vs_200wma": -36.7,
+  "death_cross": true,
+  "rsi_14": 31.08,
+  "macd_line": -80.48,
+  "macd_signal": -78.65,
+  "macd_hist": -1.82,
+  "weekly_closes_count": 200,
+  "zone": "DEEP_VALUE"
+}

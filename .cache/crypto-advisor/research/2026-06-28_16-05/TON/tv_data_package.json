@@ -1,0 +1,23 @@
+{
+  "symbol": "TON",
+  "fetched_at": "2026-06-28",
+  "price_usd": 1.593,
+  "tv_symbol": "BINANCE:TONUSDT",
+  "ath_52w": 3.643,
+  "low_52w": 0.554,
+  "pct_below_ath": 56.3,
+  "ema_chart": 1.697,
+  "rsi_14": 43.73,
+  "macd_line": -0.055,
+  "macd_signal": -0.054,
+  "macd_hist": -0.002,
+  "weekly_closes_count": 99,
+  "wma200": null,
+  "wma200_label": "INSUFFICIENT (99wk)",
+  "proxy_ma": 3.222,
+  "proxy_label": "~99wk MA proxy",
+  "pct_below_proxy": 50.6,
+  "zone": "FAIR_VALUE",
+  "death_cross": true,
+  "screenshot": ".cache/crypto-advisor/research/2026-06-28_16-05/TON/screenshot.png"
+}

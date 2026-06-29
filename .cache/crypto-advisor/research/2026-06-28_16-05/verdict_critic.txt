@@ -1,0 +1,105 @@
+=== VERDICT CRITIC — 2026-06-28 ===
+Tokens reviewed: 11/11
+Critic model: claude-sonnet-4-6
+Run dir: .cache/crypto-advisor/research/2026-06-28_16-05/
+
+--- Per-Token Verdicts ---
+
+BTC — HOLD (gov cap) — PASS
+  Quorum check: seats_bull=3≥3, seats_bear=1≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=BEARISH, VALUE=NEUTRAL, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 3B/1Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=3≥3 + zone=FAIR_VALUE + weekly_closes=210≥200 → BUY ✓
+  Governor: 3 bull seats ranks 5th (ETH/SOL/AAVE/LINK all at 4) → downgrade to HOLD ✓
+  Final signal: HOLD (gov cap) ✓
+
+ETH — BUY — PASS
+  Quorum check: seats_bull=4≥3, seats_bear=0≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=BULLISH, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 4B/0Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=4≥3 + zone=DEEP_VALUE + weekly_closes=200≥200 → BUY ✓
+  Governor: 4 bull seats, ranks in top 4 → BUY retained ✓
+  Final signal: BUY ✓
+
+SOL — BUY — PASS
+  Quorum check: seats_bull=4≥3, seats_bear=0≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=BULLISH, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 4B/0Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=4≥3 + zone=DEEP_VALUE + weekly_closes=210≥200 → BUY ✓
+  Governor: 4 bull seats, ranks in top 4 → BUY retained ✓
+  Final signal: BUY ✓
+
+TON — HOLD — PASS
+  Quorum check: seats_bull=2, seats_bear=0≤1 → SPLIT ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=NEUTRAL, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=NEUTRAL → 2B/0Bear ✓
+  Pre-governor signal: SPLIT + zone=FAIR_VALUE (not DEEP_VALUE) → not BUY(small) → HOLD ✓
+  Final signal: HOLD ✓
+
+HYPE — HOLD — PASS
+  Quorum check: seats_bull=1≤1, seats_bear=0 (<3) → UNCERTAIN ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=NEUTRAL, QUALITY=NEUTRAL, CYCLE=BULLISH, ON-CHAIN=NEUTRAL → 1B/0Bear ✓
+  Pre-governor signal: UNCERTAIN → HOLD ✓
+  Final signal: HOLD ✓
+
+AAVE — BUY — PASS
+  Quorum check: seats_bull=4≥3, seats_bear=0≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=BULLISH, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 4B/0Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=4≥3 + zone=DEEP_VALUE + weekly_closes=210≥200 → BUY ✓
+  Governor: 4 bull seats, ranks in top 4 → BUY retained ✓
+  Final signal: BUY ✓
+
+JUP — HOLD (gov cap) — PASS
+  Quorum check: seats_bull=3≥3, seats_bear=0≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=NEUTRAL, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 3B/0Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=3≥3 + weekly_closes=126<200 → BUY(small) ✓
+  Report records pre-governor as BUY(small) ✓
+  Governor: 4-BUY cap already filled by ETH/SOL/AAVE/LINK → downgrade to HOLD ✓
+  Final signal: HOLD (gov cap) ✓
+
+UNI — HOLD (gov cap) — PASS
+  Quorum check: seats_bull=2, seats_bear=0≤1 → SPLIT ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=BULLISH, QUALITY=NEUTRAL, CYCLE=BULLISH, ON-CHAIN=NEUTRAL → 2B/0Bear ✓
+  Pre-governor signal: SPLIT + zone=DEEP_VALUE → BUY(small) ✓
+  Report records pre-governor as BUY(small) ✓
+  Governor: cap filled → downgrade to HOLD ✓
+  Final signal: HOLD (gov cap) ✓
+
+AERO — HOLD (gov cap) — PASS
+  Quorum check: seats_bull=3≥3, seats_bear=0≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=NEUTRAL, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 3B/0Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=3≥3 + weekly_closes=81<200 → BUY(small) ✓
+  Report records pre-governor as BUY(small) ✓
+  Governor: cap filled → downgrade to HOLD ✓
+  Final signal: HOLD (gov cap) ✓
+
+PUMP — HOLD — PASS
+  Quorum check: seats_bull=1≤1, seats_bear=0 (<3) → UNCERTAIN ✓
+  Seat count vs narrative: TREND=NEUTRAL, VALUE=NEUTRAL, QUALITY=NEUTRAL, CYCLE=BULLISH, ON-CHAIN=NEUTRAL → 1B/0Bear ✓
+  Pre-governor signal: UNCERTAIN → HOLD ✓
+  Final signal: HOLD ✓
+
+LINK — BUY — PASS
+  Quorum check: seats_bull=4≥3, seats_bear=1≤1 → BULLISH ✓
+  Seat count vs narrative: TREND=BEARISH, VALUE=BULLISH, QUALITY=BULLISH, CYCLE=BULLISH, ON-CHAIN=BULLISH → 4B/1Bear ✓
+  Pre-governor signal: BULLISH + seats_bull=4≥3 + zone=DEEP_VALUE + weekly_closes=210≥200 → BUY ✓
+  Governor: 4 bull seats, ranks in top 4 (tied with ETH/SOL/AAVE) → BUY retained ✓
+  Final signal: BUY ✓
+
+--- Governor Ranking Verification ---
+Rank 1-4 (active BUY): ETH(4B), SOL(4B), AAVE(4B), LINK(4B)
+Rank 5 (downgraded): BTC(3B) — HOLD ✓
+BUY(small) tokens at cap: JUP(3B), AERO(3B), UNI(2B SPLIT+DV) — all HOLD ✓
+Governor cap = 4 (Extreme Fear regime, F&G=18) — correctly applied ✓
+
+--- Source Discipline ---
+T1 source present: YES — https://api.alternative.me/fng/?limit=1 (F&G API, source #1) ✓
+Actual URLs cited: 12 (sources 1-12) ✓
+FETCH FAILED entries: 6 (sources 13-18), all have declared API fallbacks used ✓
+Minimum 3 real URLs: PASS ✓
+Source discipline: PASS
+
+--- Summary ---
+Flags: 0/11
+Critical errors: none
+Source discipline: PASS
+Governor logic: PASS
+Quorum truth table: PASS (all 11 tokens correctly classified)
+Seat count vs narrative consistency: PASS (all 11 seat tallies match the 5-seat verdicts in Block 2)
+Zone guard: N/A — no ELEVATED or EXTREME zones present in this run

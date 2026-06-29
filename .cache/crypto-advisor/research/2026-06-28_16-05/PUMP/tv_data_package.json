@@ -1,0 +1,20 @@
+{
+  "symbol": "PUMP",
+  "price_usd": 0.001454,
+  "tv_symbol": "OKX:PUMPUSDT",
+  "ath_52w": 0.008994,
+  "low_52w": 0.001152,
+  "pct_below_ath": 83.8,
+  "ema_chart": 0.001587,
+  "rsi_14": 48.35,
+  "macd_line": -0.000076,
+  "macd_signal": -0.000081,
+  "macd_hist": 0.000004,
+  "weekly_closes_count": 50,
+  "wma200": null,
+  "wma200_label": "INSUFFICIENT (50wk)",
+  "proxy_ma": null,
+  "zone": "FAIR_VALUE",
+  "death_cross": null,
+  "note": "PUMP launched ~2025; only 50 weekly bars; 200wMA INSUFFICIENT; severe downtrend from 0.009 ATH"
+}

@@ -1,0 +1,21 @@
+{
+  "symbol": "JUP",
+  "fetched_at": "2026-06-28",
+  "price_usd": 0.2102,
+  "tv_symbol": "BINANCE:JUPUSDT",
+  "ath_52w": 0.5784,
+  "ath_alltime": 1.8476,
+  "low_52w": 0.0563,
+  "pct_below_ath": 63.7,
+  "ema_chart": 0.1942,
+  "rsi_14": 54.97,
+  "macd_line": 0.0096,
+  "macd_signal": 0.0066,
+  "macd_hist": 0.003,
+  "weekly_closes_count": 126,
+  "wma200": null,
+  "wma200_label": "INSUFFICIENT (126wk)",
+  "zone": "FAIR_VALUE",
+  "death_cross": true,
+  "screenshot": ".cache/crypto-advisor/research/2026-06-28_16-05/JUP/screenshot.png"
+}

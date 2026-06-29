@@ -1,0 +1,21 @@
+{
+  "symbol": "AERO",
+  "price_usd": 0.4812,
+  "tv_symbol": "Bybit:AEROUSDT",
+  "ath_52w": 1.5828,
+  "low_52w": 0.1238,
+  "pct_below_ath": 69.6,
+  "ema_chart": 0.4324,
+  "rsi_14": 55.60,
+  "macd_line": 0.0243,
+  "macd_signal": 0.0235,
+  "macd_hist": 0.0008,
+  "weekly_closes_count": 81,
+  "wma200": null,
+  "wma200_label": "INSUFFICIENT (81wk)",
+  "proxy_ma": null,
+  "zone": "FAIR_VALUE",
+  "death_cross": null,
+  "screenshot": ".cache/crypto-advisor/research/2026-06-28_16-05/AERO/chart_W.png",
+  "note": "AERO launched Dec 2023; only 81 weekly bars available; 200wMA INSUFFICIENT; Bybit symbol used (not on Binance/OKX)"
+}

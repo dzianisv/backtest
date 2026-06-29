@@ -1,0 +1,20 @@
+{
+  "symbol": "SOL",
+  "fetched_at": "2026-06-28",
+  "price_usd": 70.84,
+  "tv_symbol": "BINANCE:SOLUSDT",
+  "ath_52w": 253.51,
+  "low_52w": 60.13,
+  "pct_below_ath": 72.1,
+  "ema_chart": 75.52,
+  "rsi_14": 47.38,
+  "macd_line": -1.37,
+  "macd_signal": -1.92,
+  "macd_hist": 0.55,
+  "weekly_closes_count": 210,
+  "wma200": 106.88,
+  "pct_vs_200wma": -33.7,
+  "zone": "DEEP_VALUE",
+  "death_cross": true,
+  "screenshot": ".cache/crypto-advisor/research/2026-06-28_16-05/SOL/screenshot.png"
+}

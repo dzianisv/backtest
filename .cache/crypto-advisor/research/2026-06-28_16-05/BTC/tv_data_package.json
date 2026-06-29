@@ -1,0 +1,22 @@
+{
+  "symbol": "BTC",
+  "price_usd": 59298.03,
+  "fetched_at": "2026-06-28",
+  "tv_symbol": "BINANCE:BTCUSDT",
+  "ath_52w": 126199.63,
+  "low_52w": 58115.01,
+  "pct_below_ath": 53.0,
+  "ema20": 63089.63,
+  "sma50": 69463.33,
+  "sma200": 75717.29,
+  "wma200": 62070.87,
+  "pct_vs_200wma": -4.5,
+  "death_cross": true,
+  "rsi_14": 30.09,
+  "macd_line": -2376.08,
+  "macd_signal": -2311.12,
+  "macd_hist": -64.96,
+  "weekly_closes_count": 210,
+  "zone": "FAIR_VALUE",
+  "screenshot": ".cache/crypto-advisor/research/2026-06-28_16-05/BTC/BTC_2026-06-28.png"
+}

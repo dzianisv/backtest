@@ -1,0 +1,20 @@
+{
+  "symbol": "HYPE",
+  "fetched_at": "2026-06-28",
+  "price_usd": 61.337,
+  "tv_symbol": "OKX:HYPEUSDT",
+  "ath_52w": 76.975,
+  "low_52w": 20.5,
+  "pct_below_ath": 20.3,
+  "ema_chart": 59.228,
+  "rsi_14": 46.91,
+  "macd_line": 0.802,
+  "macd_signal": 1.871,
+  "macd_hist": -1.069,
+  "weekly_closes_count": 34,
+  "wma200": null,
+  "wma200_label": "INSUFFICIENT (34wk)",
+  "zone": "FAIR_VALUE",
+  "death_cross": false,
+  "screenshot": ".cache/crypto-advisor/research/2026-06-28_16-05/HYPE/screenshot.png"
+}
