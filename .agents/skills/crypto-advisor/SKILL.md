@@ -145,6 +145,14 @@ mkdir -p "$RUN_DIR"
 echo "Artifacts: $RUN_DIR"
 ```
 
+Fetch Lyn Alden's current macro context **once per run** — her views are book-wide (token-agnostic) and Phase 2 investor seats cannot fetch; data must arrive pre-loaded in the briefing package:
+
+```bash
+# Lyn current-views — token-agnostic macro signal; fetch once, inject into every briefing
+bun .agents/skills/investor-lyn-alden/scripts/current_context.ts --days 30 > "$RUN_DIR/lyn_current_context.md" 2>&1
+echo "Lyn context: $RUN_DIR/lyn_current_context.md — degrades to [UNAVAILABLE] lines per source if offline; proceed regardless"
+```
+
 ---
 
 ## Step 1 — Sequential per-token analysis
@@ -307,6 +315,9 @@ After all 5 research briefs return, CIO merges them into one structured markdown
 
 ### Smart Money
 {smartmoney_brief content}
+
+## Lyn Alden — current views (live, last 30d)
+$(cat "$RUN_DIR/lyn_current_context.md")
 ```
 
 ```bash
@@ -327,6 +338,8 @@ Spawn all six investor subagents in parallel. Each reads the **full briefing pac
 | `analyse-defi` (Burniske) | `analyse-defi` | On-chain — fee capture, token velocity, protocol cash flows (Burniske lens) |
 
 > **`analyse-defi` dual role:** In Phase 1, `analyse-defi` gathered DeFiLlama data (TVL/fees) and returned a data brief. In Phase 2, it reads the full briefing package and votes from Chris Burniske's on-chain value accrual lens — same skill, separate role.
+
+> **Lyn Alden seat — live context:** The briefing package includes a **"Lyn Alden — current views (live, last 30d)"** section fetched from her X/Nostr/blog this run. The Lyn seat MUST weigh this live macro stance ON TOP OF the standing framework (*Broken Money*, fiscal dominance, BTC-as-hurdle). When her current read shifts or reinforces the vote, cite the specific dated post in the Reason field (e.g. `2026-06-21 X thread: "writing about the implications of the US/Iran MOU…"`). Filter the live feed: macro/monetary-policy signal counts; personal, fiction, or book-promotion posts do not.
 
 Pass to each investor: `{ token: "{TOKEN}", price_usd: {PRICE}, briefing_package: "<full markdown>" }`.
 
@@ -538,6 +551,7 @@ Panel:
   Buffett (Quality):       BULLISH|NEUTRAL|BEARISH — {reason}
   Dalio (Cycle):           BULLISH|NEUTRAL|BEARISH — {reason}
   Druckenmiller (Trend):   BULLISH|NEUTRAL|BEARISH — {reason}
+  Alden (Debasement):      BULLISH|NEUTRAL|BEARISH — {reason}
   Burniske (On-chain):     BULLISH|NEUTRAL|BEARISH — {reason}
 ```
 
@@ -573,6 +587,7 @@ Panel:
   Buffett (Quality):       BULLISH — 21M hard cap, undisputed monetary network moat; Saylor accumulation ongoing.
   Dalio (Cycle):           BULLISH — F&G 18 (Extreme Fear) triggers contrarian signal; historically strong entry region.
   Druckenmiller (Trend):   BEARISH — death cross active, RSI < 45, MACD still negative; all bearish conditions met.
+  Alden (Debasement):      BULLISH — sound-money hardest asset; 21M cap is the debasement hedge, BTC is the hurdle every other asset must clear.
   Burniske (On-chain):     BULLISH — RSI 30 proxies MVRV undervaluation; realized price likely above spot.
 
 Bull: Extreme Fear at RSI 30 historically marks major BTC cycle bottoms; institutional floor from Saylor accumulation.
@@ -586,7 +601,7 @@ ETH has crashed 63% from its 52-week high and is now 36% below its 200-week
 moving average — a level historically associated with cycle bottoms. The
 Ethereum Foundation cut 20% of its workforce [source: https://www.theblock.co/post/405809/ethereum-foundation-cuts-20-staff],
 adding organizational risk, but chain revenue holds at $3.1M/day [source: https://defillama.com/chain/ethereum].
-Four of five panel seats bullish. Start a small tranche; upgrade to BUY on 200wMA reclaim.
+Four of six panel seats bullish. Start a small tranche; upgrade to BUY on 200wMA reclaim.
 
 Research Desk:
   Technical:   Death cross absent; RSI 31 (oversold); MACD hist barely negative (-1.8); EMA20 $1,698 overhead resistance.
@@ -600,6 +615,7 @@ Panel:
   Buffett (Quality):       BULLISH — dominant smart-contract layer, staking yield, deflationary burn, deep dev moat.
   Dalio (Cycle):           BULLISH — F&G 18 (Extreme Fear); ETH ended Q2 red, classic capitulation setup.
   Druckenmiller (Trend):   NEUTRAL — no death cross (positive), but RSI < 40 and MACD still negative; bullish condition not met.
+  Alden (Debasement):      NEUTRAL — must clear the BTC hurdle to justify the risk; sound-money case is weaker than BTC's, productive-asset case unproven.
   Burniske (On-chain):     BULLISH — NUPL capitulation + 36% below 200wMA = staking yield at relative high vs price.
 
 Bull: Spot ETF flows, staking yield, and deep-value zone converge at a historically rare oversold RSI.
@@ -627,9 +643,9 @@ BTC research sources:
 
 Self-check before printing:
 - Every token has `status='done'` in `token_analysis`
-- `seats_bull + seats_bear <= 5` for each token
+- `seats_bull + seats_bear <= 6` for each token
 - **Block 2 researcher recap present for every token** — 5 lines (Technical/On-Chain/DeFi/Macro/Smart Money), no line omitted
-- **Block 2 panel votes present for every token** — 5 lines (Graham/Buffett/Dalio/Druckenmiller/Burniske)
+- **Block 2 panel votes present for every token** — 6 lines (Graham/Buffett/Dalio/Druckenmiller/Alden/Burniske)
 - Every research source entry starts with `https://` followed by the **specific article URL** (not a listing/search page) — else remove it and mark INSUFFICIENT DATA
 - **Two-step verified**: news citations point to the article URL you fetched (step 2), not the listing page (step 1)
 - **Block 2 inline links**: every news-based claim has `[source: https://...]` — scan each verdict; remove any fact with no source tag
@@ -746,7 +762,7 @@ After Block 3 and citation validation, print the Telegram message for @CryptoAiI
 **Three mandatory elements per token — no exceptions:**
 
 1. **Market data** — price, RSI, MACD line vs signal, EMA20 vs SMA200 (above/below), % from ATH
-2. **5-seat investment panel recap** — exactly 1 sentence per seat (Value / Quality / Cycle / Trend / On-chain): what that investor saw from the briefing and how they voted
+2. **6-seat investment panel recap** — exactly 1 sentence per seat (Value / Quality / Cycle / Trend / Debasement / On-chain): what that investor saw from the briefing and how they voted
 3. **All source links** — every URL fetched for this token by the Research Desk, with a 1-line description. If none, write `no sources fetched` — never omit or fabricate
 
 A token entry without all three is incomplete. Write them in this order per token:
@@ -755,11 +771,12 @@ A token entry without all three is incomplete. Write them in this order per toke
 {EMOJI} {TOKEN} ${price} | RSI {rsi} | MACD {direction} | {above/below} 4yr avg | {pct}% below ATH
 {SIGNAL_EMOJI} {SIGNAL} — {1-sentence plain-English reason: what the data shows + why it drives this signal}
 
-📊 Investment panel ({N}/5 bullish):
+📊 Investment panel ({N}/6 bullish):
   Value (Graham): {1 sentence — margin of safety assessment from briefing; how this seat voted}
   Quality (Buffett): {1 sentence — moat/revenue quality from briefing; how this seat voted}
   Cycle (Dalio): {1 sentence — macro regime/liquidity cycle from briefing; how this seat voted}
   Trend (Druckenmiller): {1 sentence — price structure/momentum from briefing; how this seat voted}
+  Debasement (Alden): {1 sentence — fiscal dominance/BTC-hurdle/live macro context from briefing; how this seat voted}
   On-chain (Burniske): {1 sentence — fee capture/protocol flows from briefing; how this seat voted}
 
 📰 Sources:

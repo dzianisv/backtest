@@ -8,6 +8,10 @@ Multi-token crypto portfolio analyzer. Runs a **3-layer hedge fund structure** (
 
 ```mermaid
 flowchart TD
+    SETUP["⚙️ Pre-loop setup (once)\nF&G index · current_context.ts --days 30\n→ lyn_current_context.md (book-wide, not per-token)"]
+
+    SETUP -->|"run dir + lyn_current_context.md ready"| CIO
+
     CIO["🎯 CIO\n11 tokens · one at a time (chart slot)"]
 
     CIO -->|"token + price_usd"| RESEARCH
@@ -20,13 +24,14 @@ flowchart TD
         SM["analyse-smartmoney\n🌐 whale flows · exchange inflows\nOTC · positioning"]
     end
 
-    BRIEF["📄 CIO consolidates\none briefing package per token"]
+    BRIEF["📄 CIO consolidates\none briefing package per token\n+ Lyn current views injected"]
 
     TA -->|"technical brief"| BRIEF
     FUND -->|"fundamental brief"| BRIEF
     OC -->|"on-chain brief"| BRIEF
     MACRO -->|"macro brief"| BRIEF
     SM -->|"smart money brief"| BRIEF
+    SETUP -->|"lyn_current_context.md"| BRIEF
 
     BRIEF -->|"briefing"| PANEL
 
@@ -35,7 +40,7 @@ flowchart TD
         B["investor-warren-buffett\nQuality school\nBuffett / Fisher"]
         D["investor-ray-dalio\nCycle school\nDalio / Templeton"]
         DR["investor-stanley-druckenmiller\nTrend school\nDruckenmiller / Carver"]
-        LA["investor-lyn-alden\nDebasement school\nAlden — BTC-as-hurdle"]
+        LA["investor-lyn-alden\nDebasement school\nAlden — BTC-as-hurdle\n📡 reads live current views from briefing"]
         BU["analyse-defi\nOn-chain school\nBurniske"]
     end
 
@@ -82,7 +87,7 @@ flowchart TD
 | Quality | [`investor-warren-buffett`](../investor-warren-buffett/SKILL.md) | Buffett / Fisher (*Common Stocks and Uncommon Profits*) |
 | Cycle | [`investor-ray-dalio`](../investor-ray-dalio/SKILL.md) | Dalio / Templeton ("maximum pessimism") |
 | Trend | [`investor-stanley-druckenmiller`](../investor-stanley-druckenmiller/SKILL.md) | Druckenmiller / Carver (*Systematic Trading*) |
-| Debasement | [`investor-lyn-alden`](../investor-lyn-alden/SKILL.md) | Alden (*Broken Money*) — fiscal dominance, scarce-asset, BTC-as-hurdle |
+| Debasement | [`investor-lyn-alden`](../investor-lyn-alden/SKILL.md) | Alden (*Broken Money*) — fiscal dominance, scarce-asset, BTC-as-hurdle; **reads live 30d macro context from `current_context.ts` injected into briefing** |
 | On-chain | [`analyse-defi`](../analyse-defi/SKILL.md) | Burniske (*Cryptoassets* value-accrual) — dual role: research + vote |
 
 ### Layer 3 — CIO (conviction-weighted synthesis → signal → governor → report)
