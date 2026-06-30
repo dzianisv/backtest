@@ -14,7 +14,7 @@ flowchart TD
 
     subgraph RESEARCH["① Research Desk — parallel, each analyst owns its data"]
         TA["analyse-technical\n📊 TradingView MCP\nOHLCV · RSI · BB · MACD · MAs"]
-        FUND["analyse-onchain\n🌐 MVRV-Z · realized price · NUPL\nBTC valuation · sentiment · cycle"]
+        FUND["analyse-onchain\n🌐 MVRV-Z · realized price · NUPL\nPuell · LTH/STH · exchange flows"]
         OC["analyse-defi\n🌐 DeFiLlama\nTVL · fee distribution · accrual"]
         MACRO["analyse-macro\n🌐 GLI · M2 · DXY · ETF flows\nmacro headlines · halving cycle"]
         SM["analyse-smartmoney\n🌐 whale flows · exchange inflows\nOTC · positioning"]
@@ -57,7 +57,7 @@ flowchart TD
 | Analyst | Skill | Data source |
 |---|---|---|
 | Technical | [`analyse-technical`](../analyse-technical/SKILL.md) | TradingView MCP — OHLCV, RSI, BB, MACD, MAs |
-| BTC valuation | [`analyse-onchain`](../analyse-onchain/SKILL.md) | MVRV-Z, realized price, NUPL, Puell, 200wMA, sentiment/cycle |
+| BTC valuation | [`analyse-onchain`](../analyse-onchain/SKILL.md) | MVRV-Z, realized price, NUPL, Puell, LTH/STH supply, exchange flows |
 | On-chain DeFi | [`analyse-defi`](../analyse-defi/SKILL.md) | DeFiLlama: TVL, fee distribution, protocol accrual |
 | Macro | [`analyse-macro`](../analyse-macro/SKILL.md) | GLI, M2, DXY, ETF flows, halving cycle, macro headlines |
 | Smart money | [`analyse-smartmoney`](../analyse-smartmoney/SKILL.md) | Whale flows, exchange inflows/outflows, OTC desk, positioning |

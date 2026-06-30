@@ -21,7 +21,7 @@ Loop through the token universe **one token at a time** (TradingView has a singl
 
 **Layer 1 — Research Desk** (data gatherers, no votes):
 - `analyse-technical` → TradingView MCP — OHLCV, RSI, BB, MACD, MAs
-- `analyse-onchain` → MVRV-Z, realized price, NUPL, Puell, 200wMA, sentiment/cycle
+- `analyse-onchain` → MVRV-Z, realized price, NUPL, Puell, LTH/STH supply, exchange flows
 - `analyse-defi` → DeFiLlama: TVL, fee distribution, protocol accrual
 - `analyse-macro` → GLI, M2, DXY, ETF flows, halving cycle, macro headlines
 - `analyse-smartmoney` → Whale flows, exchange inflows/outflows, OTC desk, positioning
