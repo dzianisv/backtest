@@ -133,28 +133,22 @@ function stripTags(html: string): string {
 
 function unescapeHtml(s: string): string {
   return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
     .replace(/&amp;/g, "&")
     .replace(/&#038;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8216;/g, "'")
-    .replace(/&#8220;/g, '"')
-    .replace(/&#8221;/g, '"')
-    .replace(/&#8230;/g, "...")
-    .replace(/&hellip;/g, "...")
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&#8217;|&rsquo;/g, "'")
+    .replace(/&#8216;|&lsquo;/g, "'")
+    .replace(/&#8220;|&ldquo;/g, '"')
+    .replace(/&#8221;|&rdquo;/g, '"')
+    .replace(/&#8230;|&hellip;/g, "...")
     .replace(/&ndash;/g, "–")
     .replace(/&mdash;/g, "—")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lsquo;/g, "'")
-    .replace(/&rsquo;/g, "'")
-    .replace(/&ldquo;/g, '"')
-    .replace(/&rdquo;/g, '"')
-    .replace(/&#[0-9]+;/g, (e) => {
-      const code = parseInt(e.slice(2, -1), 10);
-      return String.fromCharCode(code);
-    });
+    .replace(/&nbsp;/g, " ");
 }
 
 function htmlToMarkdown(html: string): string {
@@ -252,7 +246,7 @@ async function fetchArticle(
     if (!res.ok) return { ok: false, reason: `HTTP ${res.status}` };
     const html = await res.text();
 
-    const title = extractTitle(html) || slugFromUrl(url);
+    const title = unescapeHtml(extractTitle(html) || slugFromUrl(url));
     const date = extractMeta(html, "article:published_time").slice(0, 10) || "unknown";
     const description = unescapeHtml(extractMeta(html, "og:description"));
     const bodyHtml = extractBody(html);
@@ -260,7 +254,9 @@ async function fetchArticle(
     const wordCount = bodyMd.split(/\s+/).filter(Boolean).length;
     const slug = slugFromUrl(url);
 
-    const frontmatter = `---\ntitle: ${title.replace(/:/g, "&#58;")}\nurl: ${url}\ndate: ${date}\n---\n\n# ${title}\n\n${bodyMd}`;
+    // Quote the title in YAML to safely handle colons, apostrophes, and other special chars.
+    const yamlTitle = `"${title.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+    const frontmatter = `---\ntitle: ${yamlTitle}\nurl: ${url}\ndate: ${date}\n---\n\n# ${title}\n\n${bodyMd}`;
     const outPath = path.join(KB_DIR, `${slug}.md`);
     await Bun.write(outPath, frontmatter);
 

@@ -1,5 +1,5 @@
 ---
-title: Most Investments are Actually Bad. Here&#8217;s Why.
+title: "Most Investments are Actually Bad. Here’s Why."
 url: https://www.lynalden.com/most-investments-are-bad/
 date: 2024-04-28
 ---

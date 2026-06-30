@@ -1,5 +1,5 @@
 ---
-title: Economic Japanification&#58; Not What You Think
+title: "Economic Japanification: Not What You Think"
 url: https://www.lynalden.com/economic-japanification/
 date: 2021-02-14
 ---

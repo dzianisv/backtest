@@ -1,5 +1,5 @@
 ---
-title: The Shiller PE (CAPE) Ratio&#58; Current Market Valuations
+title: "The Shiller PE (CAPE) Ratio: Current Market Valuations"
 url: https://www.lynalden.com/shiller-pe-cape-ratio/
 date: 2017-02-14
 ---

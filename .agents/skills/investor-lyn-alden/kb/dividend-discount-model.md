@@ -1,5 +1,5 @@
 ---
-title: The Dividend Discount Model&#58; Determining Equity Fair Value
+title: "The Dividend Discount Model: Determining Equity Fair Value"
 url: https://www.lynalden.com/dividend-discount-model/
 date: 2018-01-14
 ---

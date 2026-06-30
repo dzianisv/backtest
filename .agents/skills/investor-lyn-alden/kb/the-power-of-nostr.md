@@ -1,5 +1,5 @@
 ---
-title: The Power of Nostr&#58; Decentralized Social Media and More
+title: "The Power of Nostr: Decentralized Social Media and More"
 url: https://www.lynalden.com/the-power-of-nostr/
 date: 2024-07-20
 ---

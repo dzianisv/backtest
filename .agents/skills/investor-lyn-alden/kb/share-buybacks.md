@@ -1,5 +1,5 @@
 ---
-title: Share Buybacks (aka Repurchases)&#58; the Good, the Bad, and the Ugly
+title: "Share Buybacks (aka Repurchases): the Good, the Bad, and the Ugly"
 url: https://www.lynalden.com/share-buybacks/
 date: 2017-10-29
 ---

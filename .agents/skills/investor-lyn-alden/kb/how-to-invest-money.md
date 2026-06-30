@@ -1,5 +1,5 @@
 ---
-title: How to Invest Money Intelligently&#58; 2024 Investing Guide
+title: "How to Invest Money Intelligently: 2024 Investing Guide"
 url: https://www.lynalden.com/how-to-invest-money/
 date: 2017-04-09
 ---

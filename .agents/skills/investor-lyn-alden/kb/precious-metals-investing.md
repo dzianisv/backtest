@@ -1,5 +1,5 @@
 ---
-title: How to Invest in Gold and Silver&#58; Precious Metals Investing Guide
+title: "How to Invest in Gold and Silver: Precious Metals Investing Guide"
 url: https://www.lynalden.com/precious-metals-investing/
 date: 2017-06-29
 ---

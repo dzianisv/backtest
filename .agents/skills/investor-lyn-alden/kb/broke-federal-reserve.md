@@ -1,5 +1,5 @@
 ---
-title: How the Fed &#8220;Went Broke&#8221;
+title: "How the Fed “Went Broke”"
 url: https://www.lynalden.com/broke-federal-reserve/
 date: 2023-02-07
 ---

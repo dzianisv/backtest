@@ -1,5 +1,5 @@
 ---
-title: Proof-of-Stake and Stablecoins&#58; A Blockchain Centralization Dilemma
+title: "Proof-of-Stake and Stablecoins: A Blockchain Centralization Dilemma"
 url: https://www.lynalden.com/proof-of-stake/
 date: 2021-11-28
 ---

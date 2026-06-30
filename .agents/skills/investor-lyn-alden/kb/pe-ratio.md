@@ -1,5 +1,5 @@
 ---
-title: P/E Ratio&#58; Why Investors Need Better Stock Valuation Methods
+title: "P/E Ratio: Why Investors Need Better Stock Valuation Methods"
 url: https://www.lynalden.com/pe-ratio/
 date: 2019-02-16
 ---

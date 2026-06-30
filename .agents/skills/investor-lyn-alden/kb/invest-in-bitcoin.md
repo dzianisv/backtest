@@ -1,5 +1,5 @@
 ---
-title: 3 Reasons I&#8217;m Investing in Bitcoin
+title: "3 Reasons I’m Investing in Bitcoin"
 url: https://www.lynalden.com/invest-in-bitcoin/
 date: 2020-07-16
 ---

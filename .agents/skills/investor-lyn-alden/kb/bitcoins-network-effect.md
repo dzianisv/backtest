@@ -1,5 +1,5 @@
 ---
-title: Analyzing Bitcoin&#8217;s Network Effect
+title: "Analyzing Bitcoin’s Network Effect"
 url: https://www.lynalden.com/bitcoins-network-effect/
 date: 2021-03-08
 ---

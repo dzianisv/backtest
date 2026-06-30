@@ -1,5 +1,5 @@
 ---
-title: Energy&#58; The Area Under the Curve
+title: "Energy: The Area Under the Curve"
 url: https://www.lynalden.com/the-area-under-the-curve/
 date: 2022-07-10
 ---

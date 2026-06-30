@@ -96,8 +96,8 @@ dead source never blocks the others:
 | Source | Script | What it gives | Notes |
 |---|---|---|---|
 | Blog | `fetch_blog.ts` | public articles/newsletters (RSS) | live site WAF-blocks datacenter IPs → auto-falls back to the Internet Archive; the public feed is sparse (recent writing is members-only, announced on Nostr/X) |
-| X / Twitter | `fetch_x.ts` | recent tweets **and reposts** (@LynAldenContact) | keyless syndication endpoint; intermittently 429-rate-limited — just re-run |
-| Nostr | `fetch_nostr.ts` | recent notes **and reposts** (lyn@primal.net) | most reliable + freshest (often same-day); relay `wss://relay.primal.net` |
+| X / Twitter | `fetch_x.ts` | recent tweets **and reposts** (@LynAldenContact) | keyless syndication endpoint; intermittently 429-rate-limited — just re-run; the endpoint returns a fixed recent batch (~50 tweets), so `--days` can only narrow it, not extend it — for older history use `kb/` newsletters |
+| Nostr | `fetch_nostr.ts` | recent notes **and reposts** (lyn@primal.net) | most reliable + freshest (often same-day); relay `wss://relay.primal.net`; relay depth typically ~30-60 days — for older views use `kb/` and `references/10-newsletter-arc.md` |
 
 Each fetcher also runs standalone with `--days N` (and `--json`); `fetch_blog.ts --full` additionally
 downloads article bodies.

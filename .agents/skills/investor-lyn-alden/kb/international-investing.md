@@ -1,5 +1,5 @@
 ---
-title: International Stocks and ETFs&#58; Where I&#8217;m Focusing For 2024
+title: "International Stocks and ETFs: Where I’m Focusing For 2024"
 url: https://www.lynalden.com/international-investing/
 date: 2017-08-10
 ---

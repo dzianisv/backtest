@@ -1,5 +1,5 @@
 ---
-title: A Century of Fiscal and Monetary Policy&#58; Inflation vs Deflation
+title: "A Century of Fiscal and Monetary Policy: Inflation vs Deflation"
 url: https://www.lynalden.com/fiscal-and-monetary-policy/
 date: 2020-09-15
 ---

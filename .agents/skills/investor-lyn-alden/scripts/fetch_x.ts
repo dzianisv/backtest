@@ -138,6 +138,9 @@ export async function fetchX(days: number): Promise<XPost[]> {
   }
   if (!raw || raw.length === 0) throw new Error("no tweet objects in payload");
 
+  // NOTE: --days can only NARROW the fixed syndication batch, not extend it.
+  // The endpoint returns a fixed recent batch (~50 tweets); --days 365 reaches
+  // no further back than the endpoint serves (~6 months at most).
   const cutoff = Date.now() - days * 86_400_000;
   const seen = new Set<string>();
   const posts: XPost[] = [];

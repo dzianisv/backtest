@@ -1,5 +1,5 @@
 ---
-title: Global Debt&#58; An Overview of Where Debt Exists in the World
+title: "Global Debt: An Overview of Where Debt Exists in the World"
 url: https://www.lynalden.com/global-debt/
 date: 2018-11-19
 ---

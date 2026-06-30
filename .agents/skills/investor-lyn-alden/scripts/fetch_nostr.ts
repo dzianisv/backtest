@@ -128,6 +128,11 @@ function toNote(ev: NostrEvent): NostrNote {
 
 export async function fetchNostr(days: number): Promise<NostrNote[]> {
   const since = Math.floor((Date.now() - days * 86_400_000) / 1000);
+  if (days > 60) {
+    // relay.primal.net (and most public relays) only serve ~30-60d of history;
+    // requesting more will silently return the same ~30-60d window.
+    console.warn(`[fetch_nostr] relay depth is typically ~30-60d; --days ${days} may return the same results as --days 30`);
+  }
   const filter = { authors: [PUBKEY], kinds: [1, 6], since, limit: 200 };
 
   const results = await Promise.allSettled(

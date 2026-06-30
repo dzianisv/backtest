@@ -1,5 +1,5 @@
 ---
-title: Demystifying Emerging Markets&#58; How to Invest Wisely Abroad
+title: "Demystifying Emerging Markets: How to Invest Wisely Abroad"
 url: https://www.lynalden.com/invest-in-emerging-markets/
 date: 2018-09-03
 ---

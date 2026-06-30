@@ -1,5 +1,5 @@
 ---
-title: Contrarian Investing&#58; Smart Moves for 2024 and Beyond
+title: "Contrarian Investing: Smart Moves for 2024 and Beyond"
 url: https://www.lynalden.com/contrarian-investing/
 date: 2016-12-12
 ---

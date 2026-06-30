@@ -1,5 +1,5 @@
 ---
-title: Interest Rate Effects on Equities&#58; Valuation Impacts
+title: "Interest Rate Effects on Equities: Valuation Impacts"
 url: https://www.lynalden.com/interest-rate-effects/
 date: 2021-01-24
 ---

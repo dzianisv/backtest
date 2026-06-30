@@ -1,5 +1,5 @@
 ---
-title: Bitcoin&#58; A Global Liquidity Barometer
+title: "Bitcoin: A Global Liquidity Barometer"
 url: https://www.lynalden.com/bitcoin-a-global-liquidity-barometer/
 date: 2024-09-24
 ---

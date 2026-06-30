@@ -1,5 +1,5 @@
 ---
-title: Discounted Cash Flow Analysis&#58;  Complete Tutorial With Examples
+title: "Discounted Cash Flow Analysis:  Complete Tutorial With Examples"
 url: https://www.lynalden.com/discounted-cash-flow-analysis/
 date: 2017-02-01
 ---

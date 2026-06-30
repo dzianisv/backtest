@@ -1,5 +1,5 @@
 ---
-title: Digital Alchemy&#58; A Post-Mortem of the Crypto Crash
+title: "Digital Alchemy: A Post-Mortem of the Crypto Crash"
 url: https://www.lynalden.com/digital-alchemy/
 date: 2022-05-15
 ---

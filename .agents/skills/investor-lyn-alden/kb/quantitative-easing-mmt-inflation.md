@@ -1,5 +1,5 @@
 ---
-title: Quantitative Easing, MMT, and Inflation/Deflation&#58; A Primer
+title: "Quantitative Easing, MMT, and Inflation/Deflation: A Primer"
 url: https://www.lynalden.com/quantitative-easing-mmt-inflation/
 date: 2020-05-03
 ---

@@ -1,5 +1,5 @@
 ---
-title: Risk vs Volatility&#58; How to Profit from the Difference
+title: "Risk vs Volatility: How to Profit from the Difference"
 url: https://www.lynalden.com/stock-market-volatility/
 date: 2017-01-19
 ---

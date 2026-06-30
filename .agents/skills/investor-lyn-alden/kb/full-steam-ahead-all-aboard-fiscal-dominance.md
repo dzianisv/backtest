@@ -1,5 +1,5 @@
 ---
-title: Full Steam Ahead&#58; All Aboard Fiscal Dominance
+title: "Full Steam Ahead: All Aboard Fiscal Dominance"
 url: https://www.lynalden.com/full-steam-ahead-all-aboard-fiscal-dominance/
 date: 2025-01-08
 ---

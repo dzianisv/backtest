@@ -1,5 +1,5 @@
 ---
-title: The European Central Bank is Trapped. Here&#8217;s Why.
+title: "The European Central Bank is Trapped. Here’s Why."
 url: https://www.lynalden.com/ecb-trapped/
 date: 2022-06-12
 ---

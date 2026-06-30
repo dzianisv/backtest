@@ -56,7 +56,9 @@ if (import.meta.main) {
 
   lines.push("## Blog");
   if (blog.length === 0) {
-    lines.push(`- [UNAVAILABLE] ${blogErr ?? `no blog posts in last ${days}d`}`);
+    lines.push(blogErr
+      ? `- [UNAVAILABLE] ${blogErr}`
+      : `- (no public posts in last ${days}d — recent member posts are announced on Nostr/X)`);
   } else {
     for (const p of blog) {
       const d = p.date ? p.date.slice(0, 10) : "????-??-??";
@@ -67,7 +69,9 @@ if (import.meta.main) {
 
   lines.push("## X (@LynAldenContact)");
   if (x.length === 0) {
-    lines.push(`- [UNAVAILABLE] ${xErr ?? `no parseable tweets in last ${days}d`}`);
+    lines.push(xErr
+      ? `- [UNAVAILABLE] ${xErr}`
+      : `- (no tweets in last ${days}d — syndication endpoint returned an empty batch for this window)`);
   } else {
     for (const p of x) {
       const d = p.date.slice(0, 10);
@@ -79,7 +83,9 @@ if (import.meta.main) {
 
   lines.push("## Nostr (lyn@primal.net)");
   if (nostr.length === 0) {
-    lines.push(`- [UNAVAILABLE] ${nostrErr ?? `no Nostr events in last ${days}d`}`);
+    lines.push(nostrErr
+      ? `- [UNAVAILABLE] ${nostrErr}`
+      : `- (no Nostr events in last ${days}d — relay depth is typically ~30-60d)`);
   } else {
     for (const n of nostr) {
       const d = n.date.slice(0, 10);

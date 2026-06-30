@@ -1,5 +1,5 @@
 ---
-title: &#8220;The Four Monies&#8221; Visual
+title: "“The Four Monies” Visual"
 url: https://www.lynalden.com/the-four-monies/
 date: 2023-12-07
 ---

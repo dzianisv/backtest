@@ -1,5 +1,5 @@
 ---
-title: How to Invest in Renewable Energy&#58; 4 Ways to Profit
+title: "How to Invest in Renewable Energy: 4 Ways to Profit"
 url: https://www.lynalden.com/invest-in-renewable-energy/
 date: 2018-04-28
 ---

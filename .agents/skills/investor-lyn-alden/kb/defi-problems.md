@@ -1,5 +1,5 @@
 ---
-title: The Problems with DeFi &#038; Crypto
+title: "The Problems with DeFi & Crypto"
 url: https://www.lynalden.com/defi-problems/
 date: 2022-12-10
 ---

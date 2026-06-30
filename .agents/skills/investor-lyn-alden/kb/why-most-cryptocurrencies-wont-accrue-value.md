@@ -1,5 +1,5 @@
 ---
-title: Why Most Cryptocurrencies Won&#8217;t Accrue Value
+title: "Why Most Cryptocurrencies Won’t Accrue Value"
 url: https://www.lynalden.com/why-most-cryptocurrencies-wont-accrue-value/
 date: 2025-12-01
 ---

@@ -1,5 +1,5 @@
 ---
-title: Bitcoin&#8217;s Energy Usage Isn&#8217;t a Problem. Here&#8217;s Why.
+title: "Bitcoin’s Energy Usage Isn’t a Problem. Here’s Why."
 url: https://www.lynalden.com/bitcoin-energy/
 date: 2021-08-22
 ---

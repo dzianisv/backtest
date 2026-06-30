@@ -1,5 +1,5 @@
 ---
-title: Energy Problems&#58; Yes, Still There
+title: "Energy Problems: Yes, Still There"
 url: https://www.lynalden.com/energy-problems/
 date: 2022-10-29
 ---

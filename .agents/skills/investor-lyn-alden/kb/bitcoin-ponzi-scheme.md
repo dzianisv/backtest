@@ -1,5 +1,5 @@
 ---
-title: Bitcoin&#58; Addressing the Ponzi Scheme Characterization
+title: "Bitcoin: Addressing the Ponzi Scheme Characterization"
 url: https://www.lynalden.com/bitcoin-ponzi-scheme/
 date: 2021-02-01
 ---

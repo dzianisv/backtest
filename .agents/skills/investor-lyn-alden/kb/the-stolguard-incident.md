@@ -1,5 +1,5 @@
 ---
-title: New Book&#58; The Stolguard Incident
+title: "New Book: The Stolguard Incident"
 url: https://www.lynalden.com/the-stolguard-incident/
 date: 2026-03-13
 ---

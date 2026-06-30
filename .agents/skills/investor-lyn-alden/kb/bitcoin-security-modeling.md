@@ -1,5 +1,5 @@
 ---
-title: Bitcoin&#58; Fee-Based Security Modeling
+title: "Bitcoin: Fee-Based Security Modeling"
 url: https://www.lynalden.com/bitcoin-security-modeling/
 date: 2021-03-28
 ---

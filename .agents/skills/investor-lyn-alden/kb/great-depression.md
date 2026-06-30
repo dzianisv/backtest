@@ -1,5 +1,5 @@
 ---
-title: Why This is Unlike the Great Depression (Better &#038; Worse)
+title: "Why This is Unlike the Great Depression (Better & Worse)"
 url: https://www.lynalden.com/great-depression/
 date: 2020-03-27
 ---

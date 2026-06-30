@@ -1,5 +1,5 @@
 ---
-title: &#8220;Fixing&#8221; the Debt Problem
+title: "“Fixing” the Debt Problem"
 url: https://www.lynalden.com/fixing-the-debt-problem/
 date: 2020-05-28
 ---
