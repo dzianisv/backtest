@@ -154,11 +154,11 @@ The orchestrator does NOT interpret or summarize reasons. It passes them verbati
 | BEARISH trigger | `death_cross = true` AND `rsi_14 < 40` |
 | NEUTRAL trigger | MAs are null (`weekly_closes < 200`), or MA alignment and RSI conflict |
 
-### Seat 5 — `analyse-onchain-lens`
+### Seat 5 — `analyse-onchain`
 
 | Attribute | Value |
 |---|---|
-| Skill path | `.agents/skills/analyse-onchain-lens/SKILL.md` |
+| Skill path | `.agents/skills/analyse-onchain/SKILL.md` |
 | School anchoring | Chris Burniske & Jack Tatar (*Cryptoassets* — value-accrual framework); DeFiLlama methodology |
 | Primary signals | `defi_llama.tvl`, `defi_llama.protocol_revenue_30d`, `defi_llama.fee_distribution` |
 | BULLISH trigger | Value accrual verified: `fee_distribution` confirms buyback or burn mechanism AND `tvl` growing AND `protocol_revenue_30d > 0` |
@@ -352,7 +352,7 @@ Both adapters return to core:
 ## 8. File Layout
 
 Four seats reuse existing analytics skills — no new files needed. Only the onchain seat is new
-(the existing `analyse-onchain-lens` is Bitcoin MVRV-Z only; not applicable to multi-token DeFiLlama data).
+(the existing `analyse-onchain` is Bitcoin MVRV-Z only; not applicable to multi-token DeFiLlama data).
 
 ```
 .agents/skills/

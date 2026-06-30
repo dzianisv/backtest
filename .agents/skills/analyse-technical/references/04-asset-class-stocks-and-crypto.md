@@ -22,7 +22,7 @@ instrument-specific overlays below are non-negotiable for disciplined entry-timi
 
 **Scope boundary (critical):**
 On-chain valuation (MVRV, NUPL, realized price, Puell multiple) is **out of scope here** — route
-all valuation questions to `analyse-onchain-lens`. Intraday execution is **not this skill** — route to
+all valuation questions to `analyse-onchain`. Intraday execution is **not this skill** — route to
 `investor-bernstein-intraday`. Validate any rule statistically with `analyse-systematic-trading`
 before trading it live.
 
@@ -230,13 +230,13 @@ before trading it live.
   prior laggards re-rate. Use alongside fundamental context and `regime-detection`, not in isolation.
 
 - **On-chain valuation is explicitly out of scope.** MVRV, NUPL, realized price, and Puell multiple
-  belong to `analyse-onchain-lens`. This lens is price/volume structure only. Never attempt to infer
+  belong to `analyse-onchain`. This lens is price/volume structure only. Never attempt to infer
   cycle valuation position from chart patterns alone.
 
 - **All sizing and risk decisions route through `risk-management`.** This skill provides entry
   zones, base types, and invalidation levels only. It does not size positions.
 
 - **Cross-skill chain (required for full picture):**
-  Entry timing (this skill) → Valuation context (`analyse-onchain-lens`) → Backtest any rule
+  Entry timing (this skill) → Valuation context (`analyse-onchain`) → Backtest any rule
   (`analyse-systematic-trading`) → Size and veto (`risk-management`) → Regime filter
   (`regime-detection`) → Intraday execution (`investor-bernstein-intraday`).

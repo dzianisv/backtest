@@ -1,6 +1,6 @@
 ---
 name: analyse-comprehensive-crypto
-description: "Full-stack crypto analysis orchestrator — pulls live price/indicator data via TradingView MCP tools across multiple timeframes, then spawns all five analysis seats (analyse-onchain-lens, analyse-sentiment, analyse-macro, analyse-orderflow, analyse-narrative) as parallel subagents, and synthesizes their verdicts into a quorum brief: zone, posture, key tensions, and the one dominant risk. Use when asked to do a complete crypto analysis, 'full analysis of BTC', 'comprehensive read', 'what does everything say', 'run the panel', or 'multi-lens crypto brief'. Requires TradingView MCP + Chrome CDP on port 9222. Educational, not advice."
+description: "Full-stack crypto analysis orchestrator — pulls live price/indicator data via TradingView MCP tools across multiple timeframes, then spawns all five analysis seats (analyse-onchain, analyse-sentiment, analyse-macro, analyse-orderflow, analyse-narrative) as parallel subagents, and synthesizes their verdicts into a quorum brief: zone, posture, key tensions, and the one dominant risk. Use when asked to do a complete crypto analysis, 'full analysis of BTC', 'comprehensive read', 'what does everything say', 'run the panel', or 'multi-lens crypto brief'. Requires TradingView MCP + Chrome CDP on port 9222. Educational, not advice."
 license: MIT
 compatibility: opencode
 metadata:
@@ -110,7 +110,7 @@ question on the identical data package. Do NOT run them sequentially.
 
 | Seat | Skill | Focus |
 |---|---|---|
-| On-chain | `analyse-onchain-lens` | MVRV-Z, NUPL, realized price, Puell, LTH behavior |
+| On-chain | `analyse-onchain` | MVRV-Z, NUPL, realized price, Puell, LTH behavior |
 | Sentiment | `analyse-sentiment` | F&G index, funding rates, long/short ratio, social volume |
 | Macro | `analyse-macro` | GLI direction, Fed liquidity, DXY, M2, halving cycle, ETF flows |
 | Order Flow | `analyse-orderflow` | OI, liquidation clusters, CVD, CME gap, spot vs perp |

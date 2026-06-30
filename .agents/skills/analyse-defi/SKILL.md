@@ -1,6 +1,6 @@
 ---
 name: analyse-defi
-description: "On-chain seat for the crypto-advisor panel. Applies Burniske's value-accrual framework to DeFiLlama protocol data: revenue, TVL, fee distribution mechanism. Returns a structured BULLISH/NEUTRAL/BEARISH vote with one-line school citation. Input: DataPackage JSON. Output: { vote, reason } JSON. Not Bitcoin MVRV-Z — use analyse-onchain-lens for BTC cycle metrics."
+description: "On-chain seat for the crypto-advisor panel. Applies Burniske's value-accrual framework to DeFiLlama protocol data: revenue, TVL, fee distribution mechanism. Returns a structured BULLISH/NEUTRAL/BEARISH vote with one-line school citation. Input: DataPackage JSON. Output: { vote, reason } JSON. Not Bitcoin MVRV-Z — use analyse-onchain for BTC cycle metrics."
 license: MIT
 compatibility: opencode
 metadata:

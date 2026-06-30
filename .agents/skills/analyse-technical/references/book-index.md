@@ -19,5 +19,5 @@ These frameworks are the backbone of this skill. They are attributed by originat
 
 1. **All frameworks here are summarized from PUBLIC TA knowledge** — cite them by originator name (e.g., "Weinstein stage analysis") without inventing quotes, page numbers, or precise statistics.
 2. **For validation** of any entry rule derived from these frameworks, route to `analyse-systematic-trading` (walk-forward, full costs). `trend-following` is the empirically durable TA family; pair with `regime-detection` and `risk-management`.
-3. **For on-chain VALUATION** (MVRV, NUPL, realized price, Puell multiple), route to `analyse-onchain-lens` — that is not covered here.
+3. **For on-chain VALUATION** (MVRV, NUPL, realized price, Puell multiple), route to `analyse-onchain` — that is not covered here.
 4. **For intraday / day-trading execution**, route to `investor-bernstein-intraday` — that is not covered here.

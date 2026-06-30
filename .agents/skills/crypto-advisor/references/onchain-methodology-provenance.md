@@ -7,7 +7,7 @@ live-data tools.
 ## Primary book (distilled — liquidity pillar)
 - **Michael J. Howell, *Capital Wars: The Rise of Global Liquidity* (Palgrave Macmillan, 2020).**
   - Link: https://link.springer.com/book/10.1007/978-3-030-39288-8
-  - Grounds: `references/01-global-liquidity-and-btc.md` (Global Liquidity framework, four-phase cycle,
+  - Grounds: `../../analyse-macro/references/01-global-liquidity-and-btc.md` (Global Liquidity framework, four-phase cycle,
     lead-lag in months, GLI composite, the three CB rules, refinancing-mechanism view, ~US$130tn size).
   - **Scope flag (load-bearing):** *Capital Wars* (2020) gives crises "every 8–10 years," a **41-month**
     trend baseline, and leads measured in **months** — it does **NOT** state a clean "5–6 year liquidity
@@ -20,7 +20,7 @@ live-data tools.
 - **Michael Howell / CrossBorder Capital** — subsequent research introducing the ~5–6yr (65-month) liquidity
   cycle and the BTC-as-high-beta-liquidity-asset framing. **Distilled from CrossBorder/Capital Wars Substack +
   2024–26 interviews (web sources, listed in `01`).** See the "Later Howell (post-2020)" section of
-  `references/01-global-liquidity-and-btc.md` for the grounded, attributed content (65-month re-fi cycle,
+  `../../analyse-macro/references/01-global-liquidity-and-btc.md` for the grounded, attributed content (65-month re-fi cycle,
   11–13wk BTC lead, ~40% liquidity driver share, the 2026 debt-wall read). Honesty flag carried there: the
   "~0.9 correlation / 90% of BTC's move is liquidity" figure is **secondary (Raoul Pal) framing, not a precise
   Howell statistic.**
@@ -35,7 +35,7 @@ These are the data sources behind pillars 2–3; readings **decay** and must be 
 
 ## Cross-referenced repo skills (already distilled)
 - **`investor-lyn-alden`** — debasement / hardest-money logic and BTC-as-hurdle; grounds pillar 5
-  (`05-token-selection-btc-as-hurdle.md`).
+  (`../../crypto-token-screener/references/btc-as-hurdle.md`).
 - **`analyse-systematic-trading`** (Carver, *Systematic Trading* 2015) — vol-target sizing, Half-Kelly,
   the cost speed limit; grounds the sizing in pillar 4 and the day-trading-fails finding in `06`.
 - **`investor-stanley-druckenmiller`** — liquidity/timing lens; complements pillar 1.

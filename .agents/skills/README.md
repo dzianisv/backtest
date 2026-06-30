@@ -92,7 +92,7 @@ USER QUESTION
      │        → regime-detection (weighted signal ensemble → exposure dial)
      │
      ├── "manage my crypto/DeFi book"
-     │        → crypto-advisor (orchestrates analyse-onchain + regime + dip + risk)
+     │        → crypto-advisor (orchestrates analyse-onchain + analyse-macro + regime + dip + risk)
      │        → defi-portfolio-manager (DeFi-native: yield + risk + protocol audit)
      │
      └── "find trending stocks / any convergence?"
@@ -202,16 +202,16 @@ USER QUESTION + PORTFOLIO + DATE
 
 ### 3. crypto-advisor (the crypto desk orchestrator)
 
-Routes any crypto buy/sell/allocation question through the right sub-skills. Loads `analyse-onchain` internally — do NOT run both in parallel (redundant).
+Routes any crypto buy/sell/allocation question through the right sub-skills. Orchestrates the analyse-* seats (onchain/macro/sentiment/defi/smartmoney) internally — do NOT run those seats separately in parallel (redundant).
 
 ```
 USER → crypto-advisor (classifier + invariant enforcer)
        │
-       ├── analyse-onchain (brain — 4-pillar methodology)
-       │   ├── pillar 1: global liquidity (Howell, Capital Wars)
-       │   ├── pillar 2: on-chain valuation (MVRV-Z, realized price, NUPL, Puell)
-       │   ├── pillar 3: sentiment/cycle (Fear & Greed, 4-phase cycle)
-       │   └── pillar 4: execution (valuation-tilted DCA + vol-target sizing)
+       ├── analyse-onchain (on-chain valuation seat — MVRV-Z, NUPL, Puell)
+       │   ├── analyse-macro: global liquidity (Howell, Capital Wars)
+       │   ├── analyse-onchain: on-chain valuation (MVRV-Z, realized price, NUPL, Puell)
+       │   ├── analyse-sentiment: sentiment/cycle (Fear & Greed, 4-phase cycle)
+       │   └── crypto-advisor: execution (valuation-tilted DCA + vol-target sizing)
        │
        ├── regime-detection (dial — risk-on/off read)
        │
@@ -226,7 +226,7 @@ USER → crypto-advisor (classifier + invariant enforcer)
 ```
 
 **Efficient run pattern:** `crypto-advisor` + `macro-panel` = 2 calls, zero redundancy.
-Running `analyse-onchain` separately alongside `crypto-advisor` double-counts the same lens.
+Running the analyse-* seats separately alongside `crypto-advisor` double-counts — crypto-advisor already orchestrates them.
 
 ---
 
@@ -513,7 +513,7 @@ defi-portfolio-manager (PM — delegates to subagent team)
 
 ```
 ANALYTICAL LENSES (methodology-based):
-├── analyse-onchain ──────── 4-pillar: liquidity + on-chain + sentiment + execution
+├── analyse-onchain ──────── on-chain valuation seat (MVRV-Z, NUPL, Puell)
 ├── analyse-systematic-trading  Carver: vol-target, forecast scalars, cost speed limit
 ├── analyse-technical  long-term entry timing: Weinstein stage, 200d/30wk, RSI/MACD/vol confirm (scripts/ta.py)
 ├── investor-bernstein-intraday  Bernstein day-trading: set-up→trigger→follow-through (intraday only)
@@ -646,13 +646,14 @@ robinhood-connector ───── Robinhood agentic MCP (notification → live
 | [analyse-systematic-trading](analyse-systematic-trading/SKILL.md) | Robert Carver *Systematic Trading* |
 | [analyse-technical](analyse-technical/SKILL.md) | Weinstein stage analysis + Grimes + Murphy (public TA frameworks) |
 | [investor-bernstein-intraday](investor-bernstein-intraday/SKILL.md) | Jacob Bernstein *The Ultimate Day Trader* |
-| [analyse-onchain](analyse-onchain/SKILL.md) | Michael Howell *Capital Wars* + on-chain |
+| [analyse-onchain](analyse-onchain/SKILL.md) | On-chain valuation — MVRV-Z, NUPL, realized price, Puell |
+| [analyse-macro](analyse-macro/SKILL.md) | Global liquidity (Howell *Capital Wars*), M2, DXY, ETF flows |
 
 ### Crypto desk
 
 | Skill | Role |
 |-------|------|
-| [crypto-advisor](crypto-advisor/SKILL.md) | Crypto buy-the-dip / DCA orchestrator (loads analyse-onchain internally) |
+| [crypto-advisor](crypto-advisor/SKILL.md) | Crypto buy-the-dip / DCA orchestrator (orchestrates analyse-onchain/macro/sentiment/defi/smartmoney seats) |
 | [crypto-chair](crypto-chair/SKILL.md) | Final crypto decision synthesis (brief + panel → recommendation) |
 | [crypto-research-desk](crypto-research-desk/SKILL.md) | Consolidate crypto gather seats → one sourced brief |
 | [crypto-token-screener](crypto-token-screener/SKILL.md) | 6-point value-accrual filter + BTC hurdle rate |

@@ -1,142 +1,170 @@
 ---
 name: analyse-onchain
-description: "The repo's expert lens for analyzing the crypto market and deciding whether to buy BTC (or an alt) now — a four-pillar methodology, not a single-author lens. Fuses (1) global liquidity (Michael Howell, Capital Wars 2020), (2) on-chain valuation (MVRV-Z, realized price, NUPL, Puell, 200-week MA), (3) sentiment/cycle (Fear & Greed, four-phase cycle), and (4) execution via valuation-tilted DCA + vol-target sizing, plus BTC-as-hurdle token selection for alts. Encodes the honest core finding: pure TA timing does not beat DCA after costs; the defensible best practice is valuation-and-sentiment-tilted DCA governed by the liquidity cycle. Use when the user asks \"should I buy bitcoin now\", \"is BTC cheap or expensive\", \"analyze the crypto market\", \"MVRV / on-chain valuation\", \"global liquidity and bitcoin\", \"crypto DCA strategy\", \"is this altcoin worth it\", \"BTC-as-hurdle\", or \"when to deploy into crypto\". Educational, not advice; a lens, not gospel."
+description: "Analyst lens for reading Bitcoin's on-chain valuation state — MVRV-Z, NUPL, realized price, Puell multiple, LTH/STH supply, exchange flows, miner behavior. Interprets raw on-chain numbers into a buy/hold/trim zone verdict and confidence level. Use when asked \"is BTC cheap or expensive on-chain\", \"what do on-chain metrics say\", \"MVRV/NUPL/Puell analysis\", \"where is BTC in its cycle\", \"long-term holder behavior\", \"whale flows\", \"is this a bottom\". Depends on [[crypto-onchain-data]] for raw numbers; this skill interprets them. Educational, not advice."
 license: MIT
 compatibility: opencode
 metadata:
   audience: crypto-allocators-and-treasury-managers
-  domain: crypto-market-analysis
-  role: crypto-analysis-and-deployment-lens
-  source: "Howell Capital Wars (2020) + on-chain/liquidity practice (distilled 2026-06)"
+  domain: bitcoin-onchain-valuation
+  role: onchain-analysis-and-zone-lens
+  source: "On-chain valuation practice — MVRV-Z, NUPL, Puell, LTH/STH, exchange flows (distilled 2026-06)"
 ---
 
-# Analyst: The Crypto-Market Lens (liquidity → valuation → sentiment → execution)
+# Analysis: On-Chain Valuation Lens (cost-basis → crowd psychology → miner stress → zone verdict)
 
-Apply a **four-pillar lens-stack** to *how the crypto market is read and how capital is actually deployed*.
-This skill is the **synthesis + router**; detail lives in `references/`, grounded in **Michael J. Howell,
-*Capital Wars: The Rise of Global Liquidity* (Palgrave Macmillan, 2020)** for the liquidity pillar and in
-on-chain/execution practice for the rest. It is the **analysis brain** for the repo's live ~$177k
-conservative crypto treasury (`crypto/`), and the rigorous answer to the discretionary
-`analyse-technical` lens. Load the relevant reference before any load-bearing claim or number.
+Apply this lens to **interpret raw on-chain numbers** into a cycle-phase zone verdict with a confidence level.
+This skill is the **interpretation layer only**; raw metric fetching lives in `[[crypto-onchain-data]]`
+(`python3 .agents/skills/crypto-onchain-data/onchain_fetch.py`). It is the rigorous on-chain answer to
+"where is BTC in its cycle" — the focused on-chain valuation seat. For the liquidity governor see `analyse-macro`, for sentiment `analyse-sentiment`; the full deploy synthesis lives in `crypto-advisor`.
 
 ## The unifying worldview (everything connects to this)
 
-Crypto price is set, in order, by **the tide, the level, the mood, and the discipline**. The **tide is
-global liquidity** — Howell's insight that "it is the capacity of capital… more important than the cost of
-capital," and that liquidity *leads* risk assets by months (FX/bonds ~3–6mo, equities ~6–12mo). BTC is the
-highest-beta liquidity sponge, so liquidity is the **governor** over every deploy decision. The **level is
-on-chain valuation** — MVRV-Z, realized price, NUPL place price within its own cost-basis history (zone, not
-day-timing). The **mood is sentiment** — Fear & Greed as a *contrarian modulator* (extreme fear =
-accumulate). The **discipline is execution** — and the honest finding is blunt: **pure TA timing does not
-beat dollar-cost-averaging after costs; the defensible best practice is valuation-and-sentiment-tilted DCA,
-governed by the liquidity cycle, sized by volatility.** When the pillars conflict (on-chain cheap *but*
-liquidity rolling over) the resolution is **steady tilted DCA over tranches, never conviction lump-sum**.
-For alts, the worldview is harsher still: price everything **in BTC** and demand it clear the **BTC-as-hurdle**.
+On-chain data is the **aggregate cost-basis and behavior ledger of every Bitcoin holder** — the closest thing
+crypto has to a fundamental valuation model. **MVRV-Z measures whether market value is above or below
+realized value** (the aggregate cost basis): it is the single most cycle-reliable indicator because it
+captures whether the crowd is sitting on enough profit to sell. **NUPL maps unrealized profit/loss to crowd
+psychology phases** — from capitulation through euphoria — giving the MVRV-Z signal a behavioral reading.
+The **realized price is the floor that long-term holders defend**: price trading below realized price means
+most holders are underwater, which historically marks capitulation bottoms. **Puell tells you when miners
+are under structural sell pressure**, since miners are the only obligate sellers in the ecosystem. Together
+these metrics answer one master question: *are holders in profit enough to sell, or underwater enough to
+capitulate?* No single metric is sufficient — read all of them together; conflicts mean no extreme signal,
+stay patient.
 
 ## Core mental models (the load-bearing ones)
 
-1. **Liquidity is the tide and it leads.** Capacity of capital > cost of capital; markets are refinancing
-   mechanisms; GLI leads equities ~6–12mo. The liquidity governor sits above everything. → `references/01-global-liquidity-and-btc.md`
-2. **Four-phase liquidity cycle.** Rebound → Calm → Speculation → Turbulence; risk assets peak in Turbulence,
-   bottom in Calm. Maps onto the crypto cycle. → `references/01-global-liquidity-and-btc.md`
-3. **On-chain valuation = zone, not clock.** MVRV-Z >7 tops / <0 capitulation; realized price = aggregate
-   cost-basis floor; NUPL >0.75 euphoria / <0; Puell = miner stress. → `references/02-onchain-valuation.md`
-4. **Stock-to-Flow is discredited.** Projected ~$500k vs ~$66k actual; auto-correlation flaw. Citing it is a
-   **red flag**, not a signal. → `references/02-onchain-valuation.md`
-5. **Sentiment is a contrarian modulator.** Fear & Greed: extreme fear = accumulate, extreme greed = trim
-   tilt. Maps to Howell's phases. → `references/03-sentiment-and-market-cycle.md`
-6. **DCA beats lump-sum risk-adjusted; tilt it.** Buy more when MVRV-Z low / F&G extreme-fear; deploy measured
-   when liquidity rolling over. Lump only wins with perfect bottom-timing nobody achieves. → `references/04-execution-dca-and-sizing.md`
-7. **Vol-target the size; trend only caps drawdown.** Size from market volatility (borrow
-   `analyse-systematic-trading`); optional 200d-MA risk-cap is drawdown control, not alpha. → `references/04-execution-dca-and-sizing.md`
-8. **BTC-as-hurdle for every alt.** Price in BTC; 6-point value-accrual filter; base rate brutal (0 of 20 top
-   alts beat BTC 2017→2021). → `references/05-token-selection-btc-as-hurdle.md`
-9. **TA day-timing doesn't beat DCA after costs.** Most active traders lose net; the analytical tension
-   resolves to *tilted DCA, not conviction lump*; every metric decays — re-pull live. → `references/06-risks-and-honest-assessment.md`
+1. **MVRV-Z: the cycle-phase thermometer.** >7 = historically reliable top zone (price far above aggregate
+   cost basis, crowd in heavy profit); <0 = capitulation/accumulation (market value below realized value);
+   1–4 = no extreme signal, mid-cycle. → `[[crypto-onchain-data]]`
+2. **NUPL: profit/loss to crowd psychology.** >0.75 = euphoria (trim tilt); 0.5–0.75 = belief/greed;
+   0.25–0.5 = optimism; 0–0.25 = hope; <0 = capitulation (accumulate). The phase labels matter because
+   they map behavior: euphoric crowds sell; capitulating crowds have already sold. → `[[crypto-onchain-data]]`
+3. **Realized price: the cycle-bottom anchor.** It is the market's aggregate cost basis — the price at which
+   each coin last moved, averaged across supply. Price below realized price = bear market capitulation; the
+   realized price acts as a gravitational floor that long-term holders defend. → `[[crypto-onchain-data]]`
+4. **Puell multiple: miner stress and forced selling.** >4 = miners over-earning relative to their 365d
+   average (sell pressure, often coincides with tops); <0.5 = miner capitulation (historically a buy signal
+   as forced sellers exhaust). Miners are the only agents who *must* sell to cover costs. → `[[crypto-onchain-data]]`
+5. **LTH supply: smart money accumulation vs distribution.** Rising LTH supply = long-term holders
+   accumulating, illiquid supply growing (bullish); sharply falling LTH supply = distribution into strength
+   (caution). The LTH/STH split exposes *who* is moving coins. → `[[crypto-onchain-data]]`
+6. **Exchange net flows: supply pressure signal.** Sustained net outflows = coins leaving exchanges, supply
+   removed from immediate sell pressure (bullish); sustained net inflows = coins moving to exchanges,
+   sell pressure building. A single day is noise; a week or more of trend is signal. → `[[crypto-onchain-data]]`
+7. **Confirmation beats any single metric.** Conflicts between metrics → no extreme zone, stay patient and
+   DCA at base rate. ≥3 metrics aligned in the same direction → HIGH confidence zone call. → `[[crypto-onchain-data]]`
 
-## How to apply the lens (decision procedure — the lens-stack)
+## How to apply the lens (decision procedure)
 
-1. **Liquidity governor (the tide).** Read the GLI / its proxies (CB balance sheets, USD, cross-border).
-   Rising & below-trend (Rebound/Calm) → green light to deploy faster. High & falling (Turbulence) → throttle
-   to defensive tranches and raise cash. Remember the lead is *months*, so act ahead of the economy. (`01`)
-   **REQUIRED INPUTS for liquidity pillar:**
-   - `feed-fomc` → Fed tone (HAWKISH/DOVISH), actual statement language, next meeting date.
-     A hawkish Fed = liquidity headwind; dovish = tailwind. Read the primary source, not just FedWatch odds.
-   - `analyse-smartmoney-polymarket` → CME FedWatch rate-path probabilities (market-implied, anchors your base case).
-   - CPI/PCE: fetch latest from https://www.bls.gov/cpi/ (headline + core). Above-trend inflation →
-     Fed stays hawkish → liquidity headwind. Confirm the number before using it.
-2. **On-chain valuation (the level).** Place price in its cost-basis history: MVRV-Z, realized price, NUPL,
-   Puell, 200-week MA. Output a **zone** (cheap / fair / rich), never a precise top/bottom call. (`02`)
-3. **Sentiment (the contrarian modulator).** Overlay Fear & Greed and the four-phase cycle. Extreme fear at a
-   cheap on-chain zone = widen the buy tilt; extreme greed at a rich zone = shrink it. (`03`) For a real-time
-   positioning/catalyst read, pull **`analyse-smartmoney-positioning`** (funding/OI, options skew/max-pain/
-   gamma) and **`analyse-smartmoney-polymarket`** (dated events) — harder sentiment signal than Fear & Greed alone.
-4. **Execution (the discipline).** Translate the three reads into a **valuation-and-sentiment-tilted DCA
-   schedule over tranches**, sized by a vol target (Half-Kelly via `analyse-systematic-trading`), optionally
-   with a 200d-MA risk-cap for drawdown. Never lump-sum on conviction. (`04`)
-5. **If it's an alt, route to BTC-as-hurdle.** Price it in BTC and run the 6-point filter before any tilt at
-   all; if it can't beat BTC in BTC-denominated trend, default to BTC. (`05`)
-6. **Honesty pass + re-pull.** State the pillar tensions plainly, flag discredited metrics (S2F), and note
-   every reading decays — confirm live data before acting. (`06`)
+1. **Pull raw numbers** via `[[crypto-onchain-data]]`:
+   ```
+   python3 .agents/skills/crypto-onchain-data/onchain_fetch.py
+   ```
+   Confirm each metric has an `asof` timestamp before proceeding — stale data is worse than no data.
+
+2. **Score each metric independently** using the thresholds in Core Mental Models:
+   - `ACCUMULATE` — metric is in the historically cheap/capitulation zone
+   - `NEUTRAL` — metric shows no extreme signal (mid-range)
+   - `TRIM` — metric is in the historically expensive/euphoria zone
+   - `[UNAVAILABLE]` — data could not be fetched; do not impute
+
+3. **Count the signals.** Tally ACCUMULATE vs TRIM scores across all available metrics.
+   - ≥3 aligned → proceed to zone call with HIGH or MED confidence
+   - 2 aligned, rest NEUTRAL → MED confidence
+   - Split (ACCUMULATE and TRIM both present) → no extreme, FAIR VALUE / LOW confidence
+
+4. **State the zone with confidence:**
+   - `DEEP VALUE` — MVRV-Z <0 or ≥3 ACCUMULATE signals (HIGH/MED confidence)
+   - `FAIR VALUE` — no extremes, signals mixed or neutral (LOW confidence)
+   - `ELEVATED` — 2–3 TRIM signals, MVRV-Z 4–7 range (MED confidence)
+   - `EXTREME` — MVRV-Z >7 or ≥4 TRIM signals (HIGH confidence)
+
+5. **State the invalidation condition.** What specific metric crossing what threshold would change the verdict?
+   (e.g., "Verdict flips to ELEVATED if MVRV-Z crosses above 4 or LTH supply begins declining.")
+
+6. **Honesty pass.** Note any metrics that are UNAVAILABLE, any conflicts, and remind that this is a
+   *zone* call, not a top/bottom prediction. Every metric decays — re-pull before any deploy decision.
 
 ## Routing table
 
-| Question is about… | Load |
+| Question is about… | Data source |
 |---|---|
-| Global liquidity, the tide, GLI, Howell's phases, lead-lag, "is liquidity rolling over", USD as tightening | `references/01-global-liquidity-and-btc.md` |
-| On-chain valuation, MVRV-Z, realized price, NUPL, Puell, 200-week MA, Pi Cycle, Stock-to-Flow red flag | `references/02-onchain-valuation.md` |
-| Sentiment, Fear & Greed, market-cycle / rainbow charts, the four-phase cycle mapping | `references/03-sentiment-and-market-cycle.md` |
-| DCA vs lump-sum, valuation-tilted DCA, vol-target sizing, 200d trend cap, "how should I deploy" | `references/04-execution-dca-and-sizing.md` |
-| Alts, "is this altcoin worth it", BTC-as-hurdle, value-accrual filter, alt base rates | `references/05-token-selection-btc-as-hurdle.md` |
-| Risks, why TA day-timing fails, DeFi failure modes, custody, the on-chain-vs-liquidity tension | `references/06-risks-and-honest-assessment.md` |
-| Provenance, the Capital Wars link, live-data tools, what's distilled vs not, later-Howell scope | `references/book-index.md` |
+| MVRV-Z value, reading, interpretation | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
+| NUPL phase, crowd psychology, unrealized P/L | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
+| Realized price, aggregate cost basis, "is price below realized price" | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
+| Puell multiple, miner behavior, miner capitulation | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
+| LTH/STH supply split, long-term holder accumulation vs distribution | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
+| Exchange inflows/outflows, supply on exchanges, sell pressure | `[[crypto-onchain-data]]` → `onchain_fetch.py` |
+| Overall zone verdict, confidence, "is BTC cheap or expensive" | This skill — run all metrics, score, output verdict |
+| How to size deployment, DCA schedule, vol target | `crypto-advisor` → `references/execution-dca-and-sizing.md` |
+| Liquidity governor, global liquidity cycle, Howell phases | `analyse-macro` → `references/01-global-liquidity-and-btc.md` |
+| On-chain valuation theory, realized-cap, MVRV math | `references/02-onchain-valuation.md` |
+
+## Output contract
+
+Structured result for every call:
+
+```
+METRIC SCORES
+┌──────────────────┬──────────┬──────────────┬───────────────────────┐
+│ Metric           │ Value    │ Signal       │ As-of                 │
+├──────────────────┼──────────┼──────────────┼───────────────────────┤
+│ MVRV-Z           │ <value>  │ ACCUMULATE / NEUTRAL / TRIM / [UNAVAILABLE] │ <date> │
+│ NUPL             │ <value>  │ …            │ <date>                │
+│ Realized Price   │ $<value> │ …            │ <date>                │
+│ Puell Multiple   │ <value>  │ …            │ <date>                │
+│ LTH Supply trend │ <trend>  │ …            │ <date>                │
+│ Exchange flows   │ <net>    │ …            │ <date>                │
+└──────────────────┴──────────┴──────────────┴───────────────────────┘
+
+ZONE VERDICT:   [DEEP VALUE / FAIR VALUE / ELEVATED / EXTREME]
+CONFIDENCE:     [HIGH / MED / LOW]
+SIGNAL COUNT:   [N ACCUMULATE, M TRIM, K NEUTRAL, J UNAVAILABLE]
+INVALIDATION:   [specific metric crossing specific threshold that flips the verdict]
+NOTE:           Educational only — zone call, not buy/sell advice. Re-pull before acting.
+```
 
 ## Example
 
 <example>
-User: "Should we buy BTC now?"
+User: "What do on-chain metrics say about BTC right now?"
 
-Lens response: "Run the lens-stack (load `01`, `02`, `03`, `04`):
-(1) **Liquidity governor (the tide)** — say the GLI has just rolled from above-trend to *high-and-falling*:
-that's the **Turbulence** phase, and since liquidity leads equities/BTC by ~6–12 months, the tide is turning
-*against* us even if price is still firm. Governor verdict: **throttle, don't gun it.**
-(2) **On-chain (the level)** — but suppose MVRV-Z is ~1.5 and price is barely above realized price with NUPL
-near 0.3: on-chain says **cheap-to-fair**, nowhere near the >7 / >0.75 euphoria that marks tops. So the level
-says accumulate.
-(3) **Sentiment (the modulator)** — Fear & Greed at 'extreme fear' (say 18) *confirms* the cheap read and
-argues to **widen** the buy tilt contrarily.
-(4) **The tension is the whole point**: on-chain-cheap + extreme-fear says buy, but liquidity-rolling-over
-says a deeper flush can still come (cheap can get cheaper while the tide ebbs). The defensible resolution is
-**NOT a lump-sum** — it's a **valuation-and-sentiment-tilted DCA across tranches**: deploy a measured base
-schedule now (the cheap zone earns a larger-than-neutral tilt), but keep dry powder and let the liquidity
-governor cap the pace until the tide stops falling (watch for the GLI re-crossing into Rebound). Size each
-tranche by a vol target (Half-Kelly via `analyse-systematic-trading`), and optionally gate with the 200d MA
-for drawdown control — knowing that's risk-management, not alpha. And the honest baseline: this tilted-DCA
-beats trying to TA-time the exact bottom, which doesn't survive costs. Re-pull every reading before acting —
-they all decay."
+Lens response: "Pull raw numbers via `crypto-onchain-data`:
+
+METRIC SCORES (example readings — re-pull for live):
+- MVRV-Z: 1.8 → NEUTRAL (1–4 range, no extreme)
+- NUPL: 0.42 → NEUTRAL (optimism phase, no extreme)
+- Realized Price: $48,200 vs spot $62,500 → NEUTRAL (price above realized, not capitulation; not extended)
+- Puell Multiple: 0.6 → ACCUMULATE (approaching miner stress threshold <0.5, elevated sell pressure relief)
+- LTH Supply: rising 3 consecutive months → ACCUMULATE (smart money accumulating, illiquid supply growing)
+- Exchange net flows: −18,400 BTC net outflow past 14 days → ACCUMULATE (supply leaving exchanges)
+
+SIGNAL COUNT: 3 ACCUMULATE, 0 TRIM, 3 NEUTRAL
+ZONE VERDICT: FAIR VALUE leaning DEEP VALUE — signals are constructive but MVRV-Z and NUPL show no extreme cheapness
+CONFIDENCE: MED (3 of 6 metrics aligned ACCUMULATE; the two headline metrics are neutral)
+INVALIDATION: Verdict flips to ELEVATED if MVRV-Z crosses 4.0 or NUPL enters belief phase (>0.5) with exchange inflows turning positive.
+NOTE: On-chain alone is one pillar. Route through `analyse-macro` for the liquidity governor (Howell phases) before sizing a deploy decision."
 </example>
 
 ## Honesty rules (non-negotiable)
 
-- **It's a lens-stack, not a crystal ball.** Output **zones and tilts**, never precise tops/bottoms or "buy
-  today" certainty. Present liquidity claims as "Howell's framework says…".
-- **Pure TA timing does not beat DCA after costs.** The defensible best practice is valuation-and-sentiment-
-  tilted DCA governed by liquidity. Don't dress up day-timing as edge (the repo house finding: hold/mid-risk
-  beats day-trading after costs).
-- **Flag discredited metrics.** Stock-to-Flow is broken (auto-correlation; ~$500k projection vs ~$66k actual);
-  citing it is a red flag, not support.
-- **Scope-flag later-Howell.** *Capital Wars* (2020) gives crises "every 8–10 years" + month-level leads and
-  mentions crypto only as a "distrust" signal — it does **not** state a clean 5–6yr cycle or a Bitcoin
-  liquidity-beta. Those are later Howell (CrossBorder Capital); cite as such, not from the book.
-- **Ground load-bearing claims/numbers** in a specific reference (via `references/book-index.md`); for sizing
-  defer to `analyse-systematic-trading`, for debasement/BTC-as-hurdle to `investor-lyn-alden`, for liquidity
-  timing to `investor-stanley-druckenmiller`, for downside to `risk-management`.
-- **Every metric decays — re-pull live readings** (LookIntoBitcoin, Glassnode, CryptoQuant, CoinGlass,
-  Alternative.me) before any deploy decision.
+- **Output zones, not calls.** This skill returns DEEP VALUE / FAIR VALUE / ELEVATED / EXTREME — never
+  "buy now", "sell today", or a price target. Zone is a probability weight, not a trigger.
+- **No single metric is sufficient.** Always run all available metrics; state every UNAVAILABLE explicitly.
+  A verdict built on 2 metrics is weaker than one built on 6 — say so.
+- **Conflicts are data.** If MVRV-Z says TRIM while exchange flows say ACCUMULATE, the honest output is
+  FAIR VALUE / LOW confidence, not a cherry-picked bullish read.
+- **Every metric decays — re-pull live** (Glassnode, LookIntoBitcoin, CryptoQuant) before any deploy
+  decision. The `asof` field is mandatory; do not interpret a reading without it.
+- **This is one seat.** On-chain valuation is the *level* — it does
+  not replace the liquidity governor (the tide, `analyse-macro`) or sentiment (the modulator,
+  `analyse-sentiment`). Always note whether on-chain and liquidity are aligned or in tension.
+- **Educational only.** This is not financial advice. Zone calls are analytical outputs, not instructions.
 
 ## Done when
 
-The analysis (1) sets the **liquidity governor** first (tide, with the months-long lead), (2) places price in
-a **valuation zone** on-chain (not a precise call, no S2F), (3) overlays **sentiment** contrarily, (4) resolves
-any pillar tension into a **valuation-and-sentiment-tilted DCA over tranches, vol-target-sized, not lump-sum**,
-(5) routes any **alt through BTC-as-hurdle**, and (6) states the tensions honestly and re-pulls live data.
+The analysis (1) fetches **all six metrics** via `[[crypto-onchain-data]]` with confirmed `asof` timestamps,
+(2) scores each metric independently as ACCUMULATE / NEUTRAL / TRIM / [UNAVAILABLE], (3) counts signal
+alignment and resolves to one of the four **zone verdicts** with a **confidence level**, (4) states a clear
+**invalidation condition**, and (5) notes any conflicts honestly and reminds that on-chain is one pillar —
+the liquidity governor in `analyse-macro` sits above it.

@@ -67,11 +67,11 @@ Technical analysis is **the measurement of crowd behavior over time** — not fu
   - Use RS rank ≥ 70th percentile as a soft filter for high-conviction Stage 2 entries.
 
 - **Crypto 4-year Halving Cycle mapped to Weinstein Stages** (heuristic, not a law)
-  - **Stage 1 ≈ Post-bear accumulation** — BTC bottoming 12–18 months post-ATH collapse; price range-bound, on-chain metrics compressing. See `analyse-onchain-lens` for valuation context here.
+  - **Stage 1 ≈ Post-bear accumulation** — BTC bottoming 12–18 months post-ATH collapse; price range-bound, on-chain metrics compressing. See `analyse-onchain` for valuation context here.
   - **Stage 2 ≈ Bull advance / markup** — breakout above prior cycle range, halving supply shock as a catalyst, price above rising MAs. This is the regime where aggressive crypto allocation is justified.
   - **Stage 3 ≈ Cycle top / distribution** — parabolic blow-off followed by chop; MAs flattening; on-chain distribution signals. Reduce and tighten stops.
   - **Stage 4 ≈ Bear market / markdown** — price below falling 30-week MA and 200d, cascading liquidations. Avoid new positions; wait for Stage 1 re-accumulation.
-  - *Caveat:* The halving cycle is a narrative that fits past data; treat it as a rough prior, not a predictive law. On-chain signals from `analyse-onchain-lens` carry more evidential weight than cycle-timing alone.
+  - *Caveat:* The halving cycle is a narrative that fits past data; treat it as a rough prior, not a predictive law. On-chain signals from `analyse-onchain` carry more evidential weight than cycle-timing alone.
 
 ---
 
@@ -96,7 +96,7 @@ Technical analysis is **the measurement of crowd behavior over time** — not fu
 
 8. **Volume confirmation is mandatory on breakouts.** A Stage 2 breakout on below-average volume is a false signal until volume confirms. Flag it as unconfirmed and wait for volume to expand before entering.
 
-9. **For crypto assets: layer on the halving-cycle prior.** If the halving-cycle clock suggests Stage 1–early Stage 2 (12–30 months post-ATH trough), raise confidence. If it suggests late Stage 3 (18+ months into a bull run, MAs already flattening), cut size and add on-chain distribution check via `analyse-onchain-lens`.
+9. **For crypto assets: layer on the halving-cycle prior.** If the halving-cycle clock suggests Stage 1–early Stage 2 (12–30 months post-ATH trough), raise confidence. If it suggests late Stage 3 (18+ months into a bull run, MAs already flattening), cut size and add on-chain distribution check via `analyse-onchain`.
 
 10. **Golden/Death cross — treat as context only.** If a Golden Cross fired recently AND Stage 2 structural criteria pass → add as a confirming signal (not a standalone trigger). If a Death Cross fired AND Stage 4 criteria hold → adds confirmation to the **AVOID-DOWNTREND** read. Never use a cross as the *sole* trigger.
 
@@ -114,7 +114,7 @@ Technical analysis is **the measurement of crowd behavior over time** — not fu
     - Sizing and drawdown limits → `risk-management`
     - Risk-on / risk-off macro overlay → `regime-detection`
     - Intraday execution timing (entry price, order type) → `investor-bernstein-intraday`
-    - On-chain valuation (crypto only) → `analyse-onchain-lens`
+    - On-chain valuation (crypto only) → `analyse-onchain`
     - Any rule you want to use mechanically → validate with `analyse-systematic-trading` first
 
 ---
@@ -128,6 +128,6 @@ Technical analysis is **the measurement of crowd behavior over time** — not fu
 - **Stage analysis does not provide price targets.** It tells you *when* to be positioned; it does not tell you *where* to exit. Use separate target-setting logic or trailing stops.
 - **Volume data is degraded in crypto.** Exchange-reported volumes include wash trading; use volume signals qualitatively and with skepticism unless sourced from CME or aggregated reliable sources.
 - **Halving cycle mapping is hindsight-fitting.** Two complete Bitcoin cycles is insufficient statistical evidence. Treat cycle-stage priors as weak priors that can be overridden by current MA and on-chain evidence.
-- **This lens covers entry timing, not valuation.** A stock can be Stage 2 and massively overvalued. Combine with `analyse-fundamental` and `analyse-onchain-lens` (for crypto) — do not use technicals as a substitute for understanding what you are buying.
+- **This lens covers entry timing, not valuation.** A stock can be Stage 2 and massively overvalued. Combine with `analyse-fundamental` and `analyse-onchain` (for crypto) — do not use technicals as a substitute for understanding what you are buying.
 - **Timeframe stacking:** daily chart defines the trade; weekly chart defines the trend. A Stage 2 signal on the daily but Stage 3 on the weekly is a lower-quality setup. When in conflict, the weekly wins.
 - **Individual stock risk in a Stage 4 market:** even a true Stage 2 breakout in a Stage 4 index environment has a much lower completion rate. Always check `regime-detection` for the broad market stage before sizing individual positions at full allocation.

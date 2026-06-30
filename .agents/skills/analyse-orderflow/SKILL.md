@@ -112,8 +112,8 @@ regime — they route *within* it. A liquidation hunt does not reverse a bear ma
 | Liquidation heatmap, where the stop clusters are | WebFetch `coinglass.com/LiquidationMap` |
 | CME gap level and fill status | WebFetch CME BTC futures chart |
 | On-chain valuation zone, MVRV-Z, realized price, NUPL | `analyse-onchain` → `references/02-onchain-valuation.md` |
-| Global liquidity, the macro tide governing all of this | `analyse-onchain` → `references/01-global-liquidity-and-btc.md` |
-| Sentiment, Fear & Greed, cycle phase | `analyse-onchain` → `references/03-sentiment-and-market-cycle.md` |
+| Global liquidity, the macro tide governing all of this | `analyse-macro` → `references/01-global-liquidity-and-btc.md` |
+| Sentiment, Fear & Greed, cycle phase | `analyse-sentiment` → `references/03-sentiment-and-market-cycle.md` |
 | Systematic sizing, vol-target, position sizing | `analyse-systematic-trading` |
 
 ## Output contract
@@ -129,7 +129,7 @@ Every microstructure read delivers:
 | **Microstructure posture** | BULLISH STRUCTURE / NEUTRAL / BEARISH STRUCTURE + key invalidation level |
 
 No buy/sell call — structure and mechanics only. This lens does not override the liquidity governor
-(`analyse-onchain`); it routes *within* the macro regime.
+(`analyse-macro`); it routes *within* the macro regime.
 
 ## Done when
 

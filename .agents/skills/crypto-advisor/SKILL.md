@@ -885,3 +885,9 @@ Use Coinbase symbol format: `BTC-USD`, `ETH-USD`, `AAVE-USD`, `SOL-USD` (dashes,
 ```
 
 On each loop, re-seed any `pending`/missing todos and resume the sequential pull — never start a second data pull while one is in flight.
+
+## Deploy methodology references
+- Sizing & DCA: `references/execution-dca-and-sizing.md` (valuation-tilted DCA, vol-target sizing)
+- Honest assessment: `references/crypto-honest-assessment.md` (why TA day-timing fails after costs; DeFi failure modes)
+- Provenance: `references/onchain-methodology-provenance.md`
+- Alt selection (BTC-as-hurdle): `crypto-token-screener` → `references/btc-as-hurdle.md`

@@ -1,6 +1,6 @@
 ---
 name: analyse-technical
-description: A disciplined technical-analysis lens for TIMING LONG-TERM / SWING ENTRIES on daily/weekly charts — trend & stage (Weinstein Stage 1-4), the 200-day / 30-week trend filter, entry zones (pullback to a rising MA, base breakouts, support/resistance), with RSI/MACD/volume as CONFIRMATION (never standalone triggers) and multi-timeframe confluence where the weekly trend gates the daily entry. Works for stocks AND crypto; computes all indicators via `scripts/ta.py` (yfinance/ccxt, no Chrome) and emits a structured trend/structure/momentum/verdict read with a structure-based invalidation level. Use when the user asks "is now a good entry", "should I buy here or wait", "where do I accumulate", "what's the entry zone", "is this a good level to add", "pullback or breakout", "is the trend up", "what stage is this in", "should I buy this pullback", "where do I put my accumulation zone", or "is this a base breakout". NOT for intraday day-trading (use `investor-bernstein-intraday`) and NOT for crypto on-chain valuation (use `analyse-onchain-lens`). Educational, not advice; a lens, not gospel — TA has a weak/mixed empirical base, validate with backtests via `analyse-systematic-trading` before sizing.
+description: A disciplined technical-analysis lens for TIMING LONG-TERM / SWING ENTRIES on daily/weekly charts — trend & stage (Weinstein Stage 1-4), the 200-day / 30-week trend filter, entry zones (pullback to a rising MA, base breakouts, support/resistance), with RSI/MACD/volume as CONFIRMATION (never standalone triggers) and multi-timeframe confluence where the weekly trend gates the daily entry. Works for stocks AND crypto; computes all indicators via `scripts/ta.py` (yfinance/ccxt, no Chrome) and emits a structured trend/structure/momentum/verdict read with a structure-based invalidation level. Use when the user asks "is now a good entry", "should I buy here or wait", "where do I accumulate", "what's the entry zone", "is this a good level to add", "pullback or breakout", "is the trend up", "what stage is this in", "should I buy this pullback", "where do I put my accumulation zone", or "is this a base breakout". NOT for intraday day-trading (use `investor-bernstein-intraday`) and NOT for crypto on-chain valuation (use `analyse-onchain`). Educational, not advice; a lens, not gospel — TA has a weak/mixed empirical base, validate with backtests via `analyse-systematic-trading` before sizing.
 license: MIT
 compatibility: opencode
 metadata:
@@ -78,7 +78,7 @@ a great-looking entry zone in a Stage-4 downtrend is still an AVOID.
    weekly-overbought tape. → `references/03-momentum-and-volume-confirmation.md`
 4. **Asset-class specifics** — **stocks:** relative strength vs SPX/sector, base patterns, earnings-gap
    caution; **crypto:** the 4-year halving-cycle stage on the weekly, funding rate & open interest as
-   froth gauges, 24/7 = no session gaps. Cross-ref `analyse-onchain-lens` for MVRV/NUPL/realized-price
+   froth gauges, 24/7 = no session gaps. Cross-ref `analyse-onchain` for MVRV/NUPL/realized-price
    VALUATION, which lives THERE, not here. → `references/04-asset-class-stocks-and-crypto.md`
 
 ## Decision procedure
@@ -105,7 +105,7 @@ a great-looking entry zone in a Stage-4 downtrend is still an AVOID.
 | RSI, MACD, OBV, volume confirmation | `references/03-momentum-and-volume-confirmation.md` |
 | Stock-specific: relative strength, base patterns, earnings gaps | `references/04-asset-class-stocks-and-crypto.md` |
 | Crypto-specific: halving cycle, funding rate, OI, 24/7 | `references/04-asset-class-stocks-and-crypto.md` |
-| Crypto on-chain VALUATION (MVRV, NUPL, realized price) | → `analyse-onchain-lens` (not this skill) |
+| Crypto on-chain VALUATION (MVRV, NUPL, realized price) | → `analyse-onchain` (not this skill) |
 | Day-trading / intraday execution | → `investor-bernstein-intraday` (not this skill) |
 | Validate an entry rule before sizing | → `analyse-systematic-trading` |
 | Risk-on / risk-off regime check | → `regime-detection` |
@@ -124,7 +124,7 @@ Lens response:
 5. **Verdict**: **ACCUMULATE** — Stage-2 pullback to rising 200d MA, rsi_w below 70, and OBV rising (confirmation present) → highest-conviction add.
 6. **Entry zone**: current 200d MA level ±2% — accumulate in tranches.
 7. **Invalidation**: daily close meaningfully (>3%) below the 200d MA and MA rolling over → pullback became a Stage 3/4 change → stop and re-evaluate.
-8. Cross-ref `analyse-onchain-lens` for on-chain valuation (MVRV, NUPL) before sizing — this lens is price/volume only.
+8. Cross-ref `analyse-onchain` for on-chain valuation (MVRV, NUPL) before sizing — this lens is price/volume only.
 
 ```
 === ENTRY READ — BTC (crypto) — 2026-06-29 ===

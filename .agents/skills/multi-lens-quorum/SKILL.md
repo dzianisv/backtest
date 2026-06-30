@@ -58,7 +58,7 @@ method/conductor skills. The repo's available lens menu (`.agents/skills/`):
 |---|---|---|
 | `analyse-systematic-trading` | Carver — rules, vol-target, Half-Kelly, cost speed limit, overfit gate | The discipline/sizing seat; kills the narrative trade |
 | `analyse-technical` | Bernstein — setup→trigger→follow-through, "no trigger, no trade" | The timing/trigger seat (weak evidence — carry as hypothesis) |
-| `analyse-onchain` | Howell — global liquidity → on-chain → sentiment → tilted-DCA | The liquidity-tide seat (often the WAIT/dissent) |
+| `analyse-macro` | Howell — global liquidity (Capital Wars) | The liquidity-tide seat (often the WAIT/dissent) |
 | `analyse-smartmoney-positioning` | Funding/OI/basis + options skew/IV/max-pain/gamma; options-implied distribution (crypto + equities) | The positioning / market-implied seat — what leverage & options price |
 | `investor-benjamin-graham` | Margin of safety, intrinsic value, Mr. Market | The value/"is this even an investment" dissent seat |
 | `research-morgan-housel` | Behavior > intelligence, tails, enough, room for error | The behavioral guardrail / "don't blow up" seat |
@@ -156,7 +156,7 @@ cadence should the $6k be deployed?*
 | `investor-benjamin-graham` | Slow, small, quarantined | high | No intrinsic value → no margin of safety; deploy slowly and cap exposure regardless |
 | `investor-lyn-alden` | Steady DCA, don't overthink | high | Structural debasement; idle cash is the risk — get invested on a calendar, hold cycles |
 | `research-morgan-housel` | Automate it, remove yourself | med | Behavior is the weak link; a fixed schedule beats discretion under Extreme Fear |
-| `analyse-onchain` (Howell) | Deploy ~half now, gate the rest | med | Liquidity tide still out; commit a base, condition the remainder on liquidity turning |
+| `analyse-macro` (Howell) | Deploy ~half now, gate the rest | med | Liquidity tide still out; commit a base, condition the remainder on liquidity turning |
 
 **Consensus (the overlap, not the average):** **$1,000/week × 6 weeks, on the calendar.** Six lenses
 that barely share a vocabulary all land on *spaced, calendar-based, removed-from-emotion* deployment.
