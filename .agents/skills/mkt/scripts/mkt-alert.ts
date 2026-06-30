@@ -40,6 +40,25 @@ if (sub === "add") {
     }
   }
 
+  // Hard gate: price-level alerts (above/below) require --data-source
+  // to prevent fabricated support/resistance levels.
+  // RSI, MACD, and other indicator conditions are exempt.
+  const priceConditions = conditionFlags.filter(c => c === "above" || c === "below");
+  if (priceConditions.length > 0) {
+    const dataSource = flag("data-source");
+    if (!dataSource || !dataSource.trim()) {
+      die(
+        `--data-source required for price conditions (above/below).\n` +
+        `Pull OHLCV data first, then cite the evidence.\n` +
+        `Example: --data-source "14 weekly closes in $60k-$65k bucket from 210w TradingView OHLCV"\n` +
+        `Example: --data-source "200wMA $62,640 from TradingView 210 weekly bars"\n` +
+        `No data source = no alert. Do not fabricate support levels.`
+      );
+    }
+    // Embed data-source into the reason so it's visible in the alert
+    reasons.trim(); // already validated above
+  }
+
   const periodFlags = flagAll("period");
   const conditions: Cond[] = conditionFlags.map((c, i) => {
     const cond: Cond = { condition: c, value: parseFloat(valueFlags[i]) };
@@ -56,7 +75,9 @@ if (sub === "add") {
     symbol: symbol.toUpperCase(),
     conditions,
     ...(match ? { match } : {}),
-    reasoning: reasons,
+    reasoning: priceConditions.length > 0
+      ? `${reasons} [data: ${flag("data-source")}]`
+      : reasons,
     channel: flag("channel") ?? "stdout",
     ...(flag("expiry") ? { expiry: flag("expiry") } : {}),
     ...(flag("cooldown") ? { cooldownSec: parseInt(flag("cooldown")!) } : {}),
@@ -110,6 +131,7 @@ add:
   --condition  <cond>        required; repeat for compound rules
   --value      <num>         required; one per --condition
   --reason     <text>        required
+  --data-source <text>       REQUIRED for above/below price conditions — cite the OHLCV/on-chain evidence for the level (e.g. "14 weekly closes at $60-65k from 210w TV OHLCV"). Omitting this causes a hard failure. Indicator conditions (rsi_above etc.) are exempt.
   --desk       <desk>        default: crypto
   --channel    <channel>     default: stdout  (telegram:@handle | ntfy:topic | email:to@addr | stdout)
   --period     <int>         optional; per-condition indicator period
