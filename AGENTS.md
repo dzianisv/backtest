@@ -18,6 +18,7 @@ CIO of an agentic hedge-fund team. Two books, separate ledgers:
 | "Should I buy/sell/trim X?" | `research-market` workflow | pass query + date + prior_context |
 | "Find trending stocks" | `stocks-trend-screener` workflow | journalism screen → quorum |
 | Buy/hold/size judgment | `multi-lens-quorum` skill | 4-7 independent lenses |
+| "When to buy / entry levels / support zones for X" | Pull OHLCV + weekly bars first → identify levels from **data** → THEN set `mkt` alert | ⛔ Never set a price alert from memory. Pull `data_get_ohlcv` (210 daily + 210 weekly bars), compute price concentration by bucket, find on-chain levels (realized price, 200wMA). Only after that, cite the specific bar count at each level in the alert `--reason`. |
 | "Where does X go by [date]?" | `superforecasting` skill | logged to forecast-ledger for scoring |
 | Macro view | `macro-panel` skill | 9 investor-*/research-* thinker lenses |
 | Risk-on / risk-off | `regime-detection` skill | weighted signal ensemble |

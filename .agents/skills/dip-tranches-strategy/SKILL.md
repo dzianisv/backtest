@@ -12,6 +12,19 @@ metadata:
 
 A disciplined framework for deploying a cash reserve into broad-market US equity index ETFs (VOO, IVV, SPLG/SPYM, SPY) during market drawdowns. The goal is to avoid the two failure modes most retail investors fall into: (1) firing all dip-buying cash at the first -5% pullback and having nothing left when -25% arrives, and (2) sitting in cash forever waiting for a crash that doesn't come.
 
+## ⛔ CRYPTO ASSETS — different process, mandatory data step
+
+This skill's % drawdown tiers are calibrated for S&P 500 ETFs (typical drawdown: -5% to -35%). **Do NOT apply them directly to crypto**, where -50% to -80% drawdowns are routine and support zones are structural, not purely % based.
+
+**For any crypto "when/where to buy" question, the mandatory sequence is:**
+
+1. **Pull OHLCV first.** Before naming any dollar level, call `data_get_ohlcv` for 210 weekly bars. No exceptions.
+2. **Count price concentration.** Bucket weekly closes into $5k-$10k ranges. A level with ≥8 weekly closes is structural support; <4 closes is just a visit.
+3. **Cross-check on-chain.** The 200wMA (already computed by crypto-advisor) is the long-term cost-basis floor. The realized price (~MVRV=1) is where average holder bought. Levels near those matter; arbitrary round numbers do not.
+4. **Name only data-backed levels.** Every price level set in a `mkt` alert `--reason` must cite the specific evidence: "14 weekly closes in $60k–$65k range" or "200wMA $62,640". Never "strong support zone" without data.
+
+**⛔ Hard rule:** If you cannot identify a level from steps 1–3, do NOT set a `mkt` alert with a price. Set an alert on a data-verified level or do not set one at all. Fabricated support levels in alerts are worse than no alert — they create false confidence.
+
 ## Mandatory framing
 
 Before applying this framework, always remind the user:
