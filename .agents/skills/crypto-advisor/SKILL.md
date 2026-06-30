@@ -11,7 +11,7 @@ metadata:
 
 # Crypto Advisor
 
-Loop through the token universe **one token at a time** (TradingView has a single chart slot — CIO holds it per token) → run Phase 1 Research Desk in parallel (5 researchers) → CIO consolidates briefing → run Phase 2 Investment Panel in parallel (5 investors) → quorum → Verdict Critic → Citation Validator → print the report.
+Loop through the token universe **one token at a time** (TradingView has a single chart slot — CIO holds it per token) → run Phase 1 Research Desk in parallel (5 researchers) → CIO consolidates briefing → run Phase 2 Investment Panel in parallel (6 investors) → conviction-weighted synthesis → Verdict Critic → Citation Validator → print the report.
 
 > Educational analysis, not financial advice. No leverage. Ever.
 
@@ -33,6 +33,7 @@ Loop through the token universe **one token at a time** (TradingView has a singl
 - `investor-warren-buffett` → Quality school (Buffett/Fisher)
 - `investor-ray-dalio` → Cycle school (Dalio/Templeton)
 - `investor-stanley-druckenmiller` → Trend school (Druckenmiller/Carver)
+- `investor-lyn-alden` → Debasement school (fiscal dominance, scarce-asset, BTC-as-hurdle)
 - `analyse-defi` → On-chain school (Burniske) — dual role: research + vote
 
 **Why tokens loop sequentially:** TradingView has a single chart slot (`chart_set_symbol` is a global mutation). CIO pulls TV data for one token at a time. The Research Desk and Investment Panel for a given token each run in parallel within their phase, but the per-token pipeline is strictly sequential.
@@ -59,7 +60,7 @@ Follow all skill instructions:
 - Compute MAs via .agents/skills/crypto-advisor/scripts/indicators.py
 - Phase 1: Run 5 research subagents in parallel (technical/onchain/defi/macro/smartmoney) — data only, no votes
 - CIO consolidates 5 briefs into one briefing package per token
-- Phase 2: Run 5 investor subagents in parallel — each reads full briefing, votes from school lens
+- Phase 2: Run 6 investor subagents in parallel — each reads full briefing, votes from school lens with a conviction rating
 - Narrative seat: web-fetch ≥3 sources, rank T1/T2/T3, quote exact sentences
 - Print 3-block report: signal table | plain-English verdicts | news sources
 - Attach TradingView screenshot for each token in the reply
@@ -110,7 +111,7 @@ Each todo covers the full 2-phase pipeline: Phase 1 Research Desk → CIO consol
 
 ```sql
 INSERT INTO todos (id, title, description) VALUES
- ('tok-BTC', 'Analyzing BTC',  'Phase 1: pull TV data → 5 research briefs → briefing package. Phase 2: 5 investor votes → quorum → signal'),
+ ('tok-BTC', 'Analyzing BTC',  'Phase 1: pull TV data → 5 research briefs → briefing package. Phase 2: 6 investor votes → conviction-weighted synthesis → signal'),
  ('tok-ETH', 'Analyzing ETH',  'idem'),
  ('tok-SOL', 'Analyzing SOL',  'idem'),
  ('tok-TON', 'Analyzing TON',  'idem — watch Durov legal proceedings'),
@@ -312,9 +313,9 @@ After all 5 research briefs return, CIO merges them into one structured markdown
 echo "$BRIEFING_PACKAGE" > "$RUN_DIR/{TOKEN}/briefing_package.md"
 ```
 
-### 1d. Phase 2 — Investment Panel (parallel, 5 investors)
+### 1d. Phase 2 — Investment Panel (parallel, 6 investors)
 
-Spawn all five investor subagents in parallel. Each reads the **full briefing package** and votes from their school's lens. **No additional data fetching** — data was gathered in Phase 1.
+Spawn all six investor subagents in parallel. Each reads the **full briefing package** and votes from their school's lens. **No additional data fetching** — data was gathered in Phase 1.
 
 | Investor | Skill | School |
 |---|---|---|
@@ -322,6 +323,7 @@ Spawn all five investor subagents in parallel. Each reads the **full briefing pa
 | `investor-warren-buffett` | `investor-warren-buffett` | Quality — moat, revenue quality, sustainable competitive advantage (Buffett/Fisher) |
 | `investor-ray-dalio` | `investor-ray-dalio` | Cycle — macro regime, liquidity cycle, risk parity perspective (Dalio/Templeton) |
 | `investor-stanley-druckenmiller` | `investor-stanley-druckenmiller` | Trend — price structure, momentum, entry/exit timing (Druckenmiller/Carver) |
+| `investor-lyn-alden` | `investor-lyn-alden` | Debasement — fiscal dominance, currency debasement, scarce-asset / BTC-as-hurdle (Alden) |
 | `analyse-defi` (Burniske) | `analyse-defi` | On-chain — fee capture, token velocity, protocol cash flows (Burniske lens) |
 
 > **`analyse-defi` dual role:** In Phase 1, `analyse-defi` gathered DeFiLlama data (TVL/fees) and returned a data brief. In Phase 2, it reads the full briefing package and votes from Chris Burniske's on-chain value accrual lens — same skill, separate role.
@@ -332,6 +334,7 @@ Pass to each investor: `{ token: "{TOKEN}", price_usd: {PRICE}, briefing_package
 ```
 {INVESTOR} ({SCHOOL}) — {TOKEN}
 Vote: BULLISH | NEUTRAL | BEARISH
+Conviction: HIGH | MED | LOW   ← how strongly the briefing data supports THIS school's read for THIS token (not generic confidence)
 Reason: <School>: <one-line citing briefing data — reference specific numbers from the brief>
 Invalidation: <what would reverse this vote>
 ```
@@ -342,17 +345,19 @@ echo '{graham_vote_json}'   > "$RUN_DIR/{TOKEN}/vote_graham.json"
 echo '{buffett_vote_json}'  > "$RUN_DIR/{TOKEN}/vote_buffett.json"
 echo '{dalio_vote_json}'    > "$RUN_DIR/{TOKEN}/vote_dalio.json"
 echo '{druck_vote_json}'    > "$RUN_DIR/{TOKEN}/vote_druckenmiller.json"
+echo '{alden_vote_json}'    > "$RUN_DIR/{TOKEN}/vote_alden.json"
 echo '{burniske_vote_json}' > "$RUN_DIR/{TOKEN}/vote_burniske.json"
 ```
 
 ### 1e. Aggregate into the compact verdict and persist
 
-Count votes from the 5 investor subagents:
+Synthesize the 6 investor votes **by conviction, not headcount** (see quorum_verdict rules below):
 
 ```json
 {"symbol":"BTC","quorum_verdict":"BULLISH|SPLIT|BEARISH|UNCERTAIN",
  "dominant_zone":"DEEP_VALUE|FAIR_VALUE|ELEVATED|EXTREME",
- "seats_bull":3,"seats_bear":2,"key_support":60000,"key_resistance":66000,"confidence":"HIGH|MED|LOW"}
+ "seats_bull":3,"seats_bear":2,"bull_weight":7,"bear_weight":4,"core_dissent":"<lens + one line, or none>",
+ "key_support":60000,"key_resistance":66000,"confidence":"HIGH|MED|LOW"}
 ```
 
 ```sql
@@ -391,6 +396,7 @@ Directory layout after a complete run:
 │   ├── vote_buffett.json
 │   ├── vote_dalio.json
 │   ├── vote_druckenmiller.json
+│   ├── vote_alden.json
 │   ├── vote_burniske.json
 │   └── verdict.json
 ├── ETH/
@@ -401,19 +407,33 @@ Directory layout after a complete run:
 
 ---
 
-## quorum_verdict mapping (deterministic)
+## quorum_verdict — conviction-weighted synthesis (CIO judgment, not headcount)
 
-Map investor vote postures to `quorum_verdict` using this truth table — no interpretation:
+**Do not tally votes.** A static seat count is wrong because schools are not equally relevant to every
+token: a single HIGH-conviction read from the lens that owns this token's main value driver outweighs three
+LOW-conviction reads from lenses that barely touch it. Synthesize the six votes into `quorum_verdict` thus:
 
-| seats_bull | seats_bear | quorum_verdict |
-|------------|------------|----------------|
-| ≥ 3        | ≤ 1        | BULLISH        |
-| ≥ 3        | ≥ 2        | SPLIT          |
-| 2          | ≤ 1        | SPLIT          |
-| ≤ 1        | ≥ 3        | BEARISH        |
-| everything else       | UNCERTAIN  |
+1. **Weight each vote by conviction.** HIGH = 3, MED = 2, LOW = 1. A NEUTRAL vote contributes 0 regardless
+   of conviction (it is an abstention, not a half-vote).
+2. **Identify the CORE lenses for THIS token** (the ones whose school owns its dominant value driver):
+   - **DeFi protocol tokens** (AAVE, UNI, JUP, AERO, PUMP, HYPE, LINK) → Burniske (fee capture / value-accrual)
+     and Graham (margin of safety on real cash flows) are CORE. Alden's BTC-as-hurdle test gates whether the
+     token even clears the bar vs just holding BTC.
+   - **L1 monetary assets** (BTC, ETH, SOL, TON) → Alden (debasement / scarce-asset), Dalio (macro cycle) and
+     Druckenmiller (trend) are CORE; Burniske's DeFi-accrual lens is often N/A here — down-weight it.
+   - Double the conviction weight of CORE lenses; halve the weight of lenses flagged N/A for this token.
+3. **Compute the lean:** `bull_weight − bear_weight` after the CORE adjustment. Log both in the verdict JSON.
+4. **Name the strongest CORE dissent** (`core_dissent`) and state explicitly why it is or is not outweighed.
+   A **HIGH-conviction CORE dissent caps the verdict at SPLIT** unless it is directly rebutted with brief data —
+   you may not bury the lens that owns the token's value driver under unrelated bullishness.
+5. **Map to verdict:**
+   - **BULLISH** — lean clearly positive AND no unrebutted HIGH-conviction CORE dissent.
+   - **BEARISH** — lean clearly negative driven by CORE lenses.
+   - **SPLIT** — CORE lenses genuinely conflict, or a HIGH CORE dissent stands unrebutted.
+   - **UNCERTAIN** — key briefs are thin / `[UNAVAILABLE]`; do not manufacture a verdict.
 
-(seats_bull + seats_bear ≤ 5; NEUTRAL seats count toward neither.)
+Log `seats_bull` / `seats_bear` as raw audit counts, but they are **inputs to the reasoning above, not the
+gate** — the verdict is the conviction-weighted judgment, and you must be able to defend it in one sentence.
 
 ---
 
@@ -421,12 +441,14 @@ Map investor vote postures to `quorum_verdict` using this truth table — no int
 
 | Signal | Condition |
 |---|---|
-| **BUY** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone ∈ {DEEP_VALUE, FAIR_VALUE}`, `weekly_closes >= 200` |
-| **BUY\*** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone = ELEVATED` → downgrade to **HOLD** + note "await pullback" |
-| **BUY\*\*** | `quorum_verdict = BULLISH`, seats_bull ≥ 3, `dominant_zone = EXTREME` → downgrade to **HOLD** + note "extended, avoid" |
-| **BUY (small)** | (`quorum_verdict = BULLISH`, seats_bull ≥ 3, `weekly_closes < 200`) OR (`quorum_verdict = SPLIT`, `dominant_zone = DEEP_VALUE`) |
-| **SELL** | `quorum_verdict = BEARISH`, seats_bear ≥ 4 |
+| **BUY** | `quorum_verdict = BULLISH`, `dominant_zone ∈ {DEEP_VALUE, FAIR_VALUE}`, `weekly_closes >= 200` |
+| **BUY\*** | `quorum_verdict = BULLISH`, `dominant_zone = ELEVATED` → downgrade to **HOLD** + note "await pullback" |
+| **BUY\*\*** | `quorum_verdict = BULLISH`, `dominant_zone = EXTREME` → downgrade to **HOLD** + note "extended, avoid" |
+| **BUY (small)** | (`quorum_verdict = BULLISH`, `weekly_closes < 200`) OR (`quorum_verdict = SPLIT`, `dominant_zone = DEEP_VALUE`, bull lean) |
+| **SELL** | `quorum_verdict = BEARISH` |
 | **HOLD** | everything else |
+
+The verdict — not a seat count — drives the signal; the deterministic **zone** and **trend** (`weekly_closes >= 200`) gates and the F&G Governor below still hard-cap what BULLISH can buy.
 
 ## Portfolio Governor — regime-aware buy cap
 
@@ -440,7 +462,7 @@ Before finalising signals, count total BUY + BUY(small) across all tokens. Apply
 
 Perform these steps in order, even when no downgrades fire:
 
-1. **Rank all BUY/BUY(small) by conviction (ascending)**: `seats_bull` asc, then `confidence` asc (MED < HIGH). Print the ranked list.
+1. **Rank all BUY/BUY(small) by conviction (ascending)**: `bull_weight` asc (the conviction-weighted lean), then `confidence` asc (MED < HIGH). Print the ranked list.
 2. **Count total BUYs** vs the cap.
 3. **If total > cap**: downgrade from the bottom (lowest conviction first) until the cap is met. Print `⚠️ Governor: {n} BUY(s) downgraded to HOLD (regime cap F&G={value})`.
 4. **If total ≤ cap**: no downgrades. Print the count vs cap in plain English (e.g. `✅ Governor: 2 buys within the cap of 4 — Extreme Fear, F&G=18`).
@@ -469,7 +491,7 @@ Rules:
 
 Example:
 ```
-AAVE is the only buy: down 62% from its high and sitting above its long-term average price floor at $62, with 4 of 5 investment panel seats bullish. LINK also worth watching — RSI at 23 (historically oversold) with real institutional adoption via Swift and Euroclear. Sentiment: Fear & Greed at 18 — the AI/tech selloff dragged crypto down hard this week while DeFi fundamentals (locked value, fees) held steady.
+AAVE is the only buy: down 62% from its high and sitting above its long-term average price floor at $62, with the on-chain and value lenses bullish at high conviction. LINK also worth watching — RSI at 23 (historically oversold) with real institutional adoption via Swift and Euroclear. Sentiment: Fear & Greed at 18 — the AI/tech selloff dragged crypto down hard this week while DeFi fundamentals (locked value, fees) held steady.
 ```
 
 ⛔ **Jargon banned from the exec recap:** Never write `DEEP_VALUE`, `FAIR_VALUE`, `ELEVATED`, `EXTREME`, `UNKNOWN`, `BULLISH`, `BEARISH`, `UNCERTAIN`, `seats_bull`, `seats_bear`, `quorum_verdict`, `0B/4Br`, or any internal code. Write what it means in plain English.
@@ -631,7 +653,7 @@ Total: 11/11 ✓
 ```
 If your total is < universe count, add the missing rows before proceeding.
 
-**4a. For every token, spawn a verdict-critic subagent in parallel.** ⛔ Partial coverage is INCOMPLETE. Pass it the token symbol, the full quorum verdict text (signal, zone, quorum, all 5 investor votes, key claims from the briefing), and this prompt:
+**4a. For every token, spawn a verdict-critic subagent in parallel.** ⛔ Partial coverage is INCOMPLETE. Pass it the token symbol, the full quorum verdict text (signal, zone, quorum, all 6 investor votes, key claims from the briefing), and this prompt:
 
 ```
 Return EXACTLY this format:
@@ -771,14 +793,14 @@ Educational only. Not financial advice. DYOR.
 
 ```
 Ⓐ AAVE $92.18 | RSI 40 | MACD flattening | below 4yr avg ($140) | 34% below 4yr avg
-🟢 BUY — DeFi lending leader at deep discount: $27B locked, real yield from borrowing spreads + GHO fees, buy-distribute program live; 3 of 5 investors bullish
-
-📊 Investment panel (3/5 bullish):
-  Value (Graham): $27B TVL at $92 implies deep margin of safety vs historical revenue multiples; voted BUY
-  Quality (Buffett): GHO growth + dominant lending moat defensible; revenue quality high; voted BUY
+🟢 BUY — DeFi lending leader at deep discount: $27B locked, real yield from borrowing spreads + GHO fees, buy-distribute program live; CORE lenses (on-chain + value) bullish with high conviction
+📊 Investment panel (bull lean, on-chain + value lead):
+  Value (Graham): $27B TVL at $92 implies deep margin of safety vs historical revenue multiples; voted BUY [HIGH]
+  Quality (Buffett): GHO growth + dominant lending moat defensible; revenue quality high; voted BUY [MED]
   Cycle (Dalio): rate headwinds present but AAVE real yield partially hedges; risk-parity neutral; voted NEUTRAL
-  Trend (Druckenmiller): price below all MAs, no trend reversal yet — caution on size; voted BUY (small)
-  On-chain (Burniske): fee-switch buybacks confirmed on DeFiLlama; protocol cash flows accruing to holders; voted BUY
+  Trend (Druckenmiller): price below all MAs, no trend reversal yet — caution on size; voted BUY (small) [LOW]
+  Debasement (Alden): clears the BTC-as-hurdle test — real fee yield, not just monetary premium; voted BUY [MED]
+  On-chain (Burniske): fee-switch buybacks confirmed on DeFiLlama; protocol cash flows accruing to holders; voted BUY [HIGH]
 
 📰 Sources:
   • https://defillama.com/protocol/aave — TVL $27B, protocol revenue confirmed, buy-distribute live
@@ -792,7 +814,7 @@ Educational only. Not financial advice. DYOR.
 
 Plain-English replacements:
 - Zone labels → `{pct}% below ATH` or `{pct}% below 4yr avg` — the number tells the story
-- Seat counts → `{N} of 5 investors bullish` in the signal line; the panel block explains each
+- Seat counts → name the leaning CORE lenses in plain English (e.g. `on-chain + value lead bullish`); the panel block explains each with its conviction
 - `UNKNOWN` zone → `only {N} months of price history — 4yr average not yet available`
 
 **Telegram length limit is 4096 bytes per message (hard limit).** With full panel + sources, 11 tokens exceed one message. Split at token boundaries:

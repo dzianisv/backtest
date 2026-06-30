@@ -35,6 +35,7 @@ flowchart TD
         B["investor-warren-buffett\nQuality school\nBuffett / Fisher"]
         D["investor-ray-dalio\nCycle school\nDalio / Templeton"]
         DR["investor-stanley-druckenmiller\nTrend school\nDruckenmiller / Carver"]
+        LA["investor-lyn-alden\nDebasement school\nAlden — BTC-as-hurdle"]
         BU["analyse-defi\nOn-chain school\nBurniske"]
     end
 
@@ -42,11 +43,12 @@ flowchart TD
     B -->|"vote"| QUORUM
     D -->|"vote"| QUORUM
     DR -->|"vote"| QUORUM
+    LA -->|"vote"| QUORUM
     BU -->|"vote"| QUORUM
 
-    QUORUM["③ CIO counts votes\nseats_bull ≥ 4 → BUY\n≥ 3 → BUY(small)\nbear ≥ 4 → SELL\nelse → HOLD"]
+    QUORUM["③ CIO conviction-weighted synthesis\nweigh vote × conviction, not headcount\nCORE lens for this token leads\nHIGH CORE dissent caps at SPLIT\n→ BULLISH / SPLIT / BEARISH / UNCERTAIN"]
 
-    QUORUM --> GOV["F&G Governor Cap\nExtreme Fear → max 3\nFear → max 5"]
+    QUORUM --> GOV["F&G Governor Cap\nExtreme Fear → max 4\nFear → max 6"]
     GOV --> OUT["📋 Final Report\nper-token: analyst briefs + panel reasoning + signal\nACTIVE / WATCH / HOLD / SELL"]
 ```
 
@@ -80,28 +82,35 @@ flowchart TD
 | Quality | [`investor-warren-buffett`](../investor-warren-buffett/SKILL.md) | Buffett / Fisher (*Common Stocks and Uncommon Profits*) |
 | Cycle | [`investor-ray-dalio`](../investor-ray-dalio/SKILL.md) | Dalio / Templeton ("maximum pessimism") |
 | Trend | [`investor-stanley-druckenmiller`](../investor-stanley-druckenmiller/SKILL.md) | Druckenmiller / Carver (*Systematic Trading*) |
+| Debasement | [`investor-lyn-alden`](../investor-lyn-alden/SKILL.md) | Alden (*Broken Money*) — fiscal dominance, scarce-asset, BTC-as-hurdle |
 | On-chain | [`analyse-defi`](../analyse-defi/SKILL.md) | Burniske (*Cryptoassets* value-accrual) — dual role: research + vote |
 
-### Layer 3 — CIO (vote count → signal → governor → report)
+### Layer 3 — CIO (conviction-weighted synthesis → signal → governor → report)
 
 ## Signal table
 
+The conviction-weighted `quorum_verdict` — not a seat count — drives the signal; deterministic **zone** and
+**trend** gates still hard-cap what BULLISH can buy.
+
 ```
-seats_bear ≥ 4   → SELL
-seats_bull ≥ 4   → BUY
-seats_bull ≥ 3   → BUY(small)
-else             → HOLD
+quorum_verdict = BULLISH  + zone ∈ {DEEP_VALUE, FAIR_VALUE} + weekly_closes ≥ 200  → BUY
+quorum_verdict = BULLISH  + zone = ELEVATED                                        → HOLD (await pullback)
+quorum_verdict = BULLISH  + zone = EXTREME                                         → HOLD (extended, avoid)
+quorum_verdict = BULLISH  + weekly_closes < 200                                    → BUY(small)
+quorum_verdict = SPLIT    + zone = DEEP_VALUE + bull lean                          → BUY(small)
+quorum_verdict = BEARISH                                                           → SELL
+else                                                                              → HOLD
 ```
 
 ## Governor cap
 
 | F&G regime | Max simultaneous active buys |
 |---|---|
-| Extreme Fear (0–24) | 3 |
-| Fear (25–49) | 5 |
+| Extreme Fear (0–24) | 4 |
+| Fear (25–49) | 6 |
 | Neutral+ (50–100) | no cap |
 
-Rank by seats_bull DESC, downgrade lowest-conviction buys to WATCH.
+Rank by `bull_weight` (conviction-weighted lean) ascending, downgrade lowest-conviction buys to WATCH.
 
 ## Token universe
 
