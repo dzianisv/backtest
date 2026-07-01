@@ -1,0 +1,16 @@
+{
+  "date": "2026-07-01",
+  "tokens": {
+    "BTC":  {"price": 58605, "rsi": 30.22, "macd_hist": -55.06, "ema20": 66537, "ma200w": 62640, "note": "MACD hist turned sharply negative from +5.89. Death cross. Below 200wMA."},
+    "ETH":  {"price": 1571.61, "rsi": 34.32, "macd_hist": 2.42, "ema20": 1823, "ma200w": 2471, "note": "MACD hist turned slightly positive (+2.42 from -20.81). RSI still 34 (<40 → Druckenmiller BEARISH)."},
+    "SOL":  {"price": 74.61, "rsi": 54.46, "macd_hist": 0.93, "ema20": 75.43, "ma200w": 107, "note": "WATCH: RSI 54✓ MACD+✓ price $74.61 vs EMA20 $75.43 — 1.1% away from trigger!"},
+    "TON":  {"price": 1.559, "rsi": 44.62, "macd_hist": -0.001, "ema20": 1.678, "ma200w": "INSUFFICIENT", "note": "RSI fell to 44.62 (< 47.76 yesterday). MACD barely negative."},
+    "HYPE": {"price": 63.54, "rsi": 49.80, "macd_hist": -0.622, "ema20": 59.88, "ma200w": "INSUFFICIENT", "note": "RSI nearly 50 but MACD still rolling over. Above EMA20."},
+    "AAVE": {"price": 85.74, "rsi": 56.96, "macd_hist": 1.57, "ema20": 82.04, "ma200w": 130, "note": "Sharp -6.5% drop but still above EMA20 $82. All 3 Druckenmiller conditions intact. BUY weakening but intact."},
+    "JUP":  {"price": 0.2264, "rsi": 60.38, "macd_hist": 0.0016, "ema20": 0.1969, "ma200w": "INSUFFICIENT", "note": "RSI jumped 52→60. Momentum improved. Above EMA20. BUY(small) strengthened."},
+    "UNI":  {"price": 2.751, "rsi": 40.97, "macd_hist": -0.010, "ema20": 3.010, "ma200w": 5.50, "note": "RSI 41 (was 45). Continuing to weaken. Still HOLD."},
+    "AERO": {"price": 0.4727, "rsi": 49.69, "macd_hist": 0.0275, "ema20": 0.5633, "ma200w": "INSUFFICIENT", "note": "RSI near 50. MACD hist barely positive. Below EMA20. UNKNOWN zone."},
+    "PUMP": {"price": 0.001402, "rsi": 45.75, "macd_hist": 0.000015, "ema20": 0.001571, "ma200w": "INSUFFICIENT", "note": "RSI 46. Flat. UNKNOWN zone."},
+    "LINK": {"price": 7.192, "rsi": 32.78, "macd_hist": -0.010, "ema20": 8.249, "ma200w": 12.53, "note": "RSI 33 (was 34). Still falling. HOLD."}
+  }
+}
