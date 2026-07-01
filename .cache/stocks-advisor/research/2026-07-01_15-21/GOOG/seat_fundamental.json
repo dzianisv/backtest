@@ -1,0 +1,10 @@
+{
+  "seat": "fundamental",
+  "ticker": "GOOG",
+  "verdict": "FAIR",
+  "key_metric": "FCF yield 0.64% vs operating margin 36.1% — a ~$100B/yr AI capex wedge that has not yet proven its return",
+  "one_line": "Elite income-statement metrics obscure a severe FCF compression from AI capex; at $4.37T and fwd P/E 24.6x you are paying for a capital cycle that has not closed.",
+  "bull": "Revenue +21.8% at this scale is exceptional; 82% EPS growth signals operating leverage snapping through; op margin 36% and ROE 39% rank in the top decile of mega-caps; PEG 1.39 is reasonable if AI Cloud and Search AI monetize in 12–24 months; -11.5% off 52w high gives a modest entry discount; analyst consensus 1.43/5 (near strong-buy) reflects high professional conviction.",
+  "bear": "FCF yield 0.64% on $4.37T implies ~$28B free cash — dwarfed by $75–100B+ annual AI capex commitment; the 82% EPS surge is partly capex-depreciation timing lag, not durable cash conversion; at $4.37T, law-of-large-numbers means each percentage point of growth requires ~$7B incremental revenue; if AI capex fails to return cost-of-capital and EPS growth normalises to 15%, a multiple compression from 24.6x to 19–20x erases 18–23% of price even with earnings growth; Microsoft and AWS are investing equally, so GOOG may be on a treadmill not a moat-building cycle.",
+  "margin_of_safety": "Thin. Intrinsic value on a 5-yr DCF at 15% terminal EPS growth and 9% discount rate lands near $340–370 — current price is roughly at mid-range fair value, not a discount. For a weekly DCA of $500 the business quality justifies continuation but not acceleration; a dip to $310–320 (where FCF yield would reach ~0.8–0.9% and fwd P/E ~21x) would represent genuine margin of safety. Continue DCA at current pace; do not add lump-sum."
+}

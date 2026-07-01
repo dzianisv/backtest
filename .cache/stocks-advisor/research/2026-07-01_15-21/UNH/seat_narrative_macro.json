@@ -1,0 +1,30 @@
+{
+  "seat": "narrative_macro",
+  "ticker": "UNH",
+  "verdict": "MID",
+  "theme": "HEALTHCARE",
+  "one_line": "UNH recovery narrative is mid-confirmation: MCR improved to 83.9%, $1.5B AI cost-cut program launched, 2027 MA rates cleared at +2.48%; Q2 earnings Jul 16 is the next inflection gate with open DOJ criminal probe as the unresolved tail risk keeping consensus from turning fully crowded.",
+  "catalysts": "Q2 2026 earnings Jul 16 pre-open (EPS est $4.84, +18.6% YoY — margin confirmation event); DOJ criminal+civil Medicare Advantage billing probe open with no timeline (binary tail risk); 2027 CMS Medicare Advantage rate finalized +2.48% (cleared Apr 2026, below exec needs but above feared +0.09%); -2.8M MA/Medicaid member exits ongoing through 2026 (right-sizing, revenue headwind before 2027 re-growth); $1.5B AI initiative targeting ~$1B direct opex reduction (Avery assistant, 25% call-center volume cut).",
+  "citations": [
+    {
+      "url": "https://www.barchart.com/story/news/2642725/what-to-expect-from-unitedhealth-group-s-q2-2026-earnings-report",
+      "date": "2026-07-01",
+      "fact": "Q2 2026 earnings July 16 before open; diluted EPS est $4.84 (+18.6% YoY from $4.08); 26 analysts cover UNH: 19 Strong Buy, 3 Moderate Buy, 3 Hold, 1 Strong Sell; avg price target $413.16 (~1.8% upside from current); UNH +32.8% over past 52 weeks vs S&P +20.8%."
+    },
+    {
+      "url": "https://www.fxleaders.com/news/2026/04/08/unitedhealth-shares-explode-9-after-government-bumps-2027-medicare-advantage-rates/",
+      "date": "2026-04-08",
+      "fact": "CMS finalized 2027 Medicare Advantage payment rate increase; UNH shares rallied 9.37% to $307.73 on the announcement, providing sector-wide relief after prior pressure from proposed near-flat +0.09% rate."
+    },
+    {
+      "url": "https://www.fool.com/investing/2026/06/26/unitedhealth-is-near-its-52-week-high-wall-street/",
+      "date": "2026-06-26",
+      "fact": "UNH at 52-week high (range $234.60-$427.93), up 25% YTD; Q1 2026 revenue $111.7B (+2% YoY), EPS $6.90, MCR 83.9% (down 90bps YoY); $1.5B AI initiative targeting ~$1B direct cost reductions; 17 consecutive annual dividend raises, recently raised 5% to $2.32/quarter."
+    },
+    {
+      "url": "https://phemex.com/academy/unitedhealth-group-unh-stock-2026",
+      "date": "2026-07-01",
+      "fact": "DOJ criminal and civil investigations into UNH Medicare Advantage billing practices remain open with no resolution timeline; UNH confirmed cooperation with both probes in July 2025; management describes 2026 as 'right-sizing' with intentional exit of 3M+ unprofitable members; first revenue decline in a decade expected for FY2026; Warren Buffett acquired ~5M shares signaling insider value confidence."
+    }
+  ]
+}

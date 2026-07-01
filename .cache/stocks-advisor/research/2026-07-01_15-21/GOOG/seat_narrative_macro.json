@@ -1,0 +1,30 @@
+{
+  "seat": "narrative_macro",
+  "ticker": "GOOG",
+  "verdict": "LATE",
+  "theme": "AI_DISTRIBUTION_VS_MONETIZATION",
+  "one_line": "Alphabet's AI re-rating is late-cycle: +106% YoY, Dow inclusion on June 29 (classic institutionalization signal), $84.75B dilutive equity raise at peak, stock already down 11% from post-Dow high — momentum is breaking before AI monetization has proven out.",
+  "catalysts": "Bear: DOJ/35-state appeal seeking structural remedies (AdX divestiture ruling pending 2026), monetization lag vs OpenAI/Anthropic (Gemini revenue ramp slower despite 99% smartphone distribution), $84.75B equity dilution, crowded 64-analyst 'Strong Buy' consensus. Bull: Google Cloud +63% Q1 YoY, 1B+ AI Mode monthly users, $462B cloud backlog, Gemma 4 50M downloads in weeks, GM/Volvo/GenAI.mil vertical lock-in. Macro wildcard: hawkish Warsh Fed + Thursday jobs report compresses growth multiples further.",
+  "citations": [
+    {
+      "url": "https://www.cnbc.com/2026/06/23/alphabet-verizon-dow-djia.html",
+      "date": "2026-06-23",
+      "fact": "Alphabet officially announced to replace Verizon in Dow Jones Industrial Average effective June 29, 2026 — 54th composition change in the Dow's history."
+    },
+    {
+      "url": "https://finance.yahoo.com/markets/stocks/articles/dow-jones-industrial-average-changes-082600499.html",
+      "date": "2026-06-29",
+      "fact": "GOOG at $345.29 on Dow debut day; Google Cloud posted 63% Q1 sales expansion after AI integration; Motley Fool Stock Advisor team did NOT include Alphabet among their 10 best stocks despite Dow inclusion, signaling persistent institutional skepticism."
+    },
+    {
+      "url": "https://nova.kapualabs.com/goog-sys_onboarding/alphabets-ai-paradox-distribution-dominance-monetization-doubts/",
+      "date": "2026-06-01",
+      "fact": "Gemini revenue ramp is slower than both OpenAI and Anthropic despite Gemini available on 99% of smartphones; Alphabet 'controls the mills, the rail lines, and the distribution network but has not yet proven it can price the steel at a margin that rewards the capital deployed.'"
+    },
+    {
+      "url": "https://finance.yahoo.com/news/us-government-appeals-remedy-google-120633436.html",
+      "date": "2026-02-03",
+      "fact": "DOJ and 35 state attorneys general appealing Judge Mehta's search antitrust remedy seeking tougher structural remedies; AdX divestiture ruling pending 2026 — dual antitrust overhang unresolved."
+    }
+  ]
+}

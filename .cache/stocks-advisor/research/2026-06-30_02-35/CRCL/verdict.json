@@ -1,0 +1,10 @@
+{
+ "verdict": "HOLD",
+ "conv": 2,
+ "action": "Hold 70 sh seed (0.96%)",
+ "edge": "STRUCTURAL \u2014 USDC rails, but neg FCF, rate-sensitive",
+ "trigger": "ADD only on positive FCF qtr or BTC>$75k",
+ "stop": "$48-52 = EXIT",
+ "dissent": "Each 100bps Fed cut cuts USDC income ~$770M",
+ "risk": "n/a"
+}

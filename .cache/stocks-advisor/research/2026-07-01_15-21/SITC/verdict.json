@@ -1,0 +1,14 @@
+{
+  "ticker": "SITC",
+  "decision": "HOLD-through-record-date -> EXIT-stub",
+  "conviction": 3,
+  "scorecard_action": "WAIT (no adds)",
+  "edge": "STRUCTURAL — liquidating REIT, index-orphan forced selling absorbed by arbs; returns arrive as special distributions",
+  "staged_plan": ["Stage 1: HOLD all 420.625 sh through Jul 17 record date", "Stage 2: collect $1.00/sh (~$421 tax-free, Roth) paid Jul 31", "Stage 3: EXIT 100% of stub first week of August, before NYSE delisting moves it to OTC (10-20% structural discount)"],
+  "stage3_override": "pause exit ONLY if stub NAV independently verified >$4.00/sh AND 4+1 negotiations close <60d AND G&A -35% QoQ",
+  "diligence_flag": "verify due-bill status: $1.00/$4.46 = 22.4% is below NYSE 25% due-bill threshold, so standard ex-div likely governs — selling before Jul 17 record forfeits the dividend",
+  "dissent": "stub may hold residual upside if negotiations close fast; 0.42% size doesn't justify the 3-5yr OTC illiquidity bet in a Roth",
+  "risk_status": "N/A (no add)",
+  "invalidation": ["close < 3.91 (new low) accelerates Stage 3", "verified stub NAV > 4.00 pauses Stage 3", "insider Code-P open-market buy = re-assess"],
+  "seats": {"fundamental": "FAIR", "technical": "SETUP_NAMED (dead-cat probable)", "narrative": "LATE (catalyst: $1.00 special, Pike sale)", "sentiment": "NEUTRAL", "smart_money": "ACCUMULATING(MED, passive arbs)", "skeptic": "SKIP/HOLD-then-EXIT"}
+}

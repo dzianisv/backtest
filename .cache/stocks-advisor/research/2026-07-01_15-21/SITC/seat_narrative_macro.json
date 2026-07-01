@@ -1,0 +1,31 @@
+{
+  "seat": "narrative_macro",
+  "ticker": "SITC",
+  "verdict": "LATE",
+  "theme": "OTHER (liquidating REIT)",
+  "one_line": "$1.00/share special dividend declared on $50M Pike Outlets sale — div equals ~25.6% of 52-wk low share price, driving 12.3% gap up as market prices in the pending cash return",
+  "today_catalyst": "June 30, 2026 announcement: sale of ground leasehold interest in The Pike Outlets (Long Beach, CA) for $50.0M ($46.5M net), with concurrent $1.00/share special dividend (record date July 17, payment date July 31, ex-div August 3). NYSE flagged due-bills trading because dividend exceeds 25% of share price. Source: https://www.stocktitan.net/news/SITC/site-centers-announces-sale-of-the-pike-outlets-and-special-common-iyvxwq2ke5mn.html (dated 2026-06-30); https://www.investing.com/news/company-news/site-centers-sells-pike-outlets-stake-declares-1-special-dividend-93CH-4769195 (dated 2026-06-30)",
+  "remaining_value_facts": "Cumulative special distributions since mid-2025: ~$7.75/share across five payments ($1.50 Jul-2025, $3.25 Aug-2025, $1.00 Nov-2025, $1.00 Dec-2025, $1.00 Jul-2026). Total declared: >$380M (~$7.39/share per earlier disposition update, now updated with latest $1.00). $3.7B in assets sold across 64 retail properties since Oct-2023 spin-off. Remaining: 11 wholly-owned properties + 11 JV interests; 4 wholly-owned and 1 JV interest in active sale negotiations. Company plans NYSE voluntary delisting followed by certificate of dissolution → five-year statutory wind-up period. InvestingPro estimated fair value $4.93 vs $3.97 at announcement.",
+  "citations": [
+    {
+      "url": "https://www.stocktitan.net/news/SITC/site-centers-announces-sale-of-the-pike-outlets-and-special-common-iyvxwq2ke5mn.html",
+      "date": "2026-06-30",
+      "fact": "Sale of The Pike Outlets for $50.0M ($46.5M net); $1.00/share special dividend declared; record date July 17, payment July 31; NYSE due-bills trading applies because dividend exceeds 25% of share price"
+    },
+    {
+      "url": "https://www.investing.com/news/company-news/site-centers-sells-pike-outlets-stake-declares-1-special-dividend-93CH-4769195",
+      "date": "2026-06-30",
+      "fact": "Ex-dividend date confirmed August 3, 2026; stock trading near 52-week low of $3.91 at announcement; InvestingPro fair value $4.93"
+    },
+    {
+      "url": "https://www.stocktitan.net/news/SITC/site-centers-provides-update-on-disposition-activity-and-go-forward-yukk0xkcqjuj.html",
+      "date": "2026-05-01",
+      "fact": "$3.7B in assets sold across 64 properties since Oct-2023; >$380M ($7.39/share) in distributions declared; 11 wholly-owned + 11 JV properties remain; plans to delist NYSE and file certificate of dissolution with 5-year wind-up"
+    },
+    {
+      "url": "https://www.marketbeat.com/stocks/NYSE/SITC/dividend/",
+      "date": "2026-07-01",
+      "fact": "Cumulative special dividends: $1.50 (Jul-2025) + $3.25 (Aug-2025) + $1.00 (Nov-2025) + $1.00 (Dec-2025) + $1.00 (Jul-2026) = $7.75/share total"
+    }
+  ]
+}

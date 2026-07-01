@@ -1,0 +1,29 @@
+{
+  "seat": "smart_money",
+  "ticker": "UNH",
+  "verdict": "DISTRIBUTING",
+  "conviction": "HIGH",
+  "one_line": "Zero insider open-market buys in 12 months despite 40%+ crash; Berkshire fully exited 5M shares in Q1 2026; Viking Global dissolved its 1.2M-share stake — smart money sold into any recovery, not accumulating.",
+  "citations": [
+    {
+      "url": "https://www.marketbeat.com/stocks/NYSE/UNH/insider-trades/",
+      "fact": "Zero insider purchases in past 12 months; only 2 sells: Optum CEO Conway sold 800 shares at $355 on 4/23/2026 ($284K) and Director Baker sold 27 shares at $356 on 9/11/2025 ($9.6K); insider ownership 0.28%"
+    },
+    {
+      "url": "https://www.secform4.com/insider-trading/731766.htm",
+      "fact": "June 2026 Form 4s show only tax-withholding dispositions (non-discretionary) and routine option awards — no open-market buys by any executive or director despite stock trading near multi-year lows"
+    },
+    {
+      "url": "https://x.com/allday_stocks/status/2055382609115443271",
+      "fact": "Berkshire Hathaway Q1 2026 13F (filed 5/15/2026) shows full exit of UNH position — all ~5M shares sold after buying at ~$271 during the 2025 crisis; Berkshire exited 16 positions total in Q1 2026"
+    },
+    {
+      "url": "https://stockzoa.com/ticker/unh/ownership/viking-global-investors/",
+      "fact": "Viking Global reduced UNH from peak of 2.1M shares (March 2025, ~$1.1B) to 1.2M shares (December 2025, $395M); MarketScreener headline confirms Viking subsequently dissolved remaining stake alongside Netflix"
+    },
+    {
+      "url": "https://seekingalpha.com/article/4912214-unitedhealth-group-why-berkshire-hathaway-sold-fq1-2026-rating-downgrade",
+      "fact": "Seeking Alpha analysis: Berkshire sold UNH in Q1 2026 triggering analyst rating downgrade; stock slid on the 13F disclosure per Yahoo Finance report"
+    }
+  ]
+}

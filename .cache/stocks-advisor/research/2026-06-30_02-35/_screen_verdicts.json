@@ -1,0 +1,530 @@
+[
+ {
+  "t": "VOO",
+  "wt": 5.09816260277037,
+  "pl": 35.39077256848935,
+  "vs200": 7.8,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "URNM",
+  "wt": 4.161778315036115,
+  "pl": 27.98633835308117,
+  "vs200": -13.8,
+  "vd": "HOLD*",
+  "why": "hard-asset hedge \u2014 TRIM at cluster level (precious/uranium ~17% book)"
+ },
+ {
+  "t": "PHYS",
+  "wt": 2.8259296129929434,
+  "pl": 52.836195110876396,
+  "vs200": -10.5,
+  "vd": "HOLD*",
+  "why": "hard-asset hedge \u2014 TRIM at cluster level (precious/uranium ~17% book)"
+ },
+ {
+  "t": "RSP",
+  "wt": 2.285262713096845,
+  "pl": 35.07981167982117,
+  "vs200": 9.1,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "VEA",
+  "wt": 2.1330399908655058,
+  "pl": 39.73537805952678,
+  "vs200": 10.1,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "XLE",
+  "wt": 2.032921560737091,
+  "pl": 21.22623695188673,
+  "vs200": 6.1,
+  "vd": "HOLD",
+  "why": "cyclical income \u2014 keep"
+ },
+ {
+  "t": "EWZ",
+  "wt": 1.7576018096111943,
+  "pl": 29.21991049803082,
+  "vs200": 1.1,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "QCOM",
+  "wt": 1.3524338114147316,
+  "pl": 16.12436119847863,
+  "vs200": 13.2,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "VWO",
+  "wt": 1.2421401876309361,
+  "pl": 4.696795115370001,
+  "vs200": 6.2,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "AVGO",
+  "wt": 1.160428363424408,
+  "pl": 10.486100612209079,
+  "vs200": 3.4,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "PEP",
+  "wt": 1.0875155721528733,
+  "pl": -5.620022428769649,
+  "vs200": -6.0,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "ADBE",
+  "wt": 1.0528469078508182,
+  "pl": -34.194756853381946,
+  "vs200": -29.0,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "ILF",
+  "wt": 0.9882075072232013,
+  "pl": 50.74503864400741,
+  "vs200": 4.9,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "GDX",
+  "wt": 0.963951305666249,
+  "pl": 106.01807607241349,
+  "vs200": -13.2,
+  "vd": "HOLD*",
+  "why": "hard-asset hedge \u2014 TRIM at cluster level (precious/uranium ~17% book)"
+ },
+ {
+  "t": "RDDT",
+  "wt": 0.9549168287883772,
+  "pl": 26.744186046511626,
+  "vs200": -6.0,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "GSY",
+  "wt": 0.9153111422732628,
+  "pl": 0.261900477818429,
+  "vs200": 1.6,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "PFE",
+  "wt": 0.8903066305102646,
+  "pl": 1.4506317267197004,
+  "vs200": -3.5,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "NKE",
+  "wt": 0.8731502501765285,
+  "pl": -38.466762533667065,
+  "vs200": -27.2,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "BRK-B",
+  "wt": 0.8146469932384881,
+  "pl": 1.96391082561011,
+  "vs200": 1.2,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "KHC",
+  "wt": 0.7729496884401333,
+  "pl": -4.460035644189771,
+  "vs200": 4.0,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "VHT",
+  "wt": 0.77277082404942,
+  "pl": 21.279009148874003,
+  "vs200": 9.2,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "OUST",
+  "wt": 0.7719641091443655,
+  "pl": 119.19568822553894,
+  "vs200": 97.7,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "AMZN",
+  "wt": 0.7017324585866882,
+  "pl": 13.778072389700549,
+  "vs200": 3.1,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "ASML",
+  "wt": 0.6937018124730245,
+  "pl": 135.14272633910343,
+  "vs200": 45.3,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "CMCSA",
+  "wt": 0.6652660246432789,
+  "pl": -11.66013509092099,
+  "vs200": -11.2,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "TONX",
+  "wt": 0.6335084695574269,
+  "pl": -61.145290419644304,
+  "vs200": -21.5,
+  "vd": "TRIM/EXIT",
+  "why": "speculative crypto ETP -61%/-91% from high \u2014 cut or keep tiny tracker"
+ },
+ {
+  "t": "COUR",
+  "wt": 0.6220100444401356,
+  "pl": -22.19195846584825,
+  "vs200": -21.4,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "ENOR",
+  "wt": 0.5740086824425548,
+  "pl": 39.406028368794324,
+  "vs200": 2.6,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "CAG",
+  "wt": 0.5125012337992667,
+  "pl": -24.57979017710857,
+  "vs200": -13.0,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "MSCI",
+  "wt": 0.5092159694800407,
+  "pl": -1.2039660056657222,
+  "vs200": -1.4,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "XLI",
+  "wt": 0.5010028086819754,
+  "pl": 20.15758371634931,
+  "vs200": 12.0,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "INTC",
+  "wt": 0.4793930700488439,
+  "pl": 261.96513470681464,
+  "vs200": 124.1,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "CVX",
+  "wt": 0.4607583207714561,
+  "pl": 6.791598807081368,
+  "vs200": -0.7,
+  "vd": "HOLD",
+  "why": "cyclical income \u2014 keep"
+ },
+ {
+  "t": "HRMY",
+  "wt": 0.45354899073759886,
+  "pl": 29.663448995564835,
+  "vs200": 9.5,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "LYFT",
+  "wt": 0.41640725246190413,
+  "pl": -25.75054918232853,
+  "vs200": -11.0,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "PSLV",
+  "wt": 0.39123847748294444,
+  "pl": 59.43354828153009,
+  "vs200": -17.4,
+  "vd": "HOLD*",
+  "why": "hard-asset hedge \u2014 TRIM at cluster level (precious/uranium ~17% book)"
+ },
+ {
+  "t": "BTC",
+  "wt": 0.36466251428724955,
+  "pl": -0.27949830055051184,
+  "vs200": -29.3,
+  "vd": "HOLD",
+  "why": "crypto core \u2014 investor bullish"
+ },
+ {
+  "t": "ORCL",
+  "wt": 0.3545037469534649,
+  "pl": -29.78396512207995,
+  "vs200": -26.6,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "KVUE",
+  "wt": 0.3480555031535618,
+  "pl": 26.626826029216467,
+  "vs200": 12.6,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "AAL",
+  "wt": 0.3254236822877822,
+  "pl": 44.39936182446934,
+  "vs200": 35.1,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "ARE",
+  "wt": 0.3018062821262348,
+  "pl": -35.2595724688748,
+  "vs200": 2.2,
+  "vd": "HOLD/REVIEW",
+  "why": "dividend name but deep loss \u2014 verify thesis"
+ },
+ {
+  "t": "HIMS",
+  "wt": 0.3015142586311925,
+  "pl": -17.124438758873257,
+  "vs200": 1.4,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "SCHD",
+  "wt": 0.29156720833131355,
+  "pl": 20.157954118089506,
+  "vs200": 9.9,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "CRM",
+  "wt": 0.2883549498858481,
+  "pl": 0.7075471698113207,
+  "vs200": -25.7,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "JACK",
+  "wt": 0.26778554495380485,
+  "pl": 42.47980111870727,
+  "vs200": 2.1,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "BMY",
+  "wt": 0.26706461195041914,
+  "pl": 34.25050920234141,
+  "vs200": 10.0,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "TXN",
+  "wt": 0.2602294370195849,
+  "pl": 63.03241667143102,
+  "vs200": 34.6,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "SOFI",
+  "wt": 0.24885877218137467,
+  "pl": -0.06523061587962387,
+  "vs200": -19.0,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "XOM",
+  "wt": 0.24790969582248715,
+  "pl": 21.222668451584113,
+  "vs200": 1.6,
+  "vd": "HOLD",
+  "why": "cyclical income \u2014 keep"
+ },
+ {
+  "t": "VTR",
+  "wt": 0.24305480521740866,
+  "pl": 29.258633742938677,
+  "vs200": 12.6,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "VXUS",
+  "wt": 0.2327062226118465,
+  "pl": 0.0,
+  "vs200": 9.0,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "O",
+  "wt": 0.2288734142394161,
+  "pl": 10.705016155516713,
+  "vs200": 5.6,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "ROBO",
+  "wt": 0.22832587018621178,
+  "pl": 0.37308942110964016,
+  "vs200": 13.0,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "KO",
+  "wt": 0.22640946599999656,
+  "pl": 22.627520759193356,
+  "vs200": 12.9,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "DDOG",
+  "wt": 0.2263182086577958,
+  "pl": 53.86524382677752,
+  "vs200": 61.2,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "LNG",
+  "wt": 0.2217553415477596,
+  "pl": 18.143541972559582,
+  "vs200": 6.4,
+  "vd": "HOLD",
+  "why": "cyclical income \u2014 keep"
+ },
+ {
+  "t": "ESTC",
+  "wt": 0.20788422553324956,
+  "pl": -33.562762482501164,
+  "vs200": -15.4,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "GIS",
+  "wt": 0.200510632283431,
+  "pl": -23.164078892152748,
+  "vs200": -12.5,
+  "vd": "HOLD",
+  "why": "dividend/defensive \u2014 keep (cyclical/income OK)"
+ },
+ {
+  "t": "CVNA",
+  "wt": 0.1745570441615451,
+  "pl": -20.467019259554935,
+  "vs200": -13.0,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ },
+ {
+  "t": "EPAM",
+  "wt": 0.14606650192647902,
+  "pl": -45.61331974176011,
+  "vs200": -47.5,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "DLB",
+  "wt": 0.14268998026505222,
+  "pl": -26.879910213243548,
+  "vs200": -16.9,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "FIS",
+  "wt": 0.14122986278984065,
+  "pl": -43.73182082606167,
+  "vs200": -28.7,
+  "vd": "EXIT?",
+  "why": "deep loss + below 200d \u2014 dead-money/value-trap candidate; cut unless catalyst"
+ },
+ {
+  "t": "SPLV",
+  "wt": 0.1373423000120898,
+  "pl": 19.84392419175028,
+  "vs200": 4.3,
+  "vd": "HOLD",
+  "why": "core/satellite ETF \u2014 keep as ballast"
+ },
+ {
+  "t": "AMD",
+  "wt": 0.09803776272623792,
+  "pl": 244.59199384141647,
+  "vs200": 98.1,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "IBKR",
+  "wt": 0.046429910564884415,
+  "pl": 346.8470050939752,
+  "vs200": 20.9,
+  "vd": "HOLD",
+  "why": "above 200d, working \u2014 keep"
+ },
+ {
+  "t": "VSNT",
+  "wt": 0.039554582403481864,
+  "pl": -8.876087961989656,
+  "vs200": -4.9,
+  "vd": "HOLD",
+  "why": "neutral \u2014 keep small"
+ }
+]

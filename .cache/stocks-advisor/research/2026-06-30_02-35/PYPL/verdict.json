@@ -1,0 +1,10 @@
+{
+ "verdict": "HOLD",
+ "conv": 2,
+ "action": "Hold thru Q3'26 earnings; no add",
+ "edge": "VALUE mean-reversion + $6B buyback floor; not dead money",
+ "trigger": "reassess Q3; EXIT if no EPS inflection",
+ "stop": "$38 (52w low)",
+ "dissent": "risk of multi-yr eBay-style value trap",
+ "risk": "n/a"
+}

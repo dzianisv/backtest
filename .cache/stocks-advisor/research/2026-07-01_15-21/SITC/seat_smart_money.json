@@ -1,0 +1,29 @@
+{
+  "seat": "smart_money",
+  "ticker": "SITC",
+  "verdict": "ACCUMULATING",
+  "conviction": "MED",
+  "one_line": "Two arb funds initiated large passive stakes near 52-week lows (Rush Island 7.6% Dec-2025, Gumshoe Capital 5.1% Jan-2026) playing liquidation NAV discount; no insider buying and Vanguard reporting 0 shares caps conviction.",
+  "citations": [
+    {
+      "url": "https://www.stocktitan.net/sec-filings/SITC/schedule-13g-a-site-centers-corp-amended-passive-investment-disclosur-351db9642ea2.html",
+      "fact": "Rush Island Master LP et al filed 13G/A Feb 17 2026 (event date Dec 31 2025) reporting 7.6% stake — 3,989,634 shares — passive, no control intent; entered near stock lows around $6-7"
+    },
+    {
+      "url": "https://www.stocktitan.net/sec-filings/SITC/schedule-13g-site-centers-corp-passive-investment-disclosure-5-b4bfa83ba26f.html",
+      "fact": "Gumshoe Capital Management LLC (Eric Wolff) filed 13G Mar 25 2026 (event date Jan 26 2026) reporting 5.1% stake — 2,672,797 shares — passive; new position initiated during wind-down phase"
+    },
+    {
+      "url": "https://www.stocktitan.net/sec-filings/SITC/form-4-site-centers-corp-insider-trading-activity-50d31a5d6750.html",
+      "fact": "CAO Scott Alexander Form 4 Feb 22 2026: 141 shares disposed at $6.65 for tax withholding (Code F) — no open-market insider buys found"
+    },
+    {
+      "url": "https://www.stocktitan.net/sec-filings/SITC/form-4-site-centers-corp-insider-trading-activity-d8cc595acab4.html",
+      "fact": "EVP/General Counsel Aaron Kitlowski Form 4 Feb 28 2026: 3,916 shares disposed at $6.16 for tax withholding (Code F) — confirms no management open-market buying in the liquidation"
+    },
+    {
+      "url": "https://www.stocktitan.net/sec-filings/SITC/schedule-13g-a-site-centers-corp-amended-passive-investment-disclosur-e9c347f70be1.html",
+      "fact": "Vanguard amended 13G/A reporting 0 shares — large passive index fund exiting as SITC falls out of indices during wind-down, creating forced selling that arb funds are absorbing"
+    }
+  ]
+}

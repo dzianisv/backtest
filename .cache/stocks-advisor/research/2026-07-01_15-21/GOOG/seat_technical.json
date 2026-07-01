@@ -1,0 +1,15 @@
+{
+  "seat": "technical",
+  "ticker": "GOOG",
+  "verdict": "SETUP_NAMED",
+  "setup_name": "pullback-to-support bounce in primary uptrend",
+  "entry_low": 354,
+  "entry_high": 362,
+  "trigger": "daily bar close above 50d MA 367.58 = confirmed entry; EMA52 355.98 reclaim already live as early trigger (3 days closed above)",
+  "stop": 330,
+  "stop_basis": "below 334 swing low — the high-volume reversal bar (82M shares, 5 sessions ago) that ended the -17% pullback; 50d-reclaim entry uses tighter stop at 350 (EMA52 loss)",
+  "target": 400,
+  "risk_reward": "1.5:1 early (28pt risk 358→330 / 42pt reward 358→400); 1.8:1 on 50d confirm (18pt risk 368→350 / 32pt reward 368→400)",
+  "one_line": "GOOG reclaimed EMA52 off a high-volume capitulation low at 334 inside a +106% primary uptrend; MACD histogram improving 3 days, RSI at 49 with room to 65; trader waits for 50d MA close above 367.58 to confirm, targeting 400",
+  "dca_read": "The weekly drip already bought the 334 dip and buys again at 358 — no action needed; the mechanism is the strategy, levels are noise for a 52-week accumulation program in an intact uptrend"
+}

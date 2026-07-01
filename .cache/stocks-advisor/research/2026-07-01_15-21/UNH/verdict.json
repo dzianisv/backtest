@@ -1,0 +1,15 @@
+{
+  "ticker": "UNH",
+  "decision": "HOLD",
+  "conviction": 1,
+  "scorecard_action": "HOLD",
+  "edge": "ANALYTICAL — margin repair not yet in reported numbers; Jul 16 Q2 is the test",
+  "entry_zone": "n/a (ADD gate closed: Fundamental=FAIR)",
+  "trigger": "re-evaluate on Q2 earnings Jul 16: MCR <=84.0% + DOJ civil-only signal reopens ADD; MCR >=85.5% or DOJ criminal 8-K = EXIT review",
+  "stop": "3 consecutive daily closes below 395 invalidates the technical base",
+  "target": "500 (technical seat, unconfirmed breakout)",
+  "dissent": "Berkshire full Q1'26 exit + Humana 2023-24 MLR analog — V-recovery may be fully priced; DOJ x MA-coding feedback loop unmodeled",
+  "risk_status": "N/A (not BUY/ADD)",
+  "invalidation": ["3 daily closes < 395", "Q2 MCR >= 85.5% on Jul 16", "DOJ escalation: criminal charges 8-K / DPA / CMS enhanced oversight"],
+  "seats": {"fundamental": "FAIR", "technical": "SETUP_NAMED (close>430, untriggered)", "narrative": "MID", "sentiment": "CROWDED", "smart_money": "DISTRIBUTING(HIGH)", "skeptic": "WATCH/HOLD"}
+}

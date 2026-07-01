@@ -1,0 +1,10 @@
+{
+ "verdict": "ADD",
+ "conv": 3,
+ "action": "Add ~81 sh @ $100-104, 2.0%\u21923.5% (~$8.2k)",
+ "edge": "TIMING \u2014 MACD cross at 200d; prediction-market catalyst",
+ "trigger": "close >$105 on volume",
+ "stop": "$90",
+ "dissent": "World Cup prediction-mkt revenue deflates after Jul 13",
+ "risk": "APPROVED (post-COIN-trim); crypto group 14.9%"
+}

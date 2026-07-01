@@ -1,0 +1,10 @@
+{
+ "verdict": "TRIM",
+ "conv": 3,
+ "action": "Trim ~35% (~171 sh, +$16.2k), 8.5%\u21925.5%",
+ "edge": "MACRO debasement hedge + FCF 9.7%, but factor-duplicated w/ GDX/PHYS/PSLV",
+ "trigger": "trim now (bear cross, below 50d/200d)",
+ "stop": "re-add on 50d reclaim on volume",
+ "dissent": "cheapest large-cap (fwd PE 8.3) \u2014 bull says BUY not trim",
+ "risk": "hard-asset cluster 17% \u2192 cap at 20%"
+}

@@ -1,0 +1,10 @@
+{
+  "seat": "fundamental",
+  "ticker": "UNH",
+  "verdict": "FAIR",
+  "key_metric": "Fwd P/E 20.4 prices full EPS recovery; ROE 12% vs historical 25% — quality not yet restored",
+  "one_line": "V-recovered 82% in price while earnings grew 0.7%; market is betting on normalization, not observing it",
+  "bull": "FCF yield 4.57% provides floor; fwd P/E 20 is reasonable if op margins recover to 9-10% and ROE re-rates toward 20%+",
+  "bear": "No margin of safety at -0.3% from 52w high; trailing P/E 32 demands ~57% EPS recovery that has not materialized; MLR risk could reset the narrative",
+  "margin_of_safety": "None — full-recovery price with execution risk; a business trading at fwd P/E 20 with 0.7% earnings growth and ROE at half its historical average offers no cushion if recovery stalls"
+}

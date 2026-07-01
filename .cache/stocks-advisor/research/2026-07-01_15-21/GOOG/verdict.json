@@ -1,0 +1,14 @@
+{
+  "ticker": "GOOG",
+  "decision": "REDIRECT_DRIP",
+  "conviction": 3,
+  "scorecard_action": "TRIM (as-if-held) -> for a drip: reduce/redirect",
+  "edge": "ANALYTICAL — PEG 1.39 cheapest mega-cap AI; FCF yield suppressed by discretionary capex. Edge real but does not resolve which book holds the position.",
+  "action_detail": "Change the $500/wk recurring buy from GOOG to RSP (v3 core) before next run 2026-07-07. Combined GOOG exposure after quantification: IBKR 43 sh ~$15.1k (+$7.4k gain) = ~1.5% of ~$1M tradfi book.",
+  "resume_conditions": ["IBKR GOOG trim executes (20-25% at 380-400)", "GOOG corrects to 310-320 (DCF margin-of-safety zone)"],
+  "escalate_conditions": ["AdX divestiture adverse ruling or capex-ROI disappointment -> redirect stays, review IBKR position", "combined GOOG > 5% of total portfolio -> enforce concentration cap"],
+  "dissent": "Technical: drip mechanism already bought the 334 dip, setup targets 400 — redirect forfeits the next leg; PEG 1.39 edge is real",
+  "risk_status": "N/A (no new buy; redirect reduces single-name flow)",
+  "invalidation_of_redirect": ["DOJ AdX appeal resolves without structural separation AND GCP+AI >30% YoY x2 quarters with margin expansion -> GOOG re-rates, resume drip"],
+  "seats": {"fundamental": "FAIR", "technical": "SETUP_NAMED (DCA-read: keep)", "narrative": "LATE", "sentiment": "CROWDED", "smart_money": "ACCUMULATING(MED)", "skeptic": "REDIRECT_DRIP"}
+}

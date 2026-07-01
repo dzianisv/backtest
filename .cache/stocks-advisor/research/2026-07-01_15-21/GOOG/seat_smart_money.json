@@ -1,0 +1,67 @@
+{
+  "seat": "smart_money",
+  "ticker": "GOOG",
+  "verdict": "ACCUMULATING",
+  "conviction": "MED",
+  "one_line": "Berkshire tripled GOOGL to ~$16.6B (5th largest holding) in Q1 2026; Lone Pine + Third Point opened new positions; Druckenmiller fully exited and Ackman cut 95%; insider sells are 100% programmatic 10b5-1 — no discretionary signal.",
+  "detail": {
+    "insider_activity": {
+      "signal": "NEUTRAL",
+      "notes": "All visible insider sales are pre-arranged 10b5-1 plans. CEO Pichai: 32,500 shares sold Mar 2026 (~$305-308, scheduled). Walker (President): 8,998 shares Jun 29 2026 at $349.29. Director sales (Hennessy, Arnold) are tiny and programmatic. Insider ownership 58.18% (founders' supervoting structure — not a float signal). No discretionary open-market buys detected."
+    },
+    "institutional_13f_q1_2026": {
+      "adds": [
+        {
+          "manager": "Berkshire Hathaway (Buffett)",
+          "action": "Increased GOOGL 17.8M → 54.2M shares (+204%); opened new $1B GOOG Class C position",
+          "combined_exposure": "~$16.6B",
+          "context": "Now Berkshire's 5th largest holding; funded by exits from Visa, Mastercard, UnitedHealth, Amazon"
+        },
+        {
+          "manager": "Himalaya Capital (Li Lu)",
+          "action": "Added 92,000 shares to reach 2.54M total"
+        },
+        {
+          "manager": "Third Point (Dan Loeb)",
+          "action": "New 175,000-share position (~$50M)"
+        },
+        {
+          "manager": "Lone Pine (Stephen Mandel)",
+          "action": "New 187,561-share position (~$54M)"
+        }
+      ],
+      "exits_and_trims": [
+        {
+          "manager": "Duquesne (Druckenmiller)",
+          "action": "Full exit after building 277% stake over prior quarters"
+        },
+        {
+          "manager": "Pershing Square (Ackman)",
+          "action": "~95% cut, rotated proceeds into Microsoft"
+        },
+        {
+          "manager": "Altimeter",
+          "action": "Sold out"
+        }
+      ]
+    },
+    "congressional_trades": {
+      "signal": "INSUFFICIENT DATA",
+      "notes": "Capitol Trades returned HTTP 429 — not fetched this run; excluded per hard rule"
+    }
+  },
+  "citations": [
+    {
+      "url": "https://finviz.com/quote.ashx?t=GOOG",
+      "fact": "Institutional ownership 27.72%, insider ownership 58.18%; CEO Pichai sold 32,500 shares Mar 2026 via 10b5-1; Walker sold 8,998 shares Jun 29 2026 at $349.29; Director Arnold sold 112 shares Jun 30 2026 at $351.28"
+    },
+    {
+      "url": "https://positionnote.com/13f-consensus-googl-q1-2026/",
+      "fact": "Berkshire GOOGL +204% (17.8M→54.2M shares) plus new GOOG Class C ~$1B = ~$16.6B combined; Li Lu +92k shares; Loeb new 175k shares; Mandel new 187,561 shares; Druckenmiller full exit; Ackman -95% into MSFT"
+    },
+    {
+      "url": "https://www.bbae.com/blog/13f-highlights-where-top-investors-moved-in-q1-2026/",
+      "fact": "Q1 2026 13F summary: Berkshire nearly tripled Alphabet stake, Pershing Square and Altimeter sold out, Druckenmiller exited entirely"
+    }
+  ]
+}

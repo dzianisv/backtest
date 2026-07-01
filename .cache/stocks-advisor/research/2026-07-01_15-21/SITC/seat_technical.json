@@ -1,0 +1,14 @@
+{
+  "seat": "technical",
+  "ticker": "SITC",
+  "verdict": "SETUP_NAMED",
+  "setup_name": "Oversold Exhaustion Bounce (speculative — dead-cat probable, reversal unconfirmed)",
+  "entry_low": 4.17,
+  "entry_high": 4.46,
+  "trigger": "Daily close above 4.505 (today's high) on above-average volume confirms follow-through; OR hold above 4.17 for 2+ sessions builds a micro-base",
+  "stop": 3.90,
+  "stop_basis": "Hard close below 3.91 (yesterday's fresh 52w low) invalidates exhaustion thesis; new low = trend continuation",
+  "target": 5.07,
+  "risk_reward": "2.9:1 (at midpoint entry 4.30: 0.40 risk / 1.17 reward to daily EMA52 5.07; poor at full close price 4.46: 1.1:1)",
+  "one_line": "Dead-cat more likely than reversal: single-day 12.3% bounce off fresh 52w low in a liquidating REIT whose gaps are payout-driven; weekly RSI 20 + MACD histogram curling is the only credible bull signal — wait for close above 4.505 before sizing up, stop hard under 3.91, confirm base only on reclaim of 50d 5.15."
+}

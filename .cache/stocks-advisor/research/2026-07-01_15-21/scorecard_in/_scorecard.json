@@ -1,0 +1,300 @@
+[
+ {
+  "symbol": "SCHD",
+  "price": 31.85,
+  "action": "TRIM",
+  "basis": "single-name concentration 32% > 15% cap \u2014 trim to manage risk, independent of thesis",
+  "composite": 2,
+  "weight": 32.43164827672659,
+  "pnl": 3849.24,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+9% vs 200d, +0% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": [
+   "\u26a0 CONCENTRATION 32% of book"
+  ]
+ },
+ {
+  "symbol": "JEPI",
+  "price": 56.12,
+  "action": "TRIM",
+  "basis": "single-name concentration 20% > 15% cap \u2014 trim to manage risk, independent of thesis",
+  "composite": 2,
+  "weight": 19.769608545579576,
+  "pnl": 478.82,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+1% vs 200d, +0% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": [
+   "\u26a0 CONCENTRATION 20% of book"
+  ]
+ },
+ {
+  "symbol": "SGOV",
+  "price": 100.4,
+  "action": "TRIM",
+  "basis": "single-name concentration 16% > 15% cap \u2014 trim to manage risk, independent of thesis",
+  "composite": 2,
+  "weight": 16.24715144593112,
+  "pnl": 687.16,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+1% vs 200d, +0% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": [
+   "\u26a0 CONCENTRATION 16% of book"
+  ]
+ },
+ {
+  "symbol": "GOOG",
+  "price": 357.89,
+  "action": "TRIM",
+  "basis": "extended winner (expensive + uptrend) \u2014 take partial profit, let rest run",
+  "composite": 4,
+  "weight": null,
+  "pnl": null,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    -1,
+    "valuation: rich (FCF yield 0.6%, fwd P/E 25)"
+   ],
+   "trend": [
+    1,
+    "trend: uptrend, pulling back (-3% vs 50d)"
+   ],
+   "quality": [
+    2,
+    "quality: strong (op margin 36%, ROE 39%, EPS growth 82%)"
+   ],
+   "growth": [
+    2,
+    "growth: strong (rev +22%)"
+   ]
+  },
+  "flags": []
+ },
+ {
+  "symbol": "SITC",
+  "price": 4.46,
+  "action": "WAIT",
+  "basis": "cheap but downtrending \u2014 do NOT add to a falling knife; hold small, buy only once 200d reclaims OR a dated catalyst confirms",
+  "composite": -4,
+  "weight": 2.2143708534696467,
+  "pnl": -1781.24,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    2,
+    "valuation: cheap (FCF yield 18.3%)"
+   ],
+   "trend": [
+    -2,
+    "trend: DOWNTREND (-25% vs 200d, -13% vs 50d) \u2014 falling knife"
+   ],
+   "quality": [
+    -2,
+    "quality: unprofitable (op margin -46%, ROE 41%, EPS growth -70%)"
+   ],
+   "growth": [
+    -2,
+    "growth: SHRINKING (rev -70%)"
+   ]
+  },
+  "flags": [
+   "\u26a0 -64% from 52w high"
+  ]
+ },
+ {
+  "symbol": "VXUS",
+  "price": 84.53,
+  "action": "HOLD",
+  "basis": "fair value / in-trend / no decisive edge \u2014 hold, do not add",
+  "composite": 2,
+  "weight": 12.325619387141543,
+  "pnl": 2167.97,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+8% vs 200d, +0% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": []
+ },
+ {
+  "symbol": "SPYI",
+  "price": 53.09,
+  "action": "HOLD",
+  "basis": "fair value / in-trend / no decisive edge \u2014 hold, do not add",
+  "composite": 2,
+  "weight": 11.872081655913789,
+  "pnl": 1693.82,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+7% vs 200d, +1% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": []
+ },
+ {
+  "symbol": "UNH",
+  "price": 426.54,
+  "action": "HOLD",
+  "basis": "fair value / in-trend / no decisive edge \u2014 hold, do not add \u2014 index-like mega-cap, no edge stated; consider RSP/VOO instead of single-name risk",
+  "composite": 2,
+  "weight": 5.13951983523772,
+  "pnl": 854.39,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: fair (FCF yield 4.6%)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+28% vs 200d, +10% vs 50d)"
+   ],
+   "quality": [
+    1,
+    "quality: profitable (op margin 8%, ROE 12%, EPS growth 1%)"
+   ],
+   "growth": [
+    -1,
+    "growth: stalling (rev +2%)"
+   ]
+  },
+  "flags": []
+ },
+ {
+  "symbol": "ROBO",
+  "price": 85.39,
+  "action": "HOLD",
+  "basis": "fair value / in-trend / no decisive edge \u2014 hold, do not add",
+  "composite": 2,
+  "weight": null,
+  "pnl": null,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+15% vs 200d, +1% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": []
+ },
+ {
+  "symbol": "RSP",
+  "price": 213.41,
+  "action": "HOLD",
+  "basis": "fair value / in-trend / no decisive edge \u2014 hold, do not add",
+  "composite": 2,
+  "weight": null,
+  "pnl": null,
+  "crypto_beta": false,
+  "scores": {
+   "valuation": [
+    0,
+    "valuation: no FCF data (neutral)"
+   ],
+   "trend": [
+    2,
+    "trend: UPTREND (+9% vs 200d, +4% vs 50d)"
+   ],
+   "quality": [
+    0,
+    "quality: mixed (no profitability data)"
+   ],
+   "growth": [
+    0,
+    "growth: no revenue data (neutral)"
+   ]
+  },
+  "flags": []
+ }
+]

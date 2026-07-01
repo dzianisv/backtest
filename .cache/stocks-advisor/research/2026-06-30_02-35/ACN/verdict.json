@@ -1,0 +1,10 @@
+{
+ "verdict": "HOLD",
+ "conv": 3,
+ "action": "Hold thru Q4 FY26 (Sept); 11% mkt-cap buyback at 9x earnings",
+ "edge": "NARRATIVE_OVERSHOOT + buyback EPS accretion; not dead money",
+ "trigger": "EXIT if Q4 bookings<$18B & FY27 guide<3%",
+ "stop": "falling knife; no add until RSI>30+MACD cross",
+ "dissent": "AI-disruption could be structural; EXIT-for-tax-harvest legit",
+ "risk": "n/a"
+}

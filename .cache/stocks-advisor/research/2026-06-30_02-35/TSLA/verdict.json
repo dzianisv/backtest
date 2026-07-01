@@ -1,0 +1,10 @@
+{
+ "verdict": "TRIM",
+ "conv": 1,
+ "action": "Trim 50% (~23 sh, +$9.5k); hard stop on rest",
+ "edge": "WEAK \u2014 fwd PE 164, op margin 4%, all value is Robotaxi/Optimus option premium",
+ "trigger": "sell half now",
+ "stop": "hard stop remainder",
+ "dissent": "momentum/narrative could run; bull says hold",
+ "risk": "n/a"
+}

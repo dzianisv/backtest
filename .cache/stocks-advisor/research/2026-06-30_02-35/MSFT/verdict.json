@@ -1,0 +1,10 @@
+{
+ "verdict": "HOLD",
+ "conv": 3,
+ "action": "Hold; no add into downtrend",
+ "edge": "value at cyclical discount (fwd PE 19) but below 200d",
+ "trigger": "add $349-365 on RSI50+close>$380",
+ "stop": "$330",
+ "dissent": "IBM-style stall; inst net-sold 181M sh Q1",
+ "risk": "n/a"
+}

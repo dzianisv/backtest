@@ -1,0 +1,10 @@
+{
+ "verdict": "TRIM",
+ "conv": 3,
+ "action": "Trim ~25% (~19 sh, +$5.3k), 3.8%\u21922.85%; keep runner",
+ "edge": "STRUCTURAL \u2014 custom-ASIC design-win lock-in",
+ "trigger": "trim now at RSI77",
+ "stop": "trail remainder",
+ "dissent": "RSI77, trailing PE95, +132% vs 200d = trimming price",
+ "risk": "n/a"
+}
