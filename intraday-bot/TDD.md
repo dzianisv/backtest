@@ -136,3 +136,47 @@ Anti-self-deception measures (each caught a real bug in this build):
 - **Data gotchas, encoded as tests:** Binance switched kline timestamps from milliseconds to microseconds in 2025 files (hard assert — a misparse raises, never silently shifts); monthly dumps lag ~1 month (daily-endpoint backfill); delisted coins must stay in the historical universe or momentum results inflate.
 - **Known limits:** strategy params are global, not per-symbol (the ETH leg was dropped from the shadow run because BTC wants a 50-day window and ETH a 200-day one); multi-year intraday equity data isn't freely available, one more reason equities are out of scope.
 - **What would change our mind:** fresh out-of-family evidence for the trend filter on a pre-registered symbol set (the shadow deployment collects exactly this), or a genuinely new signal family. More re-tuning of failed families only raises the statistical bar they already missed.
+
+## End product goal
+
+**The end product is an unattended service on the GCP VM that trades a gate-PASSED strategy on a $500 Alpaca crypto live account, within hardcoded risk caps, with a paper track record proving that live behavior matches the backtest, and a daily P&L report reaching the owner.**
+
+One sentence per success dimension:
+- **Profitable:** positive net P&L after all fees over a meaningful live window — or an honest, evidenced shutdown decision.
+- **Proven:** every layer (signal, fills, costs, risk) validated before real money touches it.
+- **Safe:** worst realistic day loses ≤ $25 (the daily-loss kill), worst realistic total loss is capped at $500.
+- **Unattended:** survives restarts, needs no babysitting, can be halted with one file (`.KILL`).
+
+## Readiness checklist
+
+The product is ready for live money only when **every** box is checked, **in order**. No stage may borrow from a later one.
+
+**Stage 1 — Strategy validated (the gate)** — status: ❌ blocking, 0/3 candidates passed
+- [ ] A strategy shows out-of-sample Sharpe > 0, net of costs
+- [ ] Deflated Sharpe ≥ 0.95 (significant after counting every configuration tried)
+- [ ] Survives all stress tiers: 2× fees, 1-bar delayed fills, reduced fill probability, worst-volatility slippage
+- [ ] Beats buy-and-hold of the same asset on risk-adjusted return over the same window
+- [ ] Independent adversarial verifier reproduces every headline number from committed code + data and finds no look-ahead
+- [ ] Human reads RESULTS.md and signs off on promotion to paper
+
+**Stage 2 — Paper track record (Alpaca paper account, real market, fake money)**
+- [ ] ≥ 60 days of unattended paper operation with zero crashed cycles and zero manual interventions
+- [ ] Paper fill prices within the backtest fill-model assumptions (slippage audit — measured, not assumed)
+- [ ] Paper equity curve inside the backtest's expectation band (no unexplained divergence)
+- [ ] Zero hard-cap violations; restart-idempotence observed in practice (service restarted, state replayed correctly)
+- [ ] Kill switch exercised at least once in paper
+
+**Stage 3 — Live readiness (ops + risk)**
+- [ ] Hard caps re-verified in code review: order ≤ $250, position ≤ $500, daily loss ≤ $25, no shorts, `.KILL` honored
+- [ ] Secrets in Bitwarden (`dev` collection), mirrored to `/etc/intraday-bot.env` on the VM, never in git
+- [ ] Daily heartbeat + P&L notification reaching the owner (not just server logs)
+- [ ] Runbook current in `docs/infra.md`: deploy, upgrade, halt, rollback
+- [ ] Owner sets live keys + `CONFIRM_LIVE` — the final, explicit, daily-renewed go decision
+
+**Stage 4 — Judged in production (after 90 days live)**
+- [ ] Net P&L ≥ 0 after fees
+- [ ] Realized drawdown never exceeded backtest max drawdown + 10% buffer
+- [ ] Live behavior matched paper (fills, turnover, exposure)
+- If any box fails → halt, write the post-mortem into the dead-idea log, return to research. A losing bot that keeps running is a bug.
+
+**Where we are today (2026-07-02):** Stage 1 is not passed — all three candidates FAILed the gate, so Stages 2–4 are blocked by design. The deployed notify-mode shadow run is pre-Stage-2 evidence gathering; it costs nothing and risks nothing. The next unlock is a strategy that clears Stage 1.
